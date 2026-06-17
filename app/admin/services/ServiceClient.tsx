@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ServiceTable } from "./ServiceTable";
 import { CreateTable } from "./CreateTable";
-import { Service } from "./types";
+import { Service } from "../../../types";
 
 export function ServiceClient({ services }: { services: Service[] }) {
   const [message, setMessage] = useState<{

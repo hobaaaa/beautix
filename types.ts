@@ -11,3 +11,10 @@ export type Message = {
   type: "success" | "error";
   text: string;
 } | null;
+
+type WorkingHour = {
+  id?: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+};

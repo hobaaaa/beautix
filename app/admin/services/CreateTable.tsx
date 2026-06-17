@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createService } from "./actions";
-import { Message } from "./types";
+import { Message } from "../../../types";
+import { useRouter } from "next/navigation";
 
 export const CreateTable = ({
   setMessage,
@@ -11,12 +11,45 @@ export const CreateTable = ({
 }) => {
   const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+
   async function action(formData: FormData) {
     setLoading(true);
     setMessage(null);
     try {
-      await createService(formData);
+      const name = formData.get("name") as string;
+      const durationString = formData.get("duration_minutes") as string;
+
+      if (typeof name !== "string" || !name.trim()) {
+        throw new Error("Name is required");
+      }
+
+      const duration = Number(durationString);
+
+      if (!Number.isInteger(duration) || duration <= 0 || duration > 600) {
+        throw new Error("Duration must be between 1 and 600 minutes");
+      }
+
+      const payload = {
+        name: name.trim(),
+        duration_minutes: duration,
+      };
+
+      const response = await fetch("/api/admin/services", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "Failed to create service");
+      }
       setMessage({ type: "success", text: "Service created successfully." });
+
+      router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
@@ -26,6 +59,7 @@ export const CreateTable = ({
       setLoading(false);
     }
   }
+
   return (
     <form action={action} className="space-y-4">
       <div className="space-y-2">
@@ -52,6 +86,7 @@ export const CreateTable = ({
       </div>
       <button
         type="submit"
+        disabled={loading}
         className="bg-blue-500 text-white px-4 py-2 rounded"
       >
         {loading ? "Creating..." : "Create Service"}

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { deleteService, toggleServiceActiveStatus } from "./actions";
-import { Message, Service } from "./types";
+import { Message, Service } from "../../../types";
 
 export const ServiceTable = ({
   services,
