@@ -1,10 +1,11 @@
 "use client";
 
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
 export default function TestPage() {
   const [log, setLog] = useState("");
+  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     supabase

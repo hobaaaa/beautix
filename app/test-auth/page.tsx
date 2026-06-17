@@ -1,12 +1,13 @@
 "use client";
 
-import { supabase } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useState } from "react";
 
 export default function TestAuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [log, setLog] = useState("");
+  const supabase = createSupabaseBrowserClient();
 
   const signIn = async () => {
     setLog("Signing in...");

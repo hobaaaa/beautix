@@ -1,5 +1,5 @@
 import { getWorkingHours } from "./actions";
-import { WorkingHoursClient } from "./WorkingHoursClient";
+import WorkingHoursClient from "./WorkingHoursClient";
 
 export default async function HoursPage() {
   const { data } = await getWorkingHours();

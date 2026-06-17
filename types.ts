@@ -12,7 +12,7 @@ export type Message = {
   text: string;
 } | null;
 
-type WorkingHour = {
+export type WorkingHour = {
   id?: string;
   day_of_week: number;
   start_time: string;
