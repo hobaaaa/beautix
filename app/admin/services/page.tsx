@@ -1,4 +1,4 @@
-import { getServices } from "./actions";
+import { getServices } from "./queries";
 import { ServiceClient } from "./ServiceClient";
 
 export default async function ServicesPage() {

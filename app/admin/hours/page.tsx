@@ -1,4 +1,4 @@
-import { getWorkingHours } from "./actions";
+import { getWorkingHours } from "./queries";
 import WorkingHoursClient from "./WorkingHoursClient";
 
 export default async function HoursPage() {

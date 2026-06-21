@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { deleteService, toggleServiceActiveStatus } from "./actions";
+import { useRouter } from "next/navigation";
 import { Message, Service } from "../../../types";
 
 export const ServiceTable = ({
@@ -11,6 +11,7 @@ export const ServiceTable = ({
   setMessage: React.Dispatch<React.SetStateAction<Message>>;
 }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const router = useRouter();
 
   if (services.length === 0) {
     return <div>No services found.</div>;
@@ -20,11 +21,23 @@ export const ServiceTable = ({
     setLoadingId(id);
     setMessage(null);
     try {
-      await deleteService(id);
+      const response = await fetch(`/api/admin/services/${id}`, {
+        method: "DELETE",
+      });
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "Failed to delete service.");
+      }
+
       setMessage({ type: "success", text: "Service deleted successfully." });
+      router.refresh();
     } catch (error) {
       console.error("Error deleting service:", error);
-      setMessage({ type: "error", text: "Failed to delete service." });
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to delete service.",
+      });
     } finally {
       setLoadingId(null);
     }
@@ -33,14 +46,33 @@ export const ServiceTable = ({
     setLoadingId(id);
     setMessage(null);
     try {
-      await toggleServiceActiveStatus(id, !currentIsActive);
+      const response = await fetch(`/api/admin/services/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_active: !currentIsActive }),
+      });
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "Failed to update service status.");
+      }
+
       setMessage({
         type: "success",
         text: "Service status updated successfully.",
       });
+      router.refresh();
     } catch (error) {
       console.error("Error updating service status:", error);
-      setMessage({ type: "error", text: "Failed to update service status." });
+      setMessage({
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to update service status.",
+      });
     } finally {
       setLoadingId(null);
     }
