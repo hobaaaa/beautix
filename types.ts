@@ -19,7 +19,8 @@ export type Client = {
 };
 
 export type AppointmentStatus =
-  | "scheduled"
+  | "pending"
+  | "confirmed"
   | "completed"
   | "cancelled"
   | "no_show";
