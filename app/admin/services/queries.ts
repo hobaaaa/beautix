@@ -11,7 +11,7 @@ export async function getServices() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    throw new Error("User not authenticated");
+    throw new Error("Kullanıcı doğrulanamadı.");
   }
 
   const { data: membership, error: memberError } = await supabase
@@ -21,7 +21,7 @@ export async function getServices() {
     .single();
 
   if (memberError || !membership) {
-    throw new Error("User is not a member of any organization");
+    throw new Error("Kullanıcı herhangi bir işletmeye bağlı değil.");
   }
 
   const { data, error } = await supabase

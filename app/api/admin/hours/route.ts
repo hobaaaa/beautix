@@ -34,7 +34,7 @@ export async function PATCH(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest) {
 
     if (memberError || !membership) {
       return NextResponse.json(
-        { success: false, error: "User is not a member of any organization" },
+        { success: false, error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -57,14 +57,14 @@ export async function PATCH(request: NextRequest) {
 
     if (!Array.isArray(days)) {
       return NextResponse.json(
-        { success: false, error: "days must be an array" },
+        { success: false, error: "days alanı bir dizi olmalıdır." },
         { status: 400 },
       );
     }
 
     if (days.length !== 7) {
       return NextResponse.json(
-        { success: false, error: "days must contain exactly 7 items" },
+        { success: false, error: "days alanı tam olarak 7 öğe içermelidir." },
         { status: 400 },
       );
     }
@@ -79,14 +79,14 @@ export async function PATCH(request: NextRequest) {
         day.day_of_week > 7
       ) {
         return NextResponse.json(
-          { success: false, error: "day_of_week must be an integer between 1 and 7" },
+          { success: false, error: "day_of_week değeri 1 ile 7 arasında bir tam sayı olmalıdır." },
           { status: 400 },
         );
       }
 
       if (seenDays.has(day.day_of_week)) {
         return NextResponse.json(
-          { success: false, error: "day_of_week values must be unique" },
+          { success: false, error: "day_of_week değerleri benzersiz olmalıdır." },
           { status: 400 },
         );
       }
@@ -94,7 +94,7 @@ export async function PATCH(request: NextRequest) {
 
       if (typeof day.is_enabled !== "boolean") {
         return NextResponse.json(
-          { success: false, error: "is_enabled must be a boolean" },
+          { success: false, error: "is_enabled alanı true veya false olmalıdır." },
           { status: 400 },
         );
       }
@@ -107,7 +107,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "start_time and end_time are required when is_enabled is true",
+            error: "is_enabled true olduğunda başlangıç ve bitiş saati zorunludur.",
           },
           { status: 400 },
         );
@@ -117,7 +117,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "start_time and end_time must match HH:mm format",
+            error: "Başlangıç ve bitiş saati HH:mm formatında olmalıdır.",
           },
           { status: 400 },
         );
@@ -125,7 +125,7 @@ export async function PATCH(request: NextRequest) {
 
       if (timeToMinutes(day.start_time) >= timeToMinutes(day.end_time)) {
         return NextResponse.json(
-          { success: false, error: "start_time must be earlier than end_time" },
+          { success: false, error: "Başlangıç saati bitiş saatinden önce olmalıdır." },
           { status: 400 },
         );
       }
@@ -153,7 +153,7 @@ export async function PATCH(request: NextRequest) {
       if (upsertError) {
         console.error("Error upserting working hours:", upsertError);
         return NextResponse.json(
-          { success: false, error: "Failed to save working hours" },
+          { success: false, error: "Çalışma saatleri kaydedilemedi." },
           { status: 500 },
         );
       }
@@ -169,7 +169,7 @@ export async function PATCH(request: NextRequest) {
       if (deleteError) {
         console.error("Error deleting disabled working hours:", deleteError);
         return NextResponse.json(
-          { success: false, error: "Failed to save working hours" },
+          { success: false, error: "Çalışma saatleri kaydedilemedi." },
           { status: 500 },
         );
       }
@@ -179,7 +179,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error("Error updating working hours:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update working hours" },
+      { success: false, error: "Çalışma saatleri güncellenemedi." },
       { status: 500 },
     );
   }

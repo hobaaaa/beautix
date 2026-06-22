@@ -68,7 +68,7 @@ async function getCurrentOrgId() {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    throw new Error("User not authenticated");
+    throw new Error("Kullanıcı doğrulanamadı.");
   }
 
   const { data: membership, error: memberError } = await supabase
@@ -78,7 +78,7 @@ async function getCurrentOrgId() {
     .single();
 
   if (memberError || !membership) {
-    throw new Error("User is not a member of any organization");
+    throw new Error("Kullanıcı herhangi bir işletmeye bağlı değil.");
   }
 
   return { supabase, orgId: membership.org_id };
@@ -144,13 +144,13 @@ export async function getAppointmentsByDate(
         created_at: appointment.created_at,
         client: client ?? {
           id: appointment.client_id,
-          name: "Unknown client",
+          name: "Bilinmeyen müşteri",
           phone: null,
           email: null,
         },
         service: service ?? {
           id: appointment.appointment_type_id,
-          name: "Unknown service",
+          name: "Bilinmeyen hizmet",
           duration_minutes: 0,
           is_active: false,
         },

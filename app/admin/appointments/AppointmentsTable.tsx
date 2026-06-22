@@ -11,18 +11,18 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  no_show: "No Show",
+  pending: "Bekliyor",
+  confirmed: "Onaylandı",
+  completed: "Tamamlandı",
+  cancelled: "İptal Edildi",
+  no_show: "Gelmedi",
 };
 
 function formatTimeRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
   const end = new Date(endAt);
 
-  const formatter = new Intl.DateTimeFormat("en-GB", {
+  const formatter = new Intl.DateTimeFormat("tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Istanbul",
@@ -44,7 +44,7 @@ export function AppointmentsTable({
   if (appointments.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-        No appointments found for this day.
+        Bu gün için randevu bulunmuyor.
       </div>
     );
   }
@@ -57,7 +57,7 @@ export function AppointmentsTable({
           className="rounded-lg border p-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between"
         >
           <div className="min-w-36">
-            <div className="text-sm text-muted-foreground">Time</div>
+            <div className="text-sm text-muted-foreground">Saat</div>
             <div className="font-medium">
               {formatTimeRange(appointment.start_at, appointment.end_at)}
             </div>
@@ -65,7 +65,7 @@ export function AppointmentsTable({
 
           <div className="flex-1 grid gap-3 md:grid-cols-2">
             <div>
-              <div className="text-sm text-muted-foreground">Client</div>
+              <div className="text-sm text-muted-foreground">Müşteri</div>
               <div className="font-medium">{appointment.client.name}</div>
               <div className="text-sm text-muted-foreground">
                 {appointment.client.phone || appointment.client.email || "-"}
@@ -73,15 +73,15 @@ export function AppointmentsTable({
             </div>
 
             <div>
-              <div className="text-sm text-muted-foreground">Service</div>
+              <div className="text-sm text-muted-foreground">Hizmet</div>
               <div className="font-medium">{appointment.service.name}</div>
               <div className="text-sm text-muted-foreground">
-                {appointment.service.duration_minutes} min
+                {appointment.service.duration_minutes} dk
               </div>
             </div>
 
             <div>
-              <div className="text-sm text-muted-foreground">Status</div>
+              <div className="text-sm text-muted-foreground">Durum</div>
               <span
                 className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[appointment.status]}`}
               >
@@ -90,7 +90,7 @@ export function AppointmentsTable({
             </div>
 
             <div>
-              <div className="text-sm text-muted-foreground">Notes</div>
+              <div className="text-sm text-muted-foreground">Notlar</div>
               <div className="text-sm">{truncateNotes(appointment.notes)}</div>
             </div>
           </div>

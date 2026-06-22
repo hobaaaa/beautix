@@ -13,7 +13,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const ISTANBUL_OFFSET = "+03:00";
 const APPOINTMENT_OVERLAP_MESSAGE =
-  "This time slot is already booked. Please choose another time.";
+  "Bu saat aralığı dolu. Lütfen başka bir saat seçin.";
 
 function isValidUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (memberError || !membership) {
       return NextResponse.json(
-        { success: false, error: "User is not a member of any organization" },
+        { success: false, error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -66,28 +66,28 @@ export async function POST(request: NextRequest) {
 
     if (!client_id || !isValidUuid(client_id)) {
       return NextResponse.json(
-        { success: false, error: "Valid client_id is required" },
+        { success: false, error: "Geçerli bir müşteri seçimi zorunludur." },
         { status: 400 },
       );
     }
 
     if (!appointment_type_id || !isValidUuid(appointment_type_id)) {
       return NextResponse.json(
-        { success: false, error: "Valid appointment_type_id is required" },
+        { success: false, error: "Geçerli bir hizmet seçimi zorunludur." },
         { status: 400 },
       );
     }
 
     if (!date || !DATE_PATTERN.test(date)) {
       return NextResponse.json(
-        { success: false, error: "Valid date is required" },
+        { success: false, error: "Geçerli bir tarih zorunludur." },
         { status: 400 },
       );
     }
 
     if (!start_time || !TIME_PATTERN.test(start_time)) {
       return NextResponse.json(
-        { success: false, error: "Valid start_time is required" },
+        { success: false, error: "Geçerli bir başlangıç saati zorunludur." },
         { status: 400 },
       );
     }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     if (clientError || !client) {
       return NextResponse.json(
-        { success: false, error: "Selected client was not found" },
+        { success: false, error: "Seçilen müşteri bulunamadı." },
         { status: 400 },
       );
     }
@@ -116,14 +116,14 @@ export async function POST(request: NextRequest) {
 
     if (appointmentTypeError || !appointmentType) {
       return NextResponse.json(
-        { success: false, error: "Selected service was not found" },
+        { success: false, error: "Seçilen hizmet bulunamadı." },
         { status: 400 },
       );
     }
 
     if (!appointmentType.is_active) {
       return NextResponse.json(
-        { success: false, error: "Selected service is not active" },
+        { success: false, error: "Seçilen hizmet aktif değil." },
         { status: 400 },
       );
     }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     if (Number.isNaN(startAt.getTime())) {
       return NextResponse.json(
-        { success: false, error: "Invalid date or start_time" },
+        { success: false, error: "Tarih veya başlangıç saati geçersiz." },
         { status: 400 },
       );
     }
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { success: false, error: "Failed to create appointment" },
+        { success: false, error: "Randevu oluşturulamadı." },
         { status: 500 },
       );
     }
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating appointment:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create appointment" },
+      { success: false, error: "Randevu oluşturulamadı." },
       { status: 500 },
     );
   }

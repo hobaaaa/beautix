@@ -2,17 +2,14 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <p className="text-sm text-gray-500">
-          Günlük özet ve hızlı aksiyonlar.
-        </p>
+        <h1 className="text-2xl font-semibold">Yönetim Paneli</h1>
+        <p className="text-sm text-gray-500">Günlük özet ve hızlı aksiyonlar.</p>
       </div>
-      {/* Placeholder metric cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border p-4">
           <div className="text-sm text-gray-500">Bugün</div>
           <div className="mt-2 text-3xl font-semibold">-</div>
-          <div className="mt-1 text-xs text-gray-500">bugün randevu sayısı</div>
+          <div className="mt-1 text-xs text-gray-500">bugünkü randevu sayısı</div>
         </div>
 
         <div className="rounded-xl border p-4">
@@ -28,7 +25,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Placeholder section */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-xl border p-4">
           <div className="font-medium">Bugünün randevuları</div>
@@ -41,7 +37,7 @@ export default function AdminPage() {
         <div className="rounded-xl border p-4">
           <div className="font-medium">Yarın</div>
           <div className="mt-3 text-sm text-gray-500">
-            (Service ekle / Working hours ayarla / Randevu ekle)
+            (Hizmet ekle / Çalışma saatlerini ayarla / Randevu ekle)
           </div>
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="h-10 rounded-lg bg-muted/40"></div>

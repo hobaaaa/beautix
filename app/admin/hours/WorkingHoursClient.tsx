@@ -17,13 +17,13 @@ type WorkingDayForm = {
 };
 
 const WEEK_DAYS: Array<{ day_of_week: number; day_name: string }> = [
-  { day_of_week: 1, day_name: "Monday" },
-  { day_of_week: 2, day_name: "Tuesday" },
-  { day_of_week: 3, day_name: "Wednesday" },
-  { day_of_week: 4, day_name: "Thursday" },
-  { day_of_week: 5, day_name: "Friday" },
-  { day_of_week: 6, day_name: "Saturday" },
-  { day_of_week: 7, day_name: "Sunday" },
+  { day_of_week: 1, day_name: "Pazartesi" },
+  { day_of_week: 2, day_name: "Salı" },
+  { day_of_week: 3, day_name: "Çarşamba" },
+  { day_of_week: 4, day_name: "Perşembe" },
+  { day_of_week: 5, day_name: "Cuma" },
+  { day_of_week: 6, day_name: "Cumartesi" },
+  { day_of_week: 7, day_name: "Pazar" },
 ];
 
 function formatTimeForInput(value: string | null | undefined) {
@@ -82,7 +82,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       if (!day.start_time || !day.end_time) {
         setMessage({
           type: "error",
-          text: `${day.day_name}: start time and end time are required.`,
+          text: `${day.day_name}: başlangıç ve bitiş saati zorunludur.`,
         });
         return;
       }
@@ -90,7 +90,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       if (timeToMinutes(day.start_time) >= timeToMinutes(day.end_time)) {
         setMessage({
           type: "error",
-          text: `${day.day_name}: start time must be earlier than end time.`,
+          text: `${day.day_name}: başlangıç saati bitiş saatinden önce olmalıdır.`,
         });
         return;
       }
@@ -118,12 +118,12 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.error || "Failed to save working hours");
+        throw new Error(json.error || "Çalışma saatleri kaydedilemedi.");
       }
 
       setMessage({
         type: "success",
-        text: "Working hours updated successfully.",
+        text: "Çalışma saatleri başarıyla güncellendi.",
       });
       router.refresh();
     } catch (error) {
@@ -132,7 +132,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         text:
           error instanceof Error
             ? error.message
-            : "Failed to save working hours",
+            : "Çalışma saatleri kaydedilemedi.",
       });
     } finally {
       setLoading(false);
@@ -158,7 +158,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
             <div className="min-w-36">
               <div className="font-medium">{day.day_name}</div>
               <div className="text-sm text-muted-foreground">
-                {day.is_enabled ? "Open" : "Closed"}
+                {day.is_enabled ? "Açık" : "Kapalı"}
               </div>
             </div>
 
@@ -173,13 +173,13 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
                   }))
                 }
               />
-              Enabled
+              Aktif
             </label>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  Start time
+                  Başlangıç saati
                 </label>
                 <input
                   type="time"
@@ -197,7 +197,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
 
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  End time
+                  Bitiş saati
                 </label>
                 <input
                   type="time"
@@ -223,7 +223,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         disabled={loading}
         className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
       >
-        {loading ? "Saving..." : "Save Working Hours"}
+        {loading ? "Kaydediliyor..." : "Çalışma Saatlerini Kaydet"}
       </button>
     </div>
   );

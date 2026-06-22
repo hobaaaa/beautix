@@ -21,13 +21,13 @@ export const CreateTable = ({
       const durationString = formData.get("duration_minutes") as string;
 
       if (typeof name !== "string" || !name.trim()) {
-        throw new Error("Name is required");
+        throw new Error("Hizmet adı zorunludur.");
       }
 
       const duration = Number(durationString);
 
       if (!Number.isInteger(duration) || duration <= 0 || duration > 600) {
-        throw new Error("Duration must be between 1 and 600 minutes");
+        throw new Error("Süre 1 ile 600 dakika arasında olmalıdır.");
       }
 
       const payload = {
@@ -45,15 +45,15 @@ export const CreateTable = ({
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.error || "Failed to create service");
+        throw new Error(json.error || "Hizmet oluşturulamadı.");
       }
-      setMessage({ type: "success", text: "Service created successfully." });
+      setMessage({ type: "success", text: "Hizmet başarıyla oluşturuldu." });
 
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Something went wrong",
+        text: error instanceof Error ? error.message : "Bir hata oluştu.",
       });
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ export const CreateTable = ({
     <form action={action} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="name" className="">
-          Service Name:
+          Hizmet Adı:
         </label>
         <input
           type="text"
@@ -75,7 +75,7 @@ export const CreateTable = ({
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="duration_minutes">Duration (minutes):</label>
+        <label htmlFor="duration_minutes">Süre (dakika):</label>
         <input
           type="number"
           id="duration_minutes"
@@ -89,7 +89,7 @@ export const CreateTable = ({
         disabled={loading}
         className="bg-blue-500 text-white px-4 py-2 rounded"
       >
-        {loading ? "Creating..." : "Create Service"}
+        {loading ? "Oluşturuluyor..." : "Hizmet Oluştur"}
       </button>
     </form>
   );

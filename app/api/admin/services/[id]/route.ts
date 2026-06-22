@@ -11,7 +11,7 @@ export async function DELETE(
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: "Service id is required" },
+        { success: false, error: "Hizmet kimliği zorunludur." },
         { status: 400 },
       );
     }
@@ -22,7 +22,7 @@ export async function DELETE(
 
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -35,7 +35,7 @@ export async function DELETE(
 
     if (memberError || !membership) {
       return NextResponse.json(
-        { success: false, error: "User is not a member of any organization" },
+        { success: false, error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -50,19 +50,19 @@ export async function DELETE(
 
     if (error) {
       return NextResponse.json(
-        { success: false, error: "Failed to delete service" },
+        { success: false, error: "Hizmet silinemedi." },
         { status: 500 },
       );
     }
 
     return NextResponse.json(
-      { success: true, message: "Service deleted", data },
+      { success: true, message: "Hizmet silindi.", data },
       { status: 200 },
     );
   } catch (error) {
     console.error("Error deleting service:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to delete service" },
+      { success: false, error: "Hizmet silinemedi." },
       { status: 500 },
     );
   }
@@ -78,7 +78,7 @@ export async function PATCH(
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: "Service id is required" },
+        { success: false, error: "Hizmet kimliği zorunludur." },
         { status: 400 },
       );
     }
@@ -88,7 +88,7 @@ export async function PATCH(
 
     if (typeof is_active !== "boolean") {
       return NextResponse.json(
-        { success: false, error: "is_active must be a boolean" },
+        { success: false, error: "is_active alanı true veya false olmalıdır." },
         { status: 400 },
       );
     }
@@ -100,7 +100,7 @@ export async function PATCH(
 
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -113,7 +113,7 @@ export async function PATCH(
 
     if (memberError || !membership) {
       return NextResponse.json(
-        { success: false, error: "User is not a member of any organization" },
+        { success: false, error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -127,7 +127,7 @@ export async function PATCH(
 
     if (error) {
       return NextResponse.json(
-        { success: false, error: "Failed to update service" },
+        { success: false, error: "Hizmet güncellenemedi." },
         { status: 500 },
       );
     }
@@ -135,7 +135,7 @@ export async function PATCH(
   } catch (error) {
     console.error("Error updating service:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update service" },
+      { success: false, error: "Hizmet güncellenemedi." },
       { status: 500 },
     );
   }

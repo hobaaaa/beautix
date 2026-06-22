@@ -39,14 +39,14 @@ export function AppointmentForm({
       )}
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Client</label>
+        <label className="text-sm font-medium text-foreground">Müşteri</label>
         <select
           value={values.client_id}
           onChange={(event) => onChange("client_id", event.target.value)}
           disabled={loading}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
-          <option value="">Select a client</option>
+          <option value="">Müşteri seçin</option>
           {clients.map((client) => (
             <option key={client.id} value={client.id}>
               {client.name}
@@ -56,7 +56,7 @@ export function AppointmentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Service</label>
+        <label className="text-sm font-medium text-foreground">Hizmet</label>
         <select
           value={values.appointment_type_id}
           onChange={(event) =>
@@ -65,10 +65,10 @@ export function AppointmentForm({
           disabled={loading}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
-          <option value="">Select a service</option>
+          <option value="">Hizmet seçin</option>
           {services.map((service) => (
             <option key={service.id} value={service.id}>
-              {service.name} ({service.duration_minutes} min)
+              {service.name} ({service.duration_minutes} dk)
             </option>
           ))}
         </select>
@@ -76,7 +76,7 @@ export function AppointmentForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Date</label>
+          <label className="text-sm font-medium text-foreground">Tarih</label>
           <input
             type="date"
             value={values.date}
@@ -88,7 +88,7 @@ export function AppointmentForm({
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            Start time
+            Başlangıç saati
           </label>
           <input
             type="time"
@@ -101,14 +101,14 @@ export function AppointmentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Notes</label>
+        <label className="text-sm font-medium text-foreground">Notlar</label>
         <textarea
           value={values.notes}
           onChange={(event) => onChange("notes", event.target.value)}
           disabled={loading}
           rows={4}
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground disabled:opacity-50"
-          placeholder="Optional notes"
+          placeholder="İsteğe bağlı notlar"
         />
       </div>
 
@@ -119,7 +119,7 @@ export function AppointmentForm({
           disabled={loading}
           className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Create appointment"}
+          {loading ? "Oluşturuluyor..." : "Randevu Oluştur"}
         </button>
       </div>
     </div>

@@ -23,7 +23,8 @@ export default function LoginPage() {
 
     setLoading(false);
 
-    if (error) return setErr(error.message);
+    if (error)
+      return setErr("Giriş başarısız. E-posta veya şifrenizi kontrol edin.");
 
     router.refresh();
     router.replace("/admin");
@@ -31,24 +32,24 @@ export default function LoginPage() {
 
   return (
     <div style={{ padding: 24, maxWidth: 420 }}>
-      <h1>Login</h1>
+      <h1>Giriş Yap</h1>
 
       <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
         <input
-          placeholder="email"
+          placeholder="E-posta"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
         />
         <input
-          placeholder="password"
+          placeholder="Şifre"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="current-password"
         />
         <button onClick={onLogin} disabled={loading}>
-          {loading ? "Loading..." : "Login"}
+          {loading ? "Yükleniyor..." : "Giriş Yap"}
         </button>
       </div>
 

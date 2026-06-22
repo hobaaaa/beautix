@@ -11,7 +11,7 @@ export async function GET() {
 
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -24,7 +24,7 @@ export async function GET() {
 
     if (memberError || !membership) {
       return NextResponse.json(
-        { error: "User is not a member of any organization" },
+        { error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -37,7 +37,7 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json(
-        { success: false, error: "Failed to fetch services" },
+        { success: false, error: "Hizmetler alınamadı." },
         { status: 500 },
       );
     }
@@ -46,7 +46,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching services:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch services" },
+      { success: false, error: "Hizmetler alınamadı." },
       { status: 500 },
     );
   }
@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
     const duration = Number(duration_minutes);
     if (!name || typeof name !== "string" || !name.trim()) {
       return NextResponse.json(
-        { success: false, error: "Service name is required" },
+        { success: false, error: "Hizmet adı zorunludur." },
         { status: 400 },
       );
     }
     if (!Number.isInteger(duration) || duration <= 0 || duration > 600) {
       return NextResponse.json(
-        { success: false, error: "Duration must be between 1 and 600 minutes" },
+        { success: false, error: "Süre 1 ile 600 dakika arasında olmalıdır." },
         { status: 400 },
       );
     }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json(
-        { success: false, error: "User not authenticated" },
+        { success: false, error: "Kullanıcı doğrulanamadı." },
         { status: 401 },
       );
     }
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       .single();
     if (memberError || !membership) {
       return NextResponse.json(
-        { success: false, error: "User is not a member of any organization" },
+        { success: false, error: "Kullanıcı herhangi bir işletmeye bağlı değil." },
         { status: 403 },
       );
     }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("Supabase insert error:", error);
       return NextResponse.json(
-        { success: false, error: "Failed to create service" },
+        { success: false, error: "Hizmet oluşturulamadı." },
         { status: 500 },
       );
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error create services:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create services" },
+      { success: false, error: "Hizmet oluşturulamadı." },
       { status: 500 },
     );
   }

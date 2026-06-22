@@ -14,7 +14,7 @@ export const ServiceTable = ({
   const router = useRouter();
 
   if (services.length === 0) {
-    return <div>No services found.</div>;
+    return <div>Henüz hizmet bulunmuyor.</div>;
   }
 
   async function handleDelete(id: string) {
@@ -27,16 +27,16 @@ export const ServiceTable = ({
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.error || "Failed to delete service.");
+        throw new Error(json.error || "Hizmet silinemedi.");
       }
 
-      setMessage({ type: "success", text: "Service deleted successfully." });
+      setMessage({ type: "success", text: "Hizmet başarıyla silindi." });
       router.refresh();
     } catch (error) {
       console.error("Error deleting service:", error);
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Failed to delete service.",
+        text: error instanceof Error ? error.message : "Hizmet silinemedi.",
       });
     } finally {
       setLoadingId(null);
@@ -56,12 +56,12 @@ export const ServiceTable = ({
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.error || "Failed to update service status.");
+        throw new Error(json.error || "Hizmet durumu güncellenemedi.");
       }
 
       setMessage({
         type: "success",
-        text: "Service status updated successfully.",
+        text: "Hizmet durumu başarıyla güncellendi.",
       });
       router.refresh();
     } catch (error) {
@@ -71,7 +71,7 @@ export const ServiceTable = ({
         text:
           error instanceof Error
             ? error.message
-            : "Failed to update service status.",
+            : "Hizmet durumu güncellenemedi.",
       });
     } finally {
       setLoadingId(null);
@@ -82,9 +82,9 @@ export const ServiceTable = ({
       <table className="w-full border rounded-lg">
         <thead>
           <tr className="border-b">
-            <th className="p-2 text-left">Name</th>
-            <th className="p-2 text-left">Duration (minutes)</th>
-            <th className="p-2">Actions</th>
+            <th className="p-2 text-left">Ad</th>
+            <th className="p-2 text-left">Süre (dakika)</th>
+            <th className="p-2">İşlemler</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +98,7 @@ export const ServiceTable = ({
                   disabled={loadingId === service.id}
                   className="text-red-600 hover:underline disabled:opacity-50 mr-4"
                 >
-                  {loadingId === service.id ? "Deleting..." : "Delete"}
+                  {loadingId === service.id ? "Siliniyor..." : "Sil"}
                 </button>
                 <button
                   onClick={() =>
@@ -108,10 +108,10 @@ export const ServiceTable = ({
                   className="text-gray-500 hover:underline disabled:opacity-50 mr-4"
                 >
                   {loadingId === service.id
-                    ? "Updating..."
+                    ? "Güncelleniyor..."
                     : service.is_active
-                      ? "Deactivate"
-                      : "Activate"}
+                      ? "Pasifleştir"
+                      : "Aktifleştir"}
                 </button>
               </td>
             </tr>

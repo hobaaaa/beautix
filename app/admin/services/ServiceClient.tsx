@@ -21,7 +21,7 @@ export function ServiceClient({ services }: { services: Service[] }) {
       )}
       <ServiceTable services={services} setMessage={setMessage} />
       <div className="mt-12">
-        <h2 className="text-lg font-bold mb-4">Create a new service</h2>
+        <h2 className="text-lg font-bold mb-4">Yeni Hizmet Oluştur</h2>
         <CreateTable setMessage={setMessage} />
       </div>
     </>

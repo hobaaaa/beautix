@@ -40,9 +40,9 @@ export function AppointmentsClient({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Appointments</h1>
+          <h1 className="text-2xl font-semibold">Randevular</h1>
           <p className="text-sm text-muted-foreground">
-            Daily appointment list for the selected date.
+            Seçilen tarihe ait günlük randevu listesi.
           </p>
         </div>
 
@@ -59,14 +59,14 @@ export function AppointmentsClient({
               }
               className="rounded-md border px-3 py-2 text-sm"
             >
-              Today
+              Bugün
             </button>
             <button
               type="button"
               onClick={() => updateDate(tomorrow)}
               className="rounded-md border px-3 py-2 text-sm"
             >
-              Tomorrow
+              Yarın
             </button>
           </div>
 
@@ -81,7 +81,7 @@ export function AppointmentsClient({
             onClick={() => setIsCreateOpen(true)}
             className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white"
           >
-            Add appointment
+            Randevu Ekle
           </button>
         </div>
       </div>

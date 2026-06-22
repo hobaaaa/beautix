@@ -63,22 +63,22 @@ export function AppointmentCreateDialog({
 
   async function handleSubmit() {
     if (!values.client_id) {
-      setError("Client is required.");
+      setError("Müşteri seçimi zorunludur.");
       return;
     }
 
     if (!values.appointment_type_id) {
-      setError("Service is required.");
+      setError("Hizmet seçimi zorunludur.");
       return;
     }
 
     if (!values.date) {
-      setError("Date is required.");
+      setError("Tarih zorunludur.");
       return;
     }
 
     if (!values.start_time) {
-      setError("Start time is required.");
+      setError("Başlangıç saati zorunludur.");
       return;
     }
 
@@ -97,7 +97,7 @@ export function AppointmentCreateDialog({
       const json = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.error || "Failed to create appointment");
+        throw new Error(json.error || "Randevu oluşturulamadı.");
       }
 
       onSuccess();
@@ -105,7 +105,7 @@ export function AppointmentCreateDialog({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Failed to create appointment",
+          : "Randevu oluşturulamadı.",
       );
     } finally {
       setLoading(false);
@@ -121,9 +121,9 @@ export function AppointmentCreateDialog({
       <div className="w-full max-w-xl rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold">Add appointment</h2>
+            <h2 className="text-xl font-semibold">Randevu Ekle</h2>
             <p className="text-sm text-muted-foreground">
-              Create a manual appointment for the selected day.
+              Seçili tarih için manuel olarak randevu oluşturun.
             </p>
           </div>
           <button
@@ -132,7 +132,7 @@ export function AppointmentCreateDialog({
             disabled={loading}
             className="rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground disabled:opacity-50"
           >
-            Close
+            Kapat
           </button>
         </div>
 
