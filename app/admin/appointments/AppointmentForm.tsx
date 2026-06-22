@@ -32,15 +32,19 @@ export function AppointmentForm({
 }) {
   return (
     <div className="space-y-4">
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Client</label>
+        <label className="text-sm font-medium text-foreground">Client</label>
         <select
           value={values.client_id}
           onChange={(event) => onChange("client_id", event.target.value)}
           disabled={loading}
-          className="w-full rounded-md border px-3 py-2"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
           <option value="">Select a client</option>
           {clients.map((client) => (
@@ -52,14 +56,14 @@ export function AppointmentForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Service</label>
+        <label className="text-sm font-medium text-foreground">Service</label>
         <select
           value={values.appointment_type_id}
           onChange={(event) =>
             onChange("appointment_type_id", event.target.value)
           }
           disabled={loading}
-          className="w-full rounded-md border px-3 py-2"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
           <option value="">Select a service</option>
           {services.map((service) => (
@@ -72,36 +76,38 @@ export function AppointmentForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Date</label>
+          <label className="text-sm font-medium text-foreground">Date</label>
           <input
             type="date"
             value={values.date}
             onChange={(event) => onChange("date", event.target.value)}
             disabled={loading}
-            className="w-full rounded-md border px-3 py-2"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Start time</label>
+          <label className="text-sm font-medium text-foreground">
+            Start time
+          </label>
           <input
             type="time"
             value={values.start_time}
             onChange={(event) => onChange("start_time", event.target.value)}
             disabled={loading}
-            className="w-full rounded-md border px-3 py-2"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Notes</label>
+        <label className="text-sm font-medium text-foreground">Notes</label>
         <textarea
           value={values.notes}
           onChange={(event) => onChange("notes", event.target.value)}
           disabled={loading}
           rows={4}
-          className="w-full rounded-md border px-3 py-2"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder:text-muted-foreground disabled:opacity-50"
           placeholder="Optional notes"
         />
       </div>

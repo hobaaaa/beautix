@@ -118,7 +118,7 @@ export function AppointmentCreateDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="w-full max-w-xl rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">Add appointment</h2>
@@ -130,7 +130,7 @@ export function AppointmentCreateDialog({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-md border px-3 py-1 text-sm"
+            className="rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground disabled:opacity-50"
           >
             Close
           </button>

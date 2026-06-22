@@ -12,6 +12,8 @@ type CreateAppointmentBody = {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const ISTANBUL_OFFSET = "+03:00";
+const APPOINTMENT_OVERLAP_MESSAGE =
+  "This time slot is already booked. Please choose another time.";
 
 function isValidUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -21,6 +23,14 @@ function isValidUuid(value: string) {
 
 function buildStartAt(date: string, startTime: string) {
   return new Date(`${date}T${startTime}:00${ISTANBUL_OFFSET}`);
+}
+
+function isOverlapConstraintError(error: { code?: string; message?: string }) {
+  return (
+    error.code === "23P01" ||
+    error.message?.includes("appointments_no_overlap") ||
+    error.message?.toLowerCase().includes("exclusion constraint")
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -144,8 +154,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      if (isOverlapConstraintError(error)) {
+        return NextResponse.json(
+          { success: false, error: APPOINTMENT_OVERLAP_MESSAGE },
+          { status: 409 },
+        );
+      }
+
       return NextResponse.json(
-        { success: false, error: error.message || "Failed to create appointment" },
+        { success: false, error: "Failed to create appointment" },
         { status: 500 },
       );
     }
