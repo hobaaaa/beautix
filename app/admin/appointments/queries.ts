@@ -1,13 +1,14 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { AppointmentListItem, Client, Service } from "../../../types";
+import { getCurrentOrgContext } from "@/lib/supabase/org";
+import { AppointmentListItem, Client } from "../../../types";
 
 type AppointmentRow = {
   id: string;
   org_id: string;
   client_id: string;
   appointment_type_id: string;
+  staff_id: string;
   start_at: string;
   end_at: string;
   status: AppointmentListItem["status"];
@@ -41,6 +42,23 @@ type AppointmentRow = {
         is_active: boolean;
       }[]
     | null;
+  staff:
+    | {
+        id: string;
+        name: string;
+        is_active: boolean;
+      }
+    | {
+        id: string;
+        name: string;
+        is_active: boolean;
+      }[]
+    | null;
+};
+
+type AppointmentFilters = {
+  appointmentTypeId?: string;
+  staffId?: string;
 };
 
 function buildDayRange(date: string) {
@@ -59,39 +77,33 @@ function pickSingleRelation<T>(value: T | T[] | null): T | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
+function sortAppointments(appointments: AppointmentListItem[]) {
+  return [...appointments].sort((left, right) => {
+    const leftWeight = left.status === "cancelled" ? 1 : 0;
+    const rightWeight = right.status === "cancelled" ? 1 : 0;
+
+    if (leftWeight !== rightWeight) {
+      return leftWeight - rightWeight;
+    }
+
+    return new Date(left.start_at).getTime() - new Date(right.start_at).getTime();
+  });
+}
+
 async function getCurrentOrgId() {
-  const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error("Kullanıcı doğrulanamadı.");
-  }
-
-  const { data: membership, error: memberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (memberError || !membership) {
-    throw new Error("Kullanıcı herhangi bir işletmeye bağlı değil.");
-  }
-
-  return { supabase, orgId: membership.org_id };
+  const { supabase, orgId } = await getCurrentOrgContext();
+  return { supabase, orgId };
 }
 
 export async function getAppointmentsByDate(
   date: string,
+  filters: AppointmentFilters = {},
 ): Promise<{ data: AppointmentListItem[] }> {
   const { supabase, orgId } = await getCurrentOrgId();
 
   const { dayStart, nextDayStart } = buildDayRange(date);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("appointments")
     .select(
       `
@@ -99,6 +111,7 @@ export async function getAppointmentsByDate(
         org_id,
         client_id,
         appointment_type_id,
+        staff_id,
         start_at,
         end_at,
         status,
@@ -115,6 +128,11 @@ export async function getAppointmentsByDate(
           name,
           duration_minutes,
           is_active
+        ),
+        staff:staff (
+          id,
+          name,
+          is_active
         )
       `,
     )
@@ -123,20 +141,32 @@ export async function getAppointmentsByDate(
     .lt("start_at", nextDayStart)
     .order("start_at", { ascending: true });
 
+  if (filters.appointmentTypeId) {
+    query = query.eq("appointment_type_id", filters.appointmentTypeId);
+  }
+
+  if (filters.staffId) {
+    query = query.eq("staff_id", filters.staffId);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     throw error;
   }
 
-  const normalizedData: AppointmentListItem[] = ((data ?? []) as AppointmentRow[])
-    .map((appointment) => {
+  const normalizedData: AppointmentListItem[] = ((data ?? []) as AppointmentRow[]).map(
+    (appointment) => {
       const client = pickSingleRelation(appointment.client);
       const service = pickSingleRelation(appointment.service);
+      const staff = pickSingleRelation(appointment.staff);
 
       return {
         id: appointment.id,
         org_id: appointment.org_id,
         client_id: appointment.client_id,
         appointment_type_id: appointment.appointment_type_id,
+        staff_id: appointment.staff_id || staff?.id || "",
         start_at: appointment.start_at,
         end_at: appointment.end_at,
         status: appointment.status,
@@ -154,10 +184,16 @@ export async function getAppointmentsByDate(
           duration_minutes: 0,
           is_active: false,
         },
+        staff: staff ?? {
+          id: appointment.staff_id,
+          name: "Bilinmeyen personel",
+          is_active: false,
+        },
       };
-    });
+    },
+  );
 
-  return { data: normalizedData };
+  return { data: sortAppointments(normalizedData) };
 }
 
 export async function getClientsForAppointmentForm(): Promise<{
@@ -176,23 +212,4 @@ export async function getClientsForAppointmentForm(): Promise<{
   }
 
   return { data: (data ?? []) as Client[] };
-}
-
-export async function getServicesForAppointmentForm(): Promise<{
-  data: Service[];
-}> {
-  const { supabase, orgId } = await getCurrentOrgId();
-
-  const { data, error } = await supabase
-    .from("appointment_types")
-    .select("id, name, duration_minutes, is_active, created_at, org_id")
-    .eq("org_id", orgId)
-    .eq("is_active", true)
-    .order("name", { ascending: true });
-
-  if (error) {
-    throw error;
-  }
-
-  return { data: (data ?? []) as Service[] };
 }

@@ -1,10 +1,11 @@
 "use client";
 
-import { Client, Service } from "../../../types";
+import { Client, Service, StaffListItem } from "../../../types";
 
 type AppointmentFormValues = {
   client_id: string;
   appointment_type_id: string;
+  staff_id: string;
   date: string;
   start_time: string;
   notes: string;
@@ -17,6 +18,8 @@ export function AppointmentForm({
   onChange,
   onSubmit,
   services,
+  staffMembers,
+  submitLabel,
   values,
 }: {
   clients: Client[];
@@ -28,8 +31,16 @@ export function AppointmentForm({
   ) => void;
   onSubmit: () => void;
   services: Service[];
+  staffMembers: StaffListItem[];
+  submitLabel: string;
   values: AppointmentFormValues;
 }) {
+  const eligibleStaff = staffMembers.filter((staffMember) =>
+    staffMember.appointment_types.some(
+      (service) => service.id === values.appointment_type_id,
+    ),
+  );
+
   return (
     <div className="space-y-4">
       {error && (
@@ -74,6 +85,36 @@ export function AppointmentForm({
         </select>
       </div>
 
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-foreground">Personel</label>
+        <select
+          value={values.staff_id}
+          onChange={(event) => onChange("staff_id", event.target.value)}
+          disabled={
+            loading || !values.appointment_type_id || eligibleStaff.length <= 1
+          }
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+        >
+          <option value="">
+            {values.appointment_type_id
+              ? eligibleStaff.length === 0
+                ? "Bu hizmet için uygun personel yok"
+                : "Personel seçin"
+              : "Önce hizmet seçin"}
+          </option>
+          {eligibleStaff.map((staffMember) => (
+            <option key={staffMember.id} value={staffMember.id}>
+              {staffMember.name}
+            </option>
+          ))}
+        </select>
+        {values.appointment_type_id && eligibleStaff.length === 1 && (
+          <p className="text-xs text-muted-foreground">
+            Uygun personel otomatik seçildi.
+          </p>
+        )}
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Tarih</label>
@@ -82,7 +123,7 @@ export function AppointmentForm({
             value={values.date}
             onChange={(event) => onChange("date", event.target.value)}
             disabled={loading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50 "
           />
         </div>
 
@@ -119,7 +160,7 @@ export function AppointmentForm({
           disabled={loading}
           className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
         >
-          {loading ? "Oluşturuluyor..." : "Randevu Oluştur"}
+          {loading ? "Kaydediliyor..." : submitLabel}
         </button>
       </div>
     </div>

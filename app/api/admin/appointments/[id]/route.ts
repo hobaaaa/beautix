@@ -1,7 +1,8 @@
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
-type CreateAppointmentBody = {
+type UpdateAppointmentBody = {
+  status?: string;
   client_id?: string;
   appointment_type_id?: string;
   staff_id?: string;
@@ -46,10 +47,42 @@ function isOverlapConstraintError(error: { code?: string; message?: string }) {
   );
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
+    const { id } = await params;
+
+    if (!id || !isValidUuid(id)) {
+      return NextResponse.json(
+        { success: false, error: "Geçerli bir randevu kimliği zorunludur." },
+        { status: 400 },
+      );
+    }
+
+    const body = (await request.json()) as UpdateAppointmentBody;
     const { supabase, orgId } = await getCurrentOrgContext();
-    const body = (await request.json()) as CreateAppointmentBody;
+
+    if (body.status === "cancelled") {
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({ status: "cancelled" })
+        .eq("id", id)
+        .eq("org_id", orgId)
+        .select("id, status")
+        .single();
+
+      if (error || !data) {
+        return NextResponse.json(
+          { success: false, error: "Randevu iptal edilemedi." },
+          { status: 500 },
+        );
+      }
+
+      return NextResponse.json({ success: true, data }, { status: 200 });
+    }
+
     const { client_id, appointment_type_id, staff_id, date, start_time, notes } = body;
 
     if (!client_id || !isValidUuid(client_id)) {
@@ -83,6 +116,27 @@ export async function POST(request: NextRequest) {
     if (!start_time || !TIME_PATTERN.test(start_time)) {
       return NextResponse.json(
         { success: false, error: "Geçerli bir başlangıç saati zorunludur." },
+        { status: 400 },
+      );
+    }
+
+    const { data: existingAppointment, error: existingAppointmentError } = await supabase
+      .from("appointments")
+      .select("id, status")
+      .eq("id", id)
+      .eq("org_id", orgId)
+      .single();
+
+    if (existingAppointmentError || !existingAppointment) {
+      return NextResponse.json(
+        { success: false, error: "Randevu bulunamadı." },
+        { status: 404 },
+      );
+    }
+
+    if (existingAppointment.status === "cancelled") {
+      return NextResponse.json(
+        { success: false, error: "İptal edilmiş randevu düzenlenemez." },
         { status: 400 },
       );
     }
@@ -140,7 +194,7 @@ export async function POST(request: NextRequest) {
 
     if (!staff.is_active) {
       return NextResponse.json(
-        { success: false, error: "Pasif personel için yeni randevu oluşturulamaz." },
+        { success: false, error: "Pasif personel için randevu düzenlenemez." },
         { status: 400 },
       );
     }
@@ -175,7 +229,7 @@ export async function POST(request: NextRequest) {
 
     if (!workingHour) {
       return NextResponse.json(
-        { success: false, error: "Kapalı günde randevu oluşturulamaz." },
+        { success: false, error: "Kapalı günde randevu güncellenemez." },
         { status: 400 },
       );
     }
@@ -210,18 +264,43 @@ export async function POST(request: NextRequest) {
 
     const endAt = new Date(startAt.getTime() + appointmentType.duration_minutes * 60000);
 
+    const { data: conflictingAppointment, error: conflictingAppointmentError } = await supabase
+      .from("appointments")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("staff_id", staff_id)
+      .neq("id", id)
+      .neq("status", "cancelled")
+      .lt("start_at", endAt.toISOString())
+      .gt("end_at", startAt.toISOString())
+      .maybeSingle();
+
+    if (conflictingAppointmentError) {
+      return NextResponse.json(
+        { success: false, error: "Randevu çakışması kontrol edilemedi." },
+        { status: 500 },
+      );
+    }
+
+    if (conflictingAppointment) {
+      return NextResponse.json(
+        { success: false, error: APPOINTMENT_OVERLAP_MESSAGE },
+        { status: 409 },
+      );
+    }
+
     const { data, error } = await supabase
       .from("appointments")
-      .insert({
-        org_id: orgId,
+      .update({
         client_id,
         appointment_type_id,
         staff_id,
         start_at: startAt.toISOString(),
         end_at: endAt.toISOString(),
-        status: "confirmed",
         notes: notes?.trim() ? notes.trim() : null,
       })
+      .eq("id", id)
+      .eq("org_id", orgId)
       .select("id")
       .single();
 
@@ -234,16 +313,16 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { success: false, error: "Randevu oluşturulamadı." },
+        { success: false, error: "Randevu güncellenemedi." },
         { status: 500 },
       );
     }
 
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return NextResponse.json({ success: true, data }, { status: 200 });
   } catch (error) {
-    console.error("Error creating appointment:", error);
+    console.error("Error updating appointment:", error);
     return NextResponse.json(
-      { success: false, error: "Randevu oluşturulamadı." },
+      { success: false, error: "Randevu güncellenemedi." },
       { status: 500 },
     );
   }

@@ -96,7 +96,7 @@ export const ServiceTable = ({
                 <button
                   onClick={() => handleDelete(service.id)}
                   disabled={loadingId === service.id}
-                  className="text-red-600 hover:underline disabled:opacity-50 mr-4"
+                  className="text-red-600 hover:underline disabled:opacity-50 rounded-md border px-3 py-2 text-sm disabled:opacity-50 mr-4"
                 >
                   {loadingId === service.id ? "Siliniyor..." : "Sil"}
                 </button>
@@ -105,7 +105,7 @@ export const ServiceTable = ({
                     handleActiveInactive(service.id, service.is_active)
                   }
                   disabled={loadingId === service.id}
-                  className="text-gray-500 hover:underline disabled:opacity-50 mr-4"
+                  className="text-gray-500 hover:underline disabled:opacity-50 rounded-md border px-3 py-2 text-sm disabled:opacity-50 bg-slate-900 mr-4"
                 >
                   {loadingId === service.id
                     ? "Güncelleniyor..."

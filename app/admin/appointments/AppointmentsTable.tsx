@@ -38,8 +38,14 @@ function truncateNotes(notes: string | null) {
 
 export function AppointmentsTable({
   appointments,
+  cancellingId,
+  onCancelAppointment,
+  onEditAppointment,
 }: {
   appointments: AppointmentListItem[];
+  cancellingId: string | null;
+  onCancelAppointment: (id: string) => void;
+  onEditAppointment: (appointment: AppointmentListItem) => void;
 }) {
   if (appointments.length === 0) {
     return (
@@ -63,7 +69,7 @@ export function AppointmentsTable({
             </div>
           </div>
 
-          <div className="flex-1 grid gap-3 md:grid-cols-2">
+          <div className="flex-1 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div>
               <div className="text-sm text-muted-foreground">Müşteri</div>
               <div className="font-medium">{appointment.client.name}</div>
@@ -81,6 +87,14 @@ export function AppointmentsTable({
             </div>
 
             <div>
+              <div className="text-sm text-muted-foreground">Personel</div>
+              <div className="font-medium">{appointment.staff.name}</div>
+              <div className="text-sm text-muted-foreground">
+                {appointment.staff.is_active ? "Aktif" : "Pasif"}
+              </div>
+            </div>
+
+            <div>
               <div className="text-sm text-muted-foreground">Durum</div>
               <span
                 className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[appointment.status]}`}
@@ -89,10 +103,34 @@ export function AppointmentsTable({
               </span>
             </div>
 
-            <div>
+            <div className="xl:col-span-2">
               <div className="text-sm text-muted-foreground">Notlar</div>
               <div className="text-sm">{truncateNotes(appointment.notes)}</div>
             </div>
+          </div>
+
+          <div className="flex min-w-36 flex-wrap justify-end gap-2">
+            {appointment.status !== "cancelled" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEditAppointment(appointment)}
+                  className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+                >
+                  Düzenle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onCancelAppointment(appointment.id)}
+                  disabled={cancellingId === appointment.id}
+                  className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50 "
+                >
+                  {cancellingId === appointment.id
+                    ? "İptal ediliyor..."
+                    : "İptal et"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       ))}

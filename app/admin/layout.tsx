@@ -9,14 +9,12 @@ export default async function AdminLayout({
 }) {
   const supabase = await createSupabaseServerClient();
 
-  // 1-login kontrol
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
 
-  // 2-org member kontrol (kart 1)
   const { data: memberships, error } = await supabase
     .from("org_members")
     .select("id")
@@ -27,15 +25,13 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  // 3-UI Shell (kart 2)
   return (
     <div className="min-h-screen bg-background">
-      {/* topbar (mobile + desktop) */}
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="font-semibold">Beautix Yönetim</div>
-            <div className="hidden text-sm text-muted-foreground md-block">
+            <div className="hidden text-sm text-muted-foreground md:block">
               Panel
             </div>
           </div>
@@ -48,44 +44,42 @@ export default async function AdminLayout({
         </div>
       </header>
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-0 md:grid-cols-[240px_1fr]">
-        {/* sidebar (desktop only) */}
         <aside className="hidden border-r md:block">
           <nav className="flex h-[calc(100vh-56px)] flex-col gap-1 p-4">
-            <Link
-              href="/admin"
-              className="rounded-lg px-3 text-sm hover:bg-muted"
-            >
+            <Link href="/admin" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">
               Gösterge Paneli
             </Link>
             <Link
               href="/admin/services"
-              className="rounded-lg px-3 text-sm hover:bg-muted"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
             >
               Hizmetler
             </Link>
             <Link
-              href="/admin/hours"
-              className="rounded-lg px-3 text-sm hover:bg-muted"
+              href="/admin/staff"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
             >
-              Çalışma Saatleri
+              Personeller
             </Link>
             <Link
               href="/admin/appointments"
-              className="rounded-lg px-3 text-sm hover:bg-muted"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
             >
               Randevular
+            </Link>
+            <Link
+              href="/admin/hours"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+            >
+              Çalışma Saatleri
             </Link>
             <div className="mt-auto pt-4 text-xs text-muted-foreground">
               v0.1 (MVP)
             </div>
           </nav>
         </aside>
-        {/* main content */}
         <main className="p-4 md:p-6">{children}</main>
       </div>
     </div>
   );
 }
-
-//berolox293@naprb.com
-//
