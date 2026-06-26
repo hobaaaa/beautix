@@ -1,6 +1,8 @@
 import "server-only";
 
+import { logServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
+import type { OrgContext } from "@/lib/supabase/org";
 import { Service, Staff, StaffListItem } from "../../../types";
 
 type StaffAppointmentTypeRow = {
@@ -8,11 +10,15 @@ type StaffAppointmentTypeRow = {
   appointment_type_id: string;
 };
 
-export async function getStaffPageData(): Promise<{
+export async function getStaffPageData(
+  context?: OrgContext,
+  logLabel = "admin-staff-page",
+): Promise<{
   staff: StaffListItem[];
   services: Service[];
 }> {
-  const { supabase, orgId } = await getCurrentOrgContext();
+  const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
+  const initialQueryStart = Date.now();
 
   const [{ data: staffRows, error: staffError }, { data: services, error: serviceError }] =
     await Promise.all([
@@ -36,11 +42,16 @@ export async function getStaffPageData(): Promise<{
     throw serviceError;
   }
 
-  const staffIds = (staffRows ?? []).map((item) => item.id);
+  logServerTiming(logLabel, "staff.initial-queries", Date.now() - initialQueryStart, {
+    staffCount: staffRows?.length ?? 0,
+    serviceCount: services?.length ?? 0,
+  });
 
+  const staffIds = (staffRows ?? []).map((item) => item.id);
   let mappingRows: StaffAppointmentTypeRow[] = [];
 
   if (staffIds.length > 0) {
+    const mappingQueryStart = Date.now();
     const { data: mappings, error: mappingError } = await supabase
       .from("staff_appointment_types")
       .select("staff_id, appointment_type_id")
@@ -51,6 +62,9 @@ export async function getStaffPageData(): Promise<{
     }
 
     mappingRows = (mappings ?? []) as StaffAppointmentTypeRow[];
+    logServerTiming(logLabel, "staff.mappings-query", Date.now() - mappingQueryStart, {
+      mappingCount: mappingRows.length,
+    });
   }
 
   const servicesById = new Map((services ?? []).map((service) => [service.id, service]));

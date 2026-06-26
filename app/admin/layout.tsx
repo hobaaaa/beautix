@@ -1,4 +1,8 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  AuthRequiredError,
+  OrgMembershipRequiredError,
+  getCurrentOrgContext,
+} from "@/lib/supabase/org";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -7,22 +11,21 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createSupabaseServerClient();
+  let userEmail = "";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const { user } = await getCurrentOrgContext("admin-layout");
+    userEmail = user.email ?? "";
+  } catch (error) {
+    if (error instanceof AuthRequiredError) {
+      redirect("/login");
+    }
 
-  if (!user) redirect("/login");
+    if (error instanceof OrgMembershipRequiredError) {
+      redirect("/");
+    }
 
-  const { data: memberships, error } = await supabase
-    .from("org_members")
-    .select("id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (error || !memberships || memberships.length === 0) {
-    redirect("/");
+    throw error;
   }
 
   return (
@@ -37,7 +40,7 @@ export default async function AdminLayout({
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden text-sm text-muted-foreground sm:block">
-              {user.email}
+              {userEmail}
             </div>
             <div className="h-8 w-8 rounded-full bg-muted" />
           </div>

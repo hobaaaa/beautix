@@ -1,36 +1,29 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logServerTiming } from "@/lib/perf";
+import { getCurrentOrgContext } from "@/lib/supabase/org";
+import type { OrgContext } from "@/lib/supabase/org";
 
-export async function getWorkingHours() {
-  const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error("Kullanıcı doğrulanamadı.");
-  }
-
-  const { data: membership, error: memberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (memberError || !membership) {
-    throw new Error("Kullanıcı herhangi bir işletmeye bağlı değil.");
-  }
+export async function getWorkingHours(
+  context?: OrgContext,
+  logLabel = "admin-hours-page",
+) {
+  const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
+  const queryStart = Date.now();
 
   const { data, error } = await supabase
     .from("working_hours")
-    .select("*")
-    .eq("org_id", membership.org_id)
+    .select("id, org_id, day_of_week, start_time, end_time, created_at")
+    .eq("org_id", orgId)
     .order("day_of_week", { ascending: true });
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
+  logServerTiming(logLabel, "working-hours.query", Date.now() - queryStart, {
+    count: data?.length ?? 0,
+  });
 
   return { data };
 }

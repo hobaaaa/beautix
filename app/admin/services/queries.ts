@@ -1,36 +1,29 @@
 import "server-only";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { logServerTiming } from "@/lib/perf";
+import { getCurrentOrgContext } from "@/lib/supabase/org";
+import type { OrgContext } from "@/lib/supabase/org";
 
-export async function getServices() {
-  const supabase = await createSupabaseServerClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    throw new Error("Kullanıcı doğrulanamadı.");
-  }
-
-  const { data: membership, error: memberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (memberError || !membership) {
-    throw new Error("Kullanıcı herhangi bir işletmeye bağlı değil.");
-  }
+export async function getServices(
+  context?: OrgContext,
+  logLabel = "admin-services-page",
+) {
+  const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
+  const queryStart = Date.now();
 
   const { data, error } = await supabase
     .from("appointment_types")
-    .select("*")
-    .eq("org_id", membership.org_id)
+    .select("id, name, duration_minutes, is_active, created_at, org_id")
+    .eq("org_id", orgId)
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
+  logServerTiming(logLabel, "services.query", Date.now() - queryStart, {
+    count: data?.length ?? 0,
+  });
 
   return { data };
 }

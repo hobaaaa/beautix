@@ -1,6 +1,8 @@
 import "server-only";
 
+import { logServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
+import type { OrgContext } from "@/lib/supabase/org";
 import { AppointmentListItem, Client } from "../../../types";
 
 type AppointmentRow = {
@@ -90,18 +92,15 @@ function sortAppointments(appointments: AppointmentListItem[]) {
   });
 }
 
-async function getCurrentOrgId() {
-  const { supabase, orgId } = await getCurrentOrgContext();
-  return { supabase, orgId };
-}
-
 export async function getAppointmentsByDate(
   date: string,
   filters: AppointmentFilters = {},
+  context?: OrgContext,
+  logLabel = "admin-appointments-page",
 ): Promise<{ data: AppointmentListItem[] }> {
-  const { supabase, orgId } = await getCurrentOrgId();
-
+  const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
   const { dayStart, nextDayStart } = buildDayRange(date);
+  const queryStart = Date.now();
 
   let query = supabase
     .from("appointments")
@@ -155,6 +154,12 @@ export async function getAppointmentsByDate(
     throw error;
   }
 
+  logServerTiming(logLabel, "appointments.query", Date.now() - queryStart, {
+    count: data?.length ?? 0,
+    hasAppointmentTypeFilter: Boolean(filters.appointmentTypeId),
+    hasStaffFilter: Boolean(filters.staffId),
+  });
+
   const normalizedData: AppointmentListItem[] = ((data ?? []) as AppointmentRow[]).map(
     (appointment) => {
       const client = pickSingleRelation(appointment.client);
@@ -196,10 +201,14 @@ export async function getAppointmentsByDate(
   return { data: sortAppointments(normalizedData) };
 }
 
-export async function getClientsForAppointmentForm(): Promise<{
+export async function getClientsForAppointmentForm(
+  context?: OrgContext,
+  logLabel = "admin-appointments-page",
+): Promise<{
   data: Client[];
 }> {
-  const { supabase, orgId } = await getCurrentOrgId();
+  const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
+  const queryStart = Date.now();
 
   const { data, error } = await supabase
     .from("clients")
@@ -210,6 +219,10 @@ export async function getClientsForAppointmentForm(): Promise<{
   if (error) {
     throw error;
   }
+
+  logServerTiming(logLabel, "appointment-form.clients-query", Date.now() - queryStart, {
+    count: data?.length ?? 0,
+  });
 
   return { data: (data ?? []) as Client[] };
 }
