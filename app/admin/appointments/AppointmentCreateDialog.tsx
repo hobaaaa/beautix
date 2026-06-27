@@ -1,29 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AppointmentListItem, Client, Service, StaffListItem } from "../../../types";
-import { AppointmentForm } from "./AppointmentForm";
-
-type AppointmentFormValues = {
-  client_id: string;
-  appointment_type_id: string;
-  staff_id: string;
-  date: string;
-  start_time: string;
-  notes: string;
-};
+import type { AvailableSlot } from "@/lib/slots/availability-engine";
+import {
+  AppointmentListItem,
+  Client,
+  Service,
+  StaffListItem,
+} from "../../../types";
+import { AppointmentForm, AppointmentFormValues } from "./AppointmentForm";
 
 function formatDateForInput(value: string) {
   return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Istanbul",
-  }).format(new Date(value));
-}
-
-function formatTimeForInput(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
     timeZone: "Europe/Istanbul",
   }).format(new Date(value));
 }
@@ -38,7 +26,7 @@ function getInitialValues(
       appointment_type_id: appointment.appointment_type_id,
       staff_id: appointment.staff_id,
       date: formatDateForInput(appointment.start_at),
-      start_time: formatTimeForInput(appointment.start_at),
+      selected_slot_start: appointment.start_at,
       notes: appointment.notes ?? "",
     };
   }
@@ -48,7 +36,7 @@ function getInitialValues(
     appointment_type_id: "",
     staff_id: "",
     date: defaultDate,
-    start_time: "",
+    selected_slot_start: "",
     notes: "",
   };
 }
@@ -62,7 +50,9 @@ function getEligibleStaff(
   }
 
   return staffMembers.filter((staffMember) =>
-    staffMember.appointment_types.some((service) => service.id === appointmentTypeId),
+    staffMember.appointment_types.some(
+      (service) => service.id === appointmentTypeId,
+    ),
   );
 }
 
@@ -90,13 +80,19 @@ export function AppointmentCreateDialog({
     getInitialValues(defaultDate, appointment),
   );
   const [loading, setLoading] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [slotError, setSlotError] = useState<string | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       setValues(getInitialValues(defaultDate, appointment));
       setError(null);
+      setSlotError(null);
       setLoading(false);
+      setLoadingSlots(false);
+      setAvailableSlots([]);
     }
   }, [appointment, defaultDate, isOpen]);
 
@@ -117,7 +113,9 @@ export function AppointmentCreateDialog({
           : { ...current, staff_id: eligibleStaff[0].id };
       }
 
-      if (eligibleStaff.some((staffMember) => staffMember.id === current.staff_id)) {
+      if (
+        eligibleStaff.some((staffMember) => staffMember.id === current.staff_id)
+      ) {
         return current;
       }
 
@@ -125,14 +123,112 @@ export function AppointmentCreateDialog({
     });
   }, [eligibleStaff, values.appointment_type_id]);
 
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !values.date ||
+      !values.appointment_type_id ||
+      !values.staff_id
+    ) {
+      setAvailableSlots([]);
+      setLoadingSlots(false);
+      setSlotError(null);
+      return;
+    }
+
+    let isCancelled = false;
+    const searchParams = new URLSearchParams({
+      date: values.date,
+      appointmentTypeId: values.appointment_type_id,
+      staffId: values.staff_id,
+    });
+
+    if (appointment?.id) {
+      searchParams.set("excludeAppointmentId", appointment.id);
+    }
+
+    async function loadSlots() {
+      setLoadingSlots(true);
+      setSlotError(null);
+
+      try {
+        const response = await fetch(
+          `/api/admin/appointments/available-slots?${searchParams.toString()}`,
+        );
+        const json = await response.json();
+
+        if (!response.ok || !json.success) {
+          throw new Error(json.error || "Müsait saatler yüklenemedi.");
+        }
+
+        if (isCancelled) {
+          return;
+        }
+
+        const slots = (json.data ?? []) as AvailableSlot[];
+        setAvailableSlots(slots);
+
+        setValues((current) => {
+          if (
+            slots.some((slot) => slot.start_at === current.selected_slot_start)
+          ) {
+            return current;
+          }
+
+          return { ...current, selected_slot_start: "" };
+        });
+      } catch (slotLoadError) {
+        if (isCancelled) {
+          return;
+        }
+
+        setAvailableSlots([]);
+        setValues((current) => ({ ...current, selected_slot_start: "" }));
+        setSlotError(
+          slotLoadError instanceof Error
+            ? slotLoadError.message
+            : "Müsait saatler yüklenemedi.",
+        );
+      } finally {
+        if (!isCancelled) {
+          setLoadingSlots(false);
+        }
+      }
+    }
+
+    loadSlots();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    appointment?.id,
+    isOpen,
+    values.appointment_type_id,
+    values.date,
+    values.staff_id,
+  ]);
+
   function updateField(
     field: keyof AppointmentFormValues,
     value: AppointmentFormValues[keyof AppointmentFormValues],
   ) {
-    setValues((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    setValues((current) => {
+      const nextValues = {
+        ...current,
+        [field]: value,
+      };
+
+      if (
+        field === "appointment_type_id" ||
+        field === "staff_id" ||
+        field === "date"
+      ) {
+        nextValues.selected_slot_start = "";
+      }
+
+      return nextValues;
+    });
   }
 
   async function handleSubmit() {
@@ -156,8 +252,8 @@ export function AppointmentCreateDialog({
       return;
     }
 
-    if (!values.start_time) {
-      setError("Başlangıç saati zorunludur.");
+    if (!values.selected_slot_start) {
+      setError("Müsait bir saat seçmeniz zorunludur.");
       return;
     }
 
@@ -166,13 +262,21 @@ export function AppointmentCreateDialog({
 
     try {
       const response = await fetch(
-        mode === "edit" ? `/api/admin/appointments/${appointment!.id}` : "/api/admin/appointments",
+        mode === "edit"
+          ? `/api/admin/appointments/${appointment!.id}`
+          : "/api/admin/appointments",
         {
           method: mode === "edit" ? "PATCH" : "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(values),
+          body: JSON.stringify({
+            client_id: values.client_id,
+            appointment_type_id: values.appointment_type_id,
+            staff_id: values.staff_id,
+            selected_slot_start: values.selected_slot_start,
+            notes: values.notes,
+          }),
         },
       );
 
@@ -181,7 +285,9 @@ export function AppointmentCreateDialog({
       if (!response.ok || !json.success) {
         throw new Error(
           json.error ||
-            (mode === "edit" ? "Randevu güncellenemedi." : "Randevu oluşturulamadı."),
+            (mode === "edit"
+              ? "Randevu güncellenemedi."
+              : "Randevu oluşturulamadı."),
         );
       }
 
@@ -204,8 +310,8 @@ export function AppointmentCreateDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-xl rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 dark-scrollbar">
+      <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
@@ -228,14 +334,19 @@ export function AppointmentCreateDialog({
         </div>
 
         <AppointmentForm
+          availableSlots={availableSlots}
           clients={clients}
           error={error}
           loading={loading}
+          loadingSlots={loadingSlots}
           onChange={updateField}
           onSubmit={handleSubmit}
           services={services}
+          slotError={slotError}
           staffMembers={staffMembers}
-          submitLabel={mode === "edit" ? "Randevuyu Güncelle" : "Randevu Oluştur"}
+          submitLabel={
+            mode === "edit" ? "Randevuyu Güncelle" : "Randevu Oluştur"
+          }
           values={values}
         />
       </div>

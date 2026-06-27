@@ -130,15 +130,52 @@ export function StaffClient({
           ? "Personel pasife alındı."
           : "Personel aktifleştirildi.",
       });
+
       if (editingStaffId === staffMember.id) {
         resetForm();
       }
+
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
         text:
           error instanceof Error ? error.message : "Personel durumu güncellenemedi.",
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
+  async function handleDelete(staffMember: StaffListItem) {
+    setMessage(null);
+    setLoadingId(staffMember.id);
+
+    try {
+      const response = await fetch(`/api/admin/staff/${staffMember.id}`, {
+        method: "DELETE",
+      });
+
+      const json = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.error || "Personel silinemedi.");
+      }
+
+      setMessage({
+        type: "success",
+        text: "Personel silindi.",
+      });
+
+      if (editingStaffId === staffMember.id) {
+        resetForm();
+      }
+
+      router.refresh();
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Personel silinemedi.",
       });
     } finally {
       setLoadingId(null);
@@ -164,6 +201,7 @@ export function StaffClient({
 
       <StaffTable
         loadingId={loadingId}
+        onDelete={handleDelete}
         onEdit={startEdit}
         onToggleActive={handleToggleActive}
         staff={staff}

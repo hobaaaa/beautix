@@ -1,17 +1,14 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type CreateAppointmentBody = {
   client_id?: string;
   appointment_type_id?: string;
   staff_id?: string;
-  date?: string;
-  start_time?: string;
+  selected_slot_start?: string;
   notes?: string;
 };
 
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const ISTANBUL_OFFSET = "+03:00";
 const APPOINTMENT_OVERLAP_MESSAGE =
   "Bu personelin bu saat aralığı dolu. Lütfen başka bir saat seçin.";
@@ -20,10 +17,6 @@ function isValidUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value,
   );
-}
-
-function buildStartAt(date: string, startTime: string) {
-  return new Date(`${date}T${startTime}:00${ISTANBUL_OFFSET}`);
 }
 
 function getDayOfWeek(date: string) {
@@ -35,6 +28,21 @@ function getDayOfWeek(date: string) {
 function timeToMinutes(value: string) {
   const [hours, minutes] = value.slice(0, 5).split(":").map(Number);
   return hours * 60 + minutes;
+}
+
+function formatDateInIstanbul(value: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+  }).format(new Date(value));
+}
+
+function formatTimeInIstanbul(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Europe/Istanbul",
+  }).format(new Date(value));
 }
 
 function isOverlapConstraintError(error: { code?: string; message?: string }) {
@@ -50,7 +58,7 @@ export async function POST(request: NextRequest) {
   try {
     const { supabase, orgId } = await getCurrentOrgContext();
     const body = (await request.json()) as CreateAppointmentBody;
-    const { client_id, appointment_type_id, staff_id, date, start_time, notes } = body;
+    const { client_id, appointment_type_id, staff_id, selected_slot_start, notes } = body;
 
     if (!client_id || !isValidUuid(client_id)) {
       return NextResponse.json(
@@ -73,21 +81,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!date || !DATE_PATTERN.test(date)) {
+    if (!selected_slot_start) {
       return NextResponse.json(
-        { success: false, error: "Geçerli bir tarih zorunludur." },
+        { success: false, error: "Geçerli bir saat seçimi zorunludur." },
         { status: 400 },
       );
     }
 
-    if (!start_time || !TIME_PATTERN.test(start_time)) {
+    const startAt = new Date(selected_slot_start);
+
+    if (Number.isNaN(startAt.getTime())) {
       return NextResponse.json(
-        { success: false, error: "Geçerli bir başlangıç saati zorunludur." },
+        { success: false, error: "Seçilen saat geçersiz." },
         { status: 400 },
       );
     }
 
-    const dayOfWeek = getDayOfWeek(date);
+    if (startAt.getTime() <= Date.now()) {
+      return NextResponse.json(
+        { success: false, error: "Geçmiş tarih veya saate randevu oluşturulamaz." },
+        { status: 400 },
+      );
+    }
+
+    const appointmentDate = formatDateInIstanbul(startAt.toISOString());
+    const startTime = formatTimeInIstanbul(startAt.toISOString());
+    const dayOfWeek = getDayOfWeek(appointmentDate);
 
     const { data: client, error: clientError } = await supabase
       .from("clients")
@@ -180,16 +199,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const startAt = buildStartAt(date, start_time);
-
-    if (Number.isNaN(startAt.getTime())) {
-      return NextResponse.json(
-        { success: false, error: "Tarih veya başlangıç saati geçersiz." },
-        { status: 400 },
-      );
-    }
-
-    const startMinutes = timeToMinutes(start_time);
+    const startMinutes = timeToMinutes(startTime);
     const endMinutes = startMinutes + appointmentType.duration_minutes;
     const workingStartMinutes = timeToMinutes(workingHour.start_time);
     const workingEndMinutes = timeToMinutes(workingHour.end_time);

@@ -124,3 +124,51 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .dark-scrollbar {
+    scrollbar-color: #6b7280 oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-track {
+    background: oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 9999px;
+    border: 2px solid oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}
+
+@layer utilities {
+  .dark-scrollbar {
+    scrollbar-color: #6b7280 oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-track {
+    background: oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb {
+    background: #6b7280;
+    border-radius: 9999px;
+    border: 2px solid oklch(0.145 0 0);
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+}

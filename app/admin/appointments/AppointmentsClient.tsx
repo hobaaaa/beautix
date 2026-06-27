@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ import {
 } from "../../../types";
 import { AppointmentCreateDialog } from "./AppointmentCreateDialog";
 import { AppointmentsTable } from "./AppointmentsTable";
+import type { AppointmentListView } from "./queries";
 
 function addDays(date: string, amount: number) {
   const [year, month, day] = date.split("-").map(Number);
@@ -21,6 +22,9 @@ function addDays(date: string, amount: number) {
 export function AppointmentsClient({
   appointments,
   clients,
+  currentPage,
+  hasMore,
+  selectedView,
   services,
   staffMembers,
   serviceFilters,
@@ -31,6 +35,9 @@ export function AppointmentsClient({
 }: {
   appointments: AppointmentListItem[];
   clients: Client[];
+  currentPage: number;
+  hasMore: boolean;
+  selectedView: AppointmentListView;
   services: Service[];
   staffMembers: StaffListItem[];
   serviceFilters: Service[];
@@ -54,6 +61,8 @@ export function AppointmentsClient({
     date?: string;
     appointmentTypeId?: string;
     staffId?: string;
+    view?: AppointmentListView;
+    page?: string;
   }) {
     const params = new URLSearchParams(searchParams.toString());
 
@@ -78,6 +87,18 @@ export function AppointmentsClient({
     setEditingAppointment(appointment);
     setIsDialogOpen(true);
     setMessage(null);
+  }
+
+  function showDaily(date: string) {
+    updateFilters({ date, view: "day", page: undefined });
+  }
+
+  function showAllAppointments() {
+    updateFilters({ view: "all", page: "1" });
+  }
+
+  function loadMore() {
+    updateFilters({ view: "all", page: String(currentPage + 1) });
   }
 
   async function handleCancelAppointment(id: string) {
@@ -118,46 +139,66 @@ export function AppointmentsClient({
         <div>
           <h1 className="text-2xl font-semibold">Randevular</h1>
           <p className="text-sm text-muted-foreground">
-            Seçilen tarihe ait günlük randevu listesi.
+            {selectedView === "all"
+              ? "Son 3 aydaki randevuları görüntüleyin."
+              : "Seçilen tarihe ait günlük randevu listesi."}
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap sm:justify-end">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                updateFilters({
-                  date: new Intl.DateTimeFormat("en-CA", {
-                    timeZone: "Europe/Istanbul",
-                  }).format(new Date()),
-                })
-              }
-              className="rounded-md border px-3 py-2 text-sm bg-slate-900"
-            >
-              Bugün
-            </button>
-            <button
-              type="button"
-              onClick={() => updateFilters({ date: tomorrow })}
-              className="rounded-md border px-3 py-2 text-sm bg-slate-900"
-            >
-              Yarın
-            </button>
-          </div>
-
+        <button
+          type="button"
+          onClick={openCreateDialog}
+          className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white sm:ml-auto"
+        >
+          Randevu Ekle
+        </button>
+      </div>
+      <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              showDaily(
+                new Intl.DateTimeFormat("en-CA", {
+                  timeZone: "Europe/Istanbul",
+                }).format(new Date()),
+              )
+            }
+            className={`rounded-md border px-3 py-2 text-sm ${
+              selectedView === "day" ? "bg-slate-900" : "bg-background"
+            }`}
+          >
+            Bugün
+          </button>
+          <button
+            type="button"
+            onClick={() => showDaily(tomorrow)}
+            className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+          >
+            Yarın
+          </button>
           <input
             type="date"
             value={selectedDate}
-            onChange={(event) => updateFilters({ date: event.target.value })}
+            onChange={(event) => showDaily(event.target.value)}
             className="rounded-md border px-3 py-2 text-sm bg-slate-900"
           />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={showAllAppointments}
+            className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+          >
+            Tüm Randevular
+          </button>
 
           <select
             value={selectedAppointmentTypeId}
             onChange={(event) =>
               updateFilters({
                 appointmentTypeId: event.target.value || undefined,
+                page: selectedView === "all" ? "1" : undefined,
               })
             }
             className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
@@ -173,7 +214,10 @@ export function AppointmentsClient({
           <select
             value={selectedStaffId}
             onChange={(event) =>
-              updateFilters({ staffId: event.target.value || undefined })
+              updateFilters({
+                staffId: event.target.value || undefined,
+                page: selectedView === "all" ? "1" : undefined,
+              })
             }
             className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
@@ -184,14 +228,6 @@ export function AppointmentsClient({
               </option>
             ))}
           </select>
-
-          <button
-            type="button"
-            onClick={openCreateDialog}
-            className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white sm:ml-auto"
-          >
-            Randevu Ekle
-          </button>
         </div>
       </div>
 
@@ -231,7 +267,25 @@ export function AppointmentsClient({
         cancellingId={cancellingId}
         onCancelAppointment={handleCancelAppointment}
         onEditAppointment={openEditDialog}
+        showDate={selectedView === "all"}
+        emptyMessage={
+          selectedView === "all"
+            ? "Son 3 ay için randevu bulunmuyor."
+            : "Bu gün için randevu bulunmuyor."
+        }
       />
+
+      {selectedView === "all" && hasMore && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={loadMore}
+            className="rounded-md border px-4 py-2 text-sm"
+          >
+            Daha fazla yükle
+          </button>
+        </div>
+      )}
     </div>
   );
 }

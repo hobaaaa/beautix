@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AppointmentListItem, AppointmentStatus } from "../../../types";
 
@@ -31,6 +31,15 @@ function formatTimeRange(startAt: string, endAt: string) {
   return `${formatter.format(start)} - ${formatter.format(end)}`;
 }
 
+function formatDateLabel(value: string) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    timeZone: "Europe/Istanbul",
+  }).format(new Date(value));
+}
+
 function truncateNotes(notes: string | null) {
   if (!notes) return "-";
   return notes.length > 80 ? `${notes.slice(0, 77)}...` : notes;
@@ -39,18 +48,22 @@ function truncateNotes(notes: string | null) {
 export function AppointmentsTable({
   appointments,
   cancellingId,
+  emptyMessage,
   onCancelAppointment,
   onEditAppointment,
+  showDate,
 }: {
   appointments: AppointmentListItem[];
   cancellingId: string | null;
+  emptyMessage: string;
   onCancelAppointment: (id: string) => void;
   onEditAppointment: (appointment: AppointmentListItem) => void;
+  showDate: boolean;
 }) {
   if (appointments.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-        Bu gün için randevu bulunmuyor.
+        {emptyMessage}
       </div>
     );
   }
@@ -60,16 +73,21 @@ export function AppointmentsTable({
       {appointments.map((appointment) => (
         <div
           key={appointment.id}
-          className="rounded-lg border p-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between"
+          className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
         >
           <div className="min-w-36">
             <div className="text-sm text-muted-foreground">Saat</div>
             <div className="font-medium">
               {formatTimeRange(appointment.start_at, appointment.end_at)}
             </div>
+            {showDate && (
+              <div className="text-sm text-muted-foreground">
+                {formatDateLabel(appointment.start_at)}
+              </div>
+            )}
           </div>
 
-          <div className="flex-1 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             <div>
               <div className="text-sm text-muted-foreground">Müşteri</div>
               <div className="font-medium">{appointment.client.name}</div>
@@ -115,7 +133,7 @@ export function AppointmentsTable({
                 <button
                   type="button"
                   onClick={() => onEditAppointment(appointment)}
-                  className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+                  className="rounded-md border bg-slate-900 px-3 py-2 text-sm"
                 >
                   Düzenle
                 </button>
@@ -123,11 +141,9 @@ export function AppointmentsTable({
                   type="button"
                   onClick={() => onCancelAppointment(appointment.id)}
                   disabled={cancellingId === appointment.id}
-                  className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50 "
+                  className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
                 >
-                  {cancellingId === appointment.id
-                    ? "İptal ediliyor..."
-                    : "İptal et"}
+                  {cancellingId === appointment.id ? "İptal ediliyor..." : "İptal et"}
                 </button>
               </>
             )}

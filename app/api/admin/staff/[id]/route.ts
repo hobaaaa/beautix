@@ -193,3 +193,89 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params;
+
+    if (!id || !isValidUuid(id)) {
+      return NextResponse.json(
+        { success: false, error: "Geçerli bir personel kimliği zorunludur." },
+        { status: 400 },
+      );
+    }
+
+    const { supabase, orgId } = await getCurrentOrgContext();
+
+    const { data: existingStaff, error: existingStaffError } = await supabase
+      .from("staff")
+      .select("id, is_active")
+      .eq("id", id)
+      .eq("org_id", orgId)
+      .single();
+
+    if (existingStaffError || !existingStaff) {
+      return NextResponse.json(
+        { success: false, error: "Personel bulunamadı." },
+        { status: 404 },
+      );
+    }
+
+    if (existingStaff.is_active) {
+      return NextResponse.json(
+        { success: false, error: "Aktif personel silinemez. Önce pasife alınmalıdır." },
+        { status: 400 },
+      );
+    }
+
+    const { data: existingAppointment, error: appointmentError } = await supabase
+      .from("appointments")
+      .select("id")
+      .eq("org_id", orgId)
+      .eq("staff_id", id)
+      .limit(1)
+      .maybeSingle();
+
+    if (appointmentError) {
+      return NextResponse.json(
+        { success: false, error: "Personel silinmeden önce randevu kontrolü yapılamadı." },
+        { status: 500 },
+      );
+    }
+
+    if (existingAppointment) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Bu personele ait randevu kayıtları olduğu için silinemez. Pasif olarak listeden kaldırılmalıdır.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const { error: deleteError } = await supabase
+      .from("staff")
+      .delete()
+      .eq("id", id)
+      .eq("org_id", orgId);
+
+    if (deleteError) {
+      return NextResponse.json(
+        { success: false, error: "Personel silinemedi." },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting staff:", error);
+    return NextResponse.json(
+      { success: false, error: "Personel silinemedi." },
+      { status: 500 },
+    );
+  }
+}

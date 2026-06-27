@@ -1,8 +1,12 @@
-import { measureServerTiming } from "@/lib/perf";
+﻿import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { getStaffPageData } from "../staff/queries";
 import { AppointmentsClient } from "./AppointmentsClient";
-import { getAppointmentsByDate, getClientsForAppointmentForm } from "./queries";
+import {
+  AppointmentListView,
+  getAppointmentsByDate,
+  getClientsForAppointmentForm,
+} from "./queries";
 
 function getTodayInIstanbul() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -21,6 +25,15 @@ function isValidUuid(value: string | undefined) {
   );
 }
 
+function isValidView(value: string | undefined): value is AppointmentListView {
+  return value === "day" || value === "all";
+}
+
+function parsePage(value: string | undefined) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
 export default async function AppointmentsPage({
   searchParams,
 }: {
@@ -28,54 +41,66 @@ export default async function AppointmentsPage({
     date?: string;
     appointmentTypeId?: string;
     staffId?: string;
+    view?: string;
+    page?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
-  const selectedDate = isValidDate(params.date)
-    ? params.date!
-    : getTodayInIstanbul();
-  const selectedAppointmentTypeId: string = isValidUuid(params.appointmentTypeId)
+  const selectedDate = isValidDate(params.date) ? params.date! : getTodayInIstanbul();
+  const selectedAppointmentTypeId = isValidUuid(params.appointmentTypeId)
     ? params.appointmentTypeId!
     : "";
-  const selectedStaffId: string = isValidUuid(params.staffId) ? params.staffId! : "";
+  const selectedStaffId = isValidUuid(params.staffId) ? params.staffId! : "";
+  const selectedView: AppointmentListView = isValidView(params.view) ? params.view : "day";
+  const currentPage = selectedView === "all" ? parsePage(params.page) : 1;
 
-  const { appointments, clients, allStaffMembers, allServices } = await measureServerTiming(
-    "admin-appointments-page",
-    "page.total",
-    async () => {
-      const context = await getCurrentOrgContext("admin-appointments-page");
-      const [
-        { data: appointments },
-        { data: clients },
-        { staff: allStaffMembers, services: allServices },
-      ] = await Promise.all([
-        getAppointmentsByDate(
-          selectedDate,
-          {
-            appointmentTypeId: selectedAppointmentTypeId || undefined,
-            staffId: selectedStaffId || undefined,
-          },
-          context,
-          "admin-appointments-page",
-        ),
-        getClientsForAppointmentForm(context, "admin-appointments-page"),
-        getStaffPageData(context, "admin-appointments-page"),
-      ]);
+  const { appointments, hasMore, clients, allStaffMembers, allServices } =
+    await measureServerTiming(
+      "admin-appointments-page",
+      "page.total",
+      async () => {
+        const context = await getCurrentOrgContext("admin-appointments-page");
+        const [
+          { data: appointments, hasMore },
+          { data: clients },
+          { staff: allStaffMembers, services: allServices },
+        ] = await Promise.all([
+          getAppointmentsByDate(
+            selectedDate,
+            {
+              appointmentTypeId: selectedAppointmentTypeId || undefined,
+              staffId: selectedStaffId || undefined,
+            },
+            context,
+            "admin-appointments-page",
+            {
+              view: selectedView,
+              page: currentPage,
+              pageSize: 10,
+            },
+          ),
+          getClientsForAppointmentForm(context, "admin-appointments-page"),
+          getStaffPageData(context, "admin-appointments-page"),
+        ]);
 
-      return {
-        appointments,
-        clients,
-        allStaffMembers,
-        allServices,
-      };
-    },
-    (result) => ({
-      appointmentCount: result.appointments.length,
-      clientCount: result.clients.length,
-      staffCount: result.allStaffMembers.length,
-      serviceCount: result.allServices.length,
-    }),
-  );
+        return {
+          appointments,
+          hasMore,
+          clients,
+          allStaffMembers,
+          allServices,
+        };
+      },
+      (result) => ({
+        appointmentCount: result.appointments.length,
+        hasMore: result.hasMore,
+        clientCount: result.clients.length,
+        staffCount: result.allStaffMembers.length,
+        serviceCount: result.allServices.length,
+        view: selectedView,
+        page: currentPage,
+      }),
+    );
 
   const formServices = allServices.filter((service) => service.is_active);
   const formStaffMembers = allStaffMembers
@@ -90,10 +115,13 @@ export default async function AppointmentsPage({
     <AppointmentsClient
       appointments={appointments}
       clients={clients}
+      currentPage={currentPage}
+      hasMore={hasMore}
+      selectedView={selectedView}
       services={formServices}
-      staffMembers={formStaffMembers}
       serviceFilters={allServices}
       staffFilters={allStaffMembers}
+      staffMembers={formStaffMembers}
       selectedDate={selectedDate}
       selectedAppointmentTypeId={selectedAppointmentTypeId}
       selectedStaffId={selectedStaffId}

@@ -2,31 +2,32 @@
 
 import { StaffListItem } from "../../../types";
 
-export function StaffTable({
+function StaffTableSection({
+  title,
   loadingId,
+  onDelete,
   onEdit,
   onToggleActive,
   staff,
 }: {
+  title: string;
   loadingId: string | null;
+  onDelete: (staffMember: StaffListItem) => void;
   onEdit: (staffMember: StaffListItem) => void;
   onToggleActive: (staffMember: StaffListItem) => void;
   staff: StaffListItem[];
 }) {
   if (staff.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-        Henüz personel bulunmuyor.
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="space-y-3">
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold">{title}</h2>
       {staff.map((staffMember) => (
         <div
           key={staffMember.id}
-          className="rounded-lg border p-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+          className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
         >
           <div className="space-y-2">
             <div>
@@ -39,17 +40,12 @@ export function StaffTable({
             <div className="flex flex-wrap gap-2">
               {staffMember.appointment_types.length > 0 ? (
                 staffMember.appointment_types.map((service) => (
-                  <span
-                    key={service.id}
-                    className="rounded-full bg-muted px-3 py-1 text-xs"
-                  >
+                  <span key={service.id} className="rounded-full bg-muted px-3 py-1 text-xs">
                     {service.name}
                   </span>
                 ))
               ) : (
-                <span className="text-sm text-muted-foreground">
-                  Hizmet atanmamış
-                </span>
+                <span className="text-sm text-muted-foreground">Hizmet atanmamış</span>
               )}
             </div>
           </div>
@@ -59,7 +55,7 @@ export function StaffTable({
               type="button"
               onClick={() => onEdit(staffMember)}
               disabled={loadingId === staffMember.id}
-              className="rounded-md border px-3 py-2 text-sm disabled:opacity-50 bg-slate-900"
+              className="rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               Düzenle
             </button>
@@ -67,7 +63,7 @@ export function StaffTable({
               type="button"
               onClick={() => onToggleActive(staffMember)}
               disabled={loadingId === staffMember.id}
-              className="rounded-md border px-3 py-2 text-sm disabled:opacity-50 bg-slate-900"
+              className="rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               {loadingId === staffMember.id
                 ? "Güncelleniyor..."
@@ -75,9 +71,66 @@ export function StaffTable({
                   ? "Pasife al"
                   : "Aktifleştir"}
             </button>
+            {!staffMember.is_active && (
+              <button
+                type="button"
+                onClick={() => onDelete(staffMember)}
+                disabled={loadingId === staffMember.id}
+                className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
+              >
+                {loadingId === staffMember.id ? "Siliniyor..." : "Sil"}
+              </button>
+            )}
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+export function StaffTable({
+  loadingId,
+  onDelete,
+  onEdit,
+  onToggleActive,
+  staff,
+}: {
+  loadingId: string | null;
+  onDelete: (staffMember: StaffListItem) => void;
+  onEdit: (staffMember: StaffListItem) => void;
+  onToggleActive: (staffMember: StaffListItem) => void;
+  staff: StaffListItem[];
+}) {
+  if (staff.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+        Henüz personel bulunmuyor.
+      </div>
+    );
+  }
+
+  const activeStaff = staff.filter((staffMember) => staffMember.is_active);
+  const inactiveStaff = staff.filter((staffMember) => !staffMember.is_active);
+
+  return (
+    <div className="space-y-6">
+      <StaffTableSection
+        title="Aktif Personeller"
+        loadingId={loadingId}
+        onDelete={onDelete}
+        onEdit={onEdit}
+        onToggleActive={onToggleActive}
+        staff={activeStaff}
+      />
+
+      <StaffTableSection
+        title="Pasif Personeller"
+        loadingId={loadingId}
+        onDelete={onDelete}
+        onEdit={onEdit}
+        onToggleActive={onToggleActive}
+        staff={inactiveStaff}
+      />
     </div>
   );
 }

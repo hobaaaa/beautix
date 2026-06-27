@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { logServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -63,6 +63,8 @@ type AppointmentFilters = {
   staffId?: string;
 };
 
+export type AppointmentListView = "day" | "all";
+
 function buildDayRange(date: string) {
   const dayStart = new Date(`${date}T00:00:00+03:00`);
   const nextDayStart = new Date(dayStart);
@@ -74,12 +76,19 @@ function buildDayRange(date: string) {
   };
 }
 
+function buildAllRange() {
+  const current = new Date();
+  const start = new Date(current);
+  start.setMonth(start.getMonth() - 3);
+  return start.toISOString();
+}
+
 function pickSingleRelation<T>(value: T | T[] | null): T | null {
   if (!value) return null;
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-function sortAppointments(appointments: AppointmentListItem[]) {
+function sortDailyAppointments(appointments: AppointmentListItem[]) {
   return [...appointments].sort((left, right) => {
     const leftWeight = left.status === "cancelled" ? 1 : 0;
     const rightWeight = right.status === "cancelled" ? 1 : 0;
@@ -92,14 +101,27 @@ function sortAppointments(appointments: AppointmentListItem[]) {
   });
 }
 
+function sortAllAppointments(appointments: AppointmentListItem[]) {
+  return [...appointments].sort(
+    (left, right) => new Date(right.start_at).getTime() - new Date(left.start_at).getTime(),
+  );
+}
+
 export async function getAppointmentsByDate(
   date: string,
   filters: AppointmentFilters = {},
   context?: OrgContext,
   logLabel = "admin-appointments-page",
-): Promise<{ data: AppointmentListItem[] }> {
+  options: {
+    view?: AppointmentListView;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<{ data: AppointmentListItem[]; hasMore: boolean }> {
   const { supabase, orgId } = context ?? (await getCurrentOrgContext(logLabel));
-  const { dayStart, nextDayStart } = buildDayRange(date);
+  const view = options.view ?? "day";
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? 10;
   const queryStart = Date.now();
 
   let query = supabase
@@ -135,10 +157,22 @@ export async function getAppointmentsByDate(
         )
       `,
     )
-    .eq("org_id", orgId)
-    .gte("start_at", dayStart)
-    .lt("start_at", nextDayStart)
-    .order("start_at", { ascending: true });
+    .eq("org_id", orgId);
+
+  if (view === "day") {
+    const { dayStart, nextDayStart } = buildDayRange(date);
+    query = query
+      .gte("start_at", dayStart)
+      .lt("start_at", nextDayStart)
+      .order("start_at", { ascending: true });
+  } else {
+    const allStart = buildAllRange();
+    const offset = (page - 1) * pageSize;
+    query = query
+      .gte("start_at", allStart)
+      .order("start_at", { ascending: false })
+      .range(offset, offset + pageSize);
+  }
 
   if (filters.appointmentTypeId) {
     query = query.eq("appointment_type_id", filters.appointmentTypeId);
@@ -156,6 +190,8 @@ export async function getAppointmentsByDate(
 
   logServerTiming(logLabel, "appointments.query", Date.now() - queryStart, {
     count: data?.length ?? 0,
+    view,
+    page,
     hasAppointmentTypeFilter: Boolean(filters.appointmentTypeId),
     hasStaffFilter: Boolean(filters.staffId),
   });
@@ -198,7 +234,15 @@ export async function getAppointmentsByDate(
     },
   );
 
-  return { data: sortAppointments(normalizedData) };
+  const appointments =
+    view === "day"
+      ? sortDailyAppointments(normalizedData)
+      : sortAllAppointments(normalizedData);
+
+  return {
+    data: view === "all" ? appointments.slice(0, pageSize) : appointments,
+    hasMore: view === "all" ? appointments.length > pageSize : false,
+  };
 }
 
 export async function getClientsForAppointmentForm(
