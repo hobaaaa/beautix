@@ -1,4 +1,13 @@
-﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
+import {
+  APPOINTMENT_RACE_CONDITION_MESSAGE,
+  buildDayRange,
+  DEFAULT_SLOT_INTERVAL_MINUTES,
+  isOverlapConstraintError,
+  isValidUuid,
+  parseBookingStart,
+  validateBookingWindowAndAvailability,
+} from "@/lib/appointments/booking-validation";
+import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type UpdateAppointmentBody = {
@@ -9,51 +18,6 @@ type UpdateAppointmentBody = {
   selected_slot_start?: string;
   notes?: string;
 };
-
-const ISTANBUL_OFFSET = "+03:00";
-const APPOINTMENT_OVERLAP_MESSAGE =
-  "Bu personelin bu saat aralığı dolu. Lütfen başka bir saat seçin.";
-
-function isValidUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
-}
-
-function getDayOfWeek(date: string) {
-  const value = new Date(`${date}T12:00:00${ISTANBUL_OFFSET}`);
-  const day = value.getUTCDay();
-  return day === 0 ? 7 : day;
-}
-
-function timeToMinutes(value: string) {
-  const [hours, minutes] = value.slice(0, 5).split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
-function formatDateInIstanbul(value: string) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Istanbul",
-  }).format(new Date(value));
-}
-
-function formatTimeInIstanbul(value: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "Europe/Istanbul",
-  }).format(new Date(value));
-}
-
-function isOverlapConstraintError(error: { code?: string; message?: string }) {
-  return (
-    error.code === "23P01" ||
-    error.message?.includes("appointments_no_overlap") ||
-    error.message?.includes("appointments_no_overlap_by_staff") ||
-    error.message?.toLowerCase().includes("exclusion constraint")
-  );
-}
 
 export async function PATCH(
   request: NextRequest,
@@ -142,32 +106,44 @@ export async function PATCH(
       );
     }
 
-    const startAt = new Date(selected_slot_start);
+    const parsedStart = parseBookingStart(
+      selected_slot_start,
+      "Geçmiş tarih veya saate randevu taşınamaz.",
+    );
 
-    if (Number.isNaN(startAt.getTime())) {
+    if (!parsedStart.ok) {
       return NextResponse.json(
-        { success: false, error: "Seçilen saat geçersiz." },
-        { status: 400 },
+        { success: false, error: parsedStart.error },
+        { status: parsedStart.status },
       );
     }
 
-    if (startAt.getTime() <= Date.now()) {
-      return NextResponse.json(
-        { success: false, error: "Geçmiş tarih veya saate randevu taşınamaz." },
-        { status: 400 },
-      );
-    }
+    const { appointmentDate, dayOfWeek, startAt } = parsedStart;
 
-    const appointmentDate = formatDateInIstanbul(startAt.toISOString());
-    const startTime = formatTimeInIstanbul(startAt.toISOString());
-    const dayOfWeek = getDayOfWeek(appointmentDate);
-
-    const { data: client, error: clientError } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("id", client_id)
-      .eq("org_id", orgId)
-      .single();
+    const [
+      { data: client, error: clientError },
+      { data: appointmentType, error: appointmentTypeError },
+      { data: staff, error: staffError },
+    ] = await Promise.all([
+      supabase
+        .from("clients")
+        .select("id")
+        .eq("id", client_id)
+        .eq("org_id", orgId)
+        .single(),
+      supabase
+        .from("appointment_types")
+        .select("id, duration_minutes, is_active")
+        .eq("id", appointment_type_id)
+        .eq("org_id", orgId)
+        .single(),
+      supabase
+        .from("staff")
+        .select("id, is_active")
+        .eq("id", staff_id)
+        .eq("org_id", orgId)
+        .single(),
+    ]);
 
     if (clientError || !client) {
       return NextResponse.json(
@@ -175,13 +151,6 @@ export async function PATCH(
         { status: 400 },
       );
     }
-
-    const { data: appointmentType, error: appointmentTypeError } = await supabase
-      .from("appointment_types")
-      .select("id, duration_minutes, is_active")
-      .eq("id", appointment_type_id)
-      .eq("org_id", orgId)
-      .single();
 
     if (appointmentTypeError || !appointmentType) {
       return NextResponse.json(
@@ -197,12 +166,12 @@ export async function PATCH(
       );
     }
 
-    const { data: staff, error: staffError } = await supabase
-      .from("staff")
-      .select("id, is_active")
-      .eq("id", staff_id)
-      .eq("org_id", orgId)
-      .single();
+    if (!Number.isInteger(appointmentType.duration_minutes) || appointmentType.duration_minutes <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Seçilen hizmetin süresi geçersiz." },
+        { status: 400 },
+      );
+    }
 
     if (staffError || !staff) {
       return NextResponse.json(
@@ -218,12 +187,34 @@ export async function PATCH(
       );
     }
 
-    const { data: staffServiceMapping, error: mappingError } = await supabase
-      .from("staff_appointment_types")
-      .select("id")
-      .eq("staff_id", staff_id)
-      .eq("appointment_type_id", appointment_type_id)
-      .maybeSingle();
+    const { dayStart, nextDayStart } = buildDayRange(appointmentDate);
+
+    const [
+      { data: staffServiceMapping, error: mappingError },
+      { data: workingHour, error: workingHourError },
+      { data: appointments, error: appointmentsError },
+    ] = await Promise.all([
+      supabase
+        .from("staff_appointment_types")
+        .select("id")
+        .eq("staff_id", staff_id)
+        .eq("appointment_type_id", appointment_type_id)
+        .maybeSingle(),
+      supabase
+        .from("working_hours")
+        .select("start_time, end_time")
+        .eq("org_id", orgId)
+        .eq("day_of_week", dayOfWeek)
+        .maybeSingle(),
+      supabase
+        .from("appointments")
+        .select("start_at, end_at, status")
+        .eq("org_id", orgId)
+        .eq("staff_id", staff_id)
+        .neq("id", id)
+        .gte("start_at", dayStart)
+        .lt("start_at", nextDayStart),
+    ]);
 
     if (mappingError || !staffServiceMapping) {
       return NextResponse.json(
@@ -232,13 +223,6 @@ export async function PATCH(
       );
     }
 
-    const { data: workingHour, error: workingHourError } = await supabase
-      .from("working_hours")
-      .select("day_of_week, start_time, end_time")
-      .eq("org_id", orgId)
-      .eq("day_of_week", dayOfWeek)
-      .maybeSingle();
-
     if (workingHourError) {
       return NextResponse.json(
         { success: false, error: "Çalışma saatleri kontrol edilemedi." },
@@ -246,56 +230,26 @@ export async function PATCH(
       );
     }
 
-    if (!workingHour) {
+    if (appointmentsError) {
       return NextResponse.json(
-        { success: false, error: "Kapalı günde randevu güncellenemez." },
-        { status: 400 },
-      );
-    }
-
-    const startMinutes = timeToMinutes(startTime);
-    const endMinutes = startMinutes + appointmentType.duration_minutes;
-    const workingStartMinutes = timeToMinutes(workingHour.start_time);
-    const workingEndMinutes = timeToMinutes(workingHour.end_time);
-
-    if (startMinutes < workingStartMinutes || startMinutes >= workingEndMinutes) {
-      return NextResponse.json(
-        { success: false, error: "Seçilen saat çalışma saatleri dışında kalıyor." },
-        { status: 400 },
-      );
-    }
-
-    if (endMinutes > workingEndMinutes) {
-      return NextResponse.json(
-        { success: false, error: "Randevu mesai bitiş saatini aşıyor." },
-        { status: 400 },
-      );
-    }
-
-    const endAt = new Date(startAt.getTime() + appointmentType.duration_minutes * 60000);
-
-    const { data: conflictingAppointment, error: conflictingAppointmentError } = await supabase
-      .from("appointments")
-      .select("id")
-      .eq("org_id", orgId)
-      .eq("staff_id", staff_id)
-      .neq("id", id)
-      .neq("status", "cancelled")
-      .lt("start_at", endAt.toISOString())
-      .gt("end_at", startAt.toISOString())
-      .maybeSingle();
-
-    if (conflictingAppointmentError) {
-      return NextResponse.json(
-        { success: false, error: "Randevu çakışması kontrol edilemedi." },
+        { success: false, error: "Müsaitlik kontrol edilemedi." },
         { status: 500 },
       );
     }
 
-    if (conflictingAppointment) {
+    const slotValidation = validateBookingWindowAndAvailability({
+      appointments: appointments ?? [],
+      date: appointmentDate,
+      selectedSlotStart: startAt.toISOString(),
+      serviceDurationMinutes: appointmentType.duration_minutes,
+      slotIntervalMinutes: DEFAULT_SLOT_INTERVAL_MINUTES,
+      workingHours: workingHour,
+    });
+
+    if (!slotValidation.ok) {
       return NextResponse.json(
-        { success: false, error: APPOINTMENT_OVERLAP_MESSAGE },
-        { status: 409 },
+        { success: false, error: slotValidation.error },
+        { status: slotValidation.status },
       );
     }
 
@@ -306,7 +260,7 @@ export async function PATCH(
         appointment_type_id,
         staff_id,
         start_at: startAt.toISOString(),
-        end_at: endAt.toISOString(),
+        end_at: slotValidation.endAt.toISOString(),
         notes: notes?.trim() ? notes.trim() : null,
       })
       .eq("id", id)
@@ -317,7 +271,7 @@ export async function PATCH(
     if (error) {
       if (isOverlapConstraintError(error)) {
         return NextResponse.json(
-          { success: false, error: APPOINTMENT_OVERLAP_MESSAGE },
+          { success: false, error: APPOINTMENT_RACE_CONDITION_MESSAGE },
           { status: 409 },
         );
       }

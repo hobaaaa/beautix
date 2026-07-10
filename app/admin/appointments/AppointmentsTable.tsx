@@ -18,6 +18,20 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
   no_show: "Gelmedi",
 };
 
+function getEffectiveStatus(appointment: AppointmentListItem): AppointmentStatus {
+  if (appointment.status === "cancelled" || appointment.status === "no_show") {
+    return appointment.status;
+  }
+
+  if (appointment.status === "completed") {
+    return "completed";
+  }
+
+  return new Date(appointment.end_at).getTime() <= Date.now()
+    ? "completed"
+    : "confirmed";
+}
+
 function formatTimeRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
   const end = new Date(endAt);
@@ -70,11 +84,16 @@ export function AppointmentsTable({
 
   return (
     <div className="space-y-3">
-      {appointments.map((appointment) => (
-        <div
-          key={appointment.id}
-          className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
-        >
+      {appointments.map((appointment) => {
+        const effectiveStatus = getEffectiveStatus(appointment);
+        const isEditable =
+          effectiveStatus === "confirmed" || effectiveStatus === "pending";
+
+        return (
+          <div
+            key={appointment.id}
+            className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
+          >
           <div className="min-w-36">
             <div className="text-sm text-muted-foreground">Saat</div>
             <div className="font-medium">
@@ -115,9 +134,9 @@ export function AppointmentsTable({
             <div>
               <div className="text-sm text-muted-foreground">Durum</div>
               <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[appointment.status]}`}
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[effectiveStatus]}`}
               >
-                {STATUS_LABELS[appointment.status]}
+                {STATUS_LABELS[effectiveStatus]}
               </span>
             </div>
 
@@ -128,7 +147,7 @@ export function AppointmentsTable({
           </div>
 
           <div className="flex min-w-36 flex-wrap justify-end gap-2">
-            {appointment.status !== "cancelled" && (
+            {isEditable && (
               <>
                 <button
                   type="button"
@@ -148,8 +167,9 @@ export function AppointmentsTable({
               </>
             )}
           </div>
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }

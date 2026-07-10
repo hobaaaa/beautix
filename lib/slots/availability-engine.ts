@@ -1,10 +1,12 @@
 import {
   generateTimeSlots,
   ISTANBUL_TIME_ZONE,
+} from "./slot-engine.ts";
+import type {
   SlotInterval,
   TimeSlot,
   WorkingHoursInput,
-} from "./slot-engine";
+} from "./slot-engine.ts";
 
 export type AvailabilityAppointment = {
   start_at: string;

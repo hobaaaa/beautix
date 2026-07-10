@@ -5,6 +5,7 @@ import {
 } from "@/lib/supabase/org";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LogoutButton } from "./LogoutButton";
 
 export default async function AdminLayout({
   children,
@@ -42,6 +43,9 @@ export default async function AdminLayout({
             <div className="hidden text-sm text-muted-foreground sm:block">
               {userEmail}
             </div>
+            <div className="md:hidden">
+              <LogoutButton compact />
+            </div>
             <div className="h-8 w-8 rounded-full bg-muted" />
           </div>
         </div>
@@ -76,8 +80,9 @@ export default async function AdminLayout({
             >
               Çalışma Saatleri
             </Link>
-            <div className="mt-auto pt-4 text-xs text-muted-foreground">
-              v0.1 (MVP)
+            <div className="mt-auto space-y-3 pt-4">
+              <LogoutButton />
+              <div className="text-xs text-muted-foreground">v0.1 (MVP)</div>
             </div>
           </nav>
         </aside>

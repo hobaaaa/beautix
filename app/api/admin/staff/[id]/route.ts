@@ -257,15 +257,39 @@ export async function DELETE(
       );
     }
 
-    const { error: deleteError } = await supabase
+    const { error: deleteMappingsError } = await supabase
+      .from("staff_appointment_types")
+      .delete()
+      .eq("staff_id", id);
+
+    if (deleteMappingsError) {
+      return NextResponse.json(
+        { success: false, error: "Personel silinemedi." },
+        { status: 500 },
+      );
+    }
+
+    const { data: deletedStaff, error: deleteError } = await supabase
       .from("staff")
       .delete()
       .eq("id", id)
-      .eq("org_id", orgId);
+      .eq("org_id", orgId)
+      .select("id")
+      .maybeSingle();
 
     if (deleteError) {
       return NextResponse.json(
         { success: false, error: "Personel silinemedi." },
+        { status: 500 },
+      );
+    }
+
+    if (!deletedStaff) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Personel silinemedi. Veritabanı yetkileri kontrol edilmelidir.",
+        },
         { status: 500 },
       );
     }
