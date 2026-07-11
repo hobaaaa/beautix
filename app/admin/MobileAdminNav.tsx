@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 
 const navigationItems = [
@@ -58,29 +59,31 @@ export function MobileAdminNav() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50">
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+        <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80"
             onClick={() => setIsOpen(false)}
             aria-label="Yönetim menüsünü kapat"
           />
 
           <aside
             id="mobile-admin-navigation"
-            className="relative flex h-full w-[min(82vw,320px)] flex-col border-r border-border bg-background p-4 shadow-2xl"
+            className="relative flex h-full w-[min(82vw,320px)] flex-col border-r border-white/10 bg-[#171717] p-4 text-zinc-100 shadow-2xl"
             aria-label="Yönetim menüsü"
           >
-            <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+            <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <div className="font-semibold">Beautix Yönetim</div>
-                <div className="text-xs text-muted-foreground">Menü</div>
+                <div className="text-xs text-zinc-400">Menü</div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
                 aria-label="Menüyü kapat"
               >
                 <X className="h-5 w-5" />
@@ -99,8 +102,8 @@ export function MobileAdminNav() {
                     onClick={() => setIsOpen(false)}
                     className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                       active
-                        ? "bg-muted font-medium text-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-white/10 font-medium text-white"
+                        : "text-zinc-400 hover:bg-white/10 hover:text-white"
                     }`}
                     aria-current={active ? "page" : undefined}
                   >
@@ -111,11 +114,12 @@ export function MobileAdminNav() {
               })}
             </nav>
 
-            <div className="mt-auto border-t border-border pt-4 text-xs text-muted-foreground">
+            <div className="mt-auto border-t border-white/10 pt-4 text-xs text-zinc-500">
               v0.1 (MVP)
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
