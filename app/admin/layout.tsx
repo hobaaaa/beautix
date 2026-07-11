@@ -6,8 +6,8 @@ import {
 import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { LogoutButton } from "./LogoutButton";
 import { MobileAdminNav } from "./MobileAdminNav";
+import { UserMenu } from "./UserMenu";
 
 export default async function AdminLayout({
   children,
@@ -15,10 +15,12 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   let userEmail = "";
+  let userId = "";
 
   try {
     const { user } = await getCurrentOrgContext("admin-layout");
     userEmail = user.email ?? "";
+    userId = user.id;
   } catch (error) {
     if (error instanceof AuthRequiredError) {
       redirect("/login");
@@ -47,12 +49,9 @@ export default async function AdminLayout({
               {userEmail}
             </div>
             <div className="md:hidden">
-              <div className="flex items-center gap-2">
-                <InstallAppButton compact />
-                <LogoutButton compact />
-              </div>
+              <InstallAppButton compact />
             </div>
-            <div className="h-8 w-8 rounded-full bg-muted" />
+            <UserMenu userId={userId} />
           </div>
         </div>
       </header>
@@ -88,7 +87,6 @@ export default async function AdminLayout({
             </Link>
             <div className="mt-auto space-y-3 pt-4">
               <InstallAppButton />
-              <LogoutButton />
               <div className="text-xs text-muted-foreground">v0.1 (MVP)</div>
             </div>
           </nav>
