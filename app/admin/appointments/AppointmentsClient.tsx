@@ -153,8 +153,8 @@ export function AppointmentsClient({
           Randevu Ekle
         </button>
       </div>
-      <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
-        <div className="flex gap-2">
+      <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex">
           <button
             type="button"
             onClick={() =>
@@ -164,7 +164,7 @@ export function AppointmentsClient({
                 }).format(new Date()),
               )
             }
-            className={`rounded-md border px-3 py-2 text-sm ${
+            className={`min-w-0 rounded-md border px-3 py-2 text-sm ${
               selectedView === "day" ? "bg-slate-900" : "bg-background"
             }`}
           >
@@ -173,7 +173,7 @@ export function AppointmentsClient({
           <button
             type="button"
             onClick={() => showDaily(tomorrow)}
-            className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+            className="min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
             Yarın
           </button>
@@ -181,14 +181,14 @@ export function AppointmentsClient({
             type="date"
             value={selectedDate}
             onChange={(event) => showDaily(event.target.value)}
-            className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+            className="col-span-2 min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm sm:col-auto"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
             onClick={showAllAppointments}
-            className="rounded-md border px-3 py-2 text-sm bg-slate-900"
+            className="w-full min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
             Tüm Randevular
           </button>
@@ -201,7 +201,7 @@ export function AppointmentsClient({
                 page: selectedView === "all" ? "1" : undefined,
               })
             }
-            className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+            className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
             <option value="">Tüm hizmetler</option>
             {serviceFilters.map((service) => (
@@ -219,7 +219,7 @@ export function AppointmentsClient({
                 page: selectedView === "all" ? "1" : undefined,
               })
             }
-            className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+            className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
             <option value="">Tüm personeller</option>
             {staffFilters.map((staffMember) => (
