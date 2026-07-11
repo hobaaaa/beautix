@@ -3,6 +3,7 @@ import {
   OrgMembershipRequiredError,
   getCurrentOrgContext,
 } from "@/lib/supabase/org";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "./LogoutButton";
@@ -44,7 +45,10 @@ export default async function AdminLayout({
               {userEmail}
             </div>
             <div className="md:hidden">
-              <LogoutButton compact />
+              <div className="flex items-center gap-2">
+                <InstallAppButton compact />
+                <LogoutButton compact />
+              </div>
             </div>
             <div className="h-8 w-8 rounded-full bg-muted" />
           </div>
@@ -81,6 +85,7 @@ export default async function AdminLayout({
               Çalışma Saatleri
             </Link>
             <div className="mt-auto space-y-3 pt-4">
+              <InstallAppButton />
               <LogoutButton />
               <div className="text-xs text-muted-foreground">v0.1 (MVP)</div>
             </div>
