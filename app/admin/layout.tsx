@@ -7,6 +7,7 @@ import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "./LogoutButton";
+import { MobileAdminNav } from "./MobileAdminNav";
 
 export default async function AdminLayout({
   children,
@@ -35,6 +36,7 @@ export default async function AdminLayout({
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
+            <MobileAdminNav />
             <div className="font-semibold">Beautix Yönetim</div>
             <div className="hidden text-sm text-muted-foreground md:block">
               Panel
