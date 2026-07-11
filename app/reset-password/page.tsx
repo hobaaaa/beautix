@@ -5,6 +5,41 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+function mapPasswordUpdateError(error: unknown) {
+  const message =
+    error instanceof Error ? error.message.toLowerCase() : String(error ?? "").toLowerCase();
+
+  if (message.includes("weak_password") || message.includes("weak password")) {
+    return "Şifre güvenlik kurallarını karşılamıyor. Daha güçlü bir şifre belirleyin.";
+  }
+
+  if (
+    message.includes("same_password") ||
+    message.includes("different from the old password")
+  ) {
+    return "Yeni şifre eski şifrenizden farklı olmalıdır.";
+  }
+
+  if (
+    message.includes("session") ||
+    message.includes("jwt") ||
+    message.includes("not authenticated")
+  ) {
+    return "Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.";
+  }
+
+  return "Şifre güncellenirken bir hata oluştu.";
+}
+
+function cleanResetUrl(params: URLSearchParams) {
+  const nextQuery = params.toString();
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}`,
+  );
+}
+
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -14,14 +49,74 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sessionReady, setSessionReady] = useState<boolean | null>(null);
+  const [returnPath, setReturnPath] = useState("/login");
 
   useEffect(() => {
     let active = true;
+    const params = new URLSearchParams(window.location.search);
+    const nextPath = params.get("next");
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (!active) return;
-      setSessionReady(Boolean(data.user));
-    });
+    if (nextPath?.startsWith("/")) {
+      setReturnPath(nextPath);
+    }
+
+    if (params.get("error")) {
+      setError("Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.");
+      setSessionReady(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    async function preparePasswordResetSession() {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+      const code = params.get("code");
+
+      try {
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (sessionError) {
+            throw sessionError;
+          }
+
+          if (!active) return;
+          cleanResetUrl(params);
+          setSessionReady(true);
+          return;
+        }
+
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            throw exchangeError;
+          }
+
+          params.delete("code");
+
+          if (!active) return;
+          cleanResetUrl(params);
+          setSessionReady(true);
+          return;
+        }
+
+        if (!active) return;
+        setSessionReady(false);
+      } catch (sessionError) {
+        console.error("Password reset session failed:", sessionError);
+        if (!active) return;
+        setError("Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.");
+        setSessionReady(false);
+      }
+    }
+
+    void preparePasswordResetSession();
 
     return () => {
       active = false;
@@ -67,14 +162,18 @@ export default function ResetPasswordPage() {
         throw updateError;
       }
 
+      await supabase.auth.signOut();
       setSuccess("Şifreniz başarıyla güncellendi. Giriş ekranına yönlendiriliyorsunuz.");
 
       setTimeout(() => {
-        router.replace("/login");
+        const params = new URLSearchParams(window.location.search);
+        const nextPath = params.get("next") ?? "/login";
+        router.replace(nextPath.startsWith("/") ? nextPath : "/login");
         router.refresh();
       }, 1500);
-    } catch {
-      setError("Şifre güncellenirken bir hata oluştu.");
+    } catch (updateError) {
+      console.error("Password update failed:", updateError);
+      setError(mapPasswordUpdateError(updateError));
       setLoading(false);
     }
   }
@@ -146,7 +245,7 @@ export default function ResetPasswordPage() {
           </button>
 
           <div className="text-center text-sm">
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href={returnPath} className="text-blue-600 hover:underline">
               Giriş ekranına dön
             </Link>
           </div>

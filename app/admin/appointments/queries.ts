@@ -256,8 +256,11 @@ export async function getClientsForAppointmentForm(
 
   const { data, error } = await supabase
     .from("clients")
-    .select("id, org_id, user_id, name, phone, email, notes, created_at")
+    .select(
+      "id, org_id, user_id, name, first_name, last_name, phone, email, address, notes, birth_date, is_active, created_at",
+    )
     .eq("org_id", orgId)
+    .eq("is_active", true)
     .order("name", { ascending: true });
 
   if (error) {

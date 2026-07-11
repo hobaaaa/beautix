@@ -12,9 +12,14 @@ export type Client = {
   org_id: string;
   user_id: string | null;
   name: string;
+  first_name: string;
+  last_name: string;
   phone: string | null;
   email: string | null;
+  address: string | null;
   notes: string | null;
+  birth_date: string | null;
+  is_active: boolean;
   created_at: string;
 };
 

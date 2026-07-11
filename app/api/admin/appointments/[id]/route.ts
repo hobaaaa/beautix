@@ -127,7 +127,7 @@ export async function PATCH(
     ] = await Promise.all([
       supabase
         .from("clients")
-        .select("id")
+        .select("id, is_active")
         .eq("id", client_id)
         .eq("org_id", orgId)
         .single(),
@@ -148,6 +148,13 @@ export async function PATCH(
     if (clientError || !client) {
       return NextResponse.json(
         { success: false, error: "Seçilen müşteri bulunamadı." },
+        { status: 400 },
+      );
+    }
+
+    if (!client.is_active) {
+      return NextResponse.json(
+        { success: false, error: "Pasif müşteri için randevu güncellenemez." },
         { status: 400 },
       );
     }

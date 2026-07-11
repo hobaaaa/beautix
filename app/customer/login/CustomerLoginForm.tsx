@@ -1,6 +1,7 @@
 "use client";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,16 +28,16 @@ function mapAuthErrorMessage(message?: string) {
   return "Giriş yapılırken bir hata oluştu.";
 }
 
-export function LoginForm() {
+export function CustomerLoginForm() {
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function onLogin() {
-    const trimmedEmail = email.trim();
+  async function handleLogin() {
+    const trimmedEmail = email.trim().toLowerCase();
 
     if (!trimmedEmail) {
       setError("E-posta adresinizi girin.");
@@ -53,8 +54,8 @@ export function LoginForm() {
       return;
     }
 
-    setError(null);
     setLoading(true);
+    setError(null);
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
@@ -66,7 +67,7 @@ export function LoginForm() {
         throw authError;
       }
 
-      router.replace("/admin");
+      router.replace("/customer");
       router.refresh();
     } catch (loginError) {
       setError(
@@ -79,66 +80,85 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-card-foreground shadow-sm">
+    <div className="w-full max-w-md rounded-3xl border border-white/10 bg-card p-6 text-card-foreground shadow-2xl sm:p-8">
       <Link
         href="/"
         className="mb-5 inline-flex text-sm text-muted-foreground transition hover:text-foreground"
       >
         Geri
       </Link>
+      <div className="mb-7 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/15 text-blue-400">
+        <Mail className="h-6 w-6" />
+      </div>
+
       <div className="space-y-2">
-        <div className="text-sm font-medium text-muted-foreground">Artexo</div>
-        <h1 className="text-2xl font-semibold tracking-tight">Giriş Yap</h1>
-        <p className="text-sm text-muted-foreground">
-          Yönetim paneline erişmek için hesabınızla giriş yapın.
+        <div className="text-sm font-medium text-blue-400">Artexo</div>
+        <h1 className="text-2xl font-semibold tracking-tight">Müşteri Girişi</h1>
+        <p className="text-sm leading-6 text-muted-foreground">
+          İşletmede kayıtlı müşteri hesabınızla giriş yapın.
         </p>
       </div>
 
       <div className="mt-6 space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">E-posta</label>
+          <label htmlFor="customer-email" className="text-sm font-medium">
+            E-posta
+          </label>
           <input
+            id="customer-email"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !loading) void handleLogin();
+            }}
             autoComplete="email"
             disabled={loading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
-            placeholder="ornek@artexo.com"
+            placeholder="ornek@email.com"
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition focus:border-blue-500 disabled:opacity-50"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Şifre</label>
+          <label htmlFor="customer-password" className="text-sm font-medium">
+            Şifre
+          </label>
           <input
+            id="customer-password"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !loading) void handleLogin();
+            }}
             autoComplete="current-password"
             disabled={loading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
             placeholder="Şifreniz"
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition focus:border-blue-500 disabled:opacity-50"
           />
         </div>
 
         {error && (
-          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-300">
             {error}
           </div>
         )}
 
         <button
           type="button"
-          onClick={onLogin}
+          onClick={() => void handleLogin()}
           disabled={loading}
-          className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
         </button>
 
         <div className="text-center text-sm">
-          <Link href="/forgot-password" className="text-blue-600 hover:underline">
-            Şifremi unuttum
+          <Link
+            href="/forgot-password?next=/customer/login"
+            className="text-blue-400 hover:text-blue-300"
+          >
+            Şifremi Unuttum
           </Link>
         </div>
       </div>

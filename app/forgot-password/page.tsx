@@ -8,6 +8,9 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+const RESET_REQUEST_MESSAGE =
+  "Eğer bu e-posta sistemde kayıtlıysa birkaç dakika içinde şifre sıfırlama bağlantısı gelir. Gelmezse spam klasörünü kontrol edin veya işletmeden hesap daveti isteyin.";
+
 export default function ForgotPasswordPage() {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [email, setEmail] = useState("");
@@ -33,7 +36,9 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`;
+      const params = new URLSearchParams(window.location.search);
+      const nextPath = params.get("next") ?? "/login";
+      const redirectTo = `${window.location.origin}/reset-password?next=${encodeURIComponent(nextPath)}`;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         trimmedEmail,
         {
@@ -45,13 +50,10 @@ export default function ForgotPasswordPage() {
         throw resetError;
       }
 
-      setSuccess(
-        "Bu e-posta sistemde kayıtlıysa şifre sıfırlama bağlantısı gönderildi.",
-      );
-    } catch {
-      setSuccess(
-        "Bu e-posta sistemde kayıtlıysa şifre sıfırlama bağlantısı gönderildi.",
-      );
+      setSuccess(RESET_REQUEST_MESSAGE);
+    } catch (resetError) {
+      console.error("Password reset request failed:", resetError);
+      setSuccess(RESET_REQUEST_MESSAGE);
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ export default function ForgotPasswordPage() {
               autoComplete="email"
               disabled={loading}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
-              placeholder="ornek@beautix.com"
+              placeholder="ornek@artexo.com"
             />
           </div>
 

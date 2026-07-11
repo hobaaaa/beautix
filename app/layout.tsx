@@ -3,16 +3,16 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  applicationName: "Beautix",
+  applicationName: "Artexo",
   title: {
-    default: "Beautix",
-    template: "%s | Beautix",
+    default: "Artexo",
+    template: "%s | Artexo",
   },
   description: "Randevu ve işletme yönetim sistemi",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "Beautix",
+    title: "Artexo",
     statusBarStyle: "black-translucent",
   },
   icons: {

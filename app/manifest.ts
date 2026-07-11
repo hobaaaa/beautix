@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Beautix",
-    short_name: "Beautix",
+    name: "Artexo",
+    short_name: "Artexo",
     description: "Randevu ve işletme yönetim sistemi",
-    start_url: "/admin",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#171717",

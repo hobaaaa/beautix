@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Clock3,
+  ContactRound,
   LayoutDashboard,
   Menu,
   Users,
@@ -18,6 +19,7 @@ const navigationItems = [
   { href: "/admin", label: "Gösterge Paneli", icon: LayoutDashboard },
   { href: "/admin/services", label: "Hizmetler", icon: BriefcaseBusiness },
   { href: "/admin/staff", label: "Personeller", icon: Users },
+  { href: "/admin/clients", label: "Müşteriler", icon: ContactRound },
   { href: "/admin/appointments", label: "Randevular", icon: CalendarDays },
   { href: "/admin/hours", label: "Çalışma Saatleri", icon: Clock3 },
 ] as const;
@@ -77,7 +79,7 @@ export function MobileAdminNav() {
           >
             <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
               <div>
-                <div className="font-semibold">Beautix Yönetim</div>
+                <div className="font-semibold">Artexo Yönetim</div>
                 <div className="text-xs text-zinc-400">Menü</div>
               </div>
               <button

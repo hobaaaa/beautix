@@ -39,7 +39,7 @@ export default async function AdminLayout({
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <MobileAdminNav />
-            <div className="font-semibold">Beautix Yönetim</div>
+            <div className="font-semibold">Artexo Yönetim</div>
             <div className="hidden text-sm text-muted-foreground md:block">
               Panel
             </div>
@@ -72,6 +72,12 @@ export default async function AdminLayout({
               className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
             >
               Personeller
+            </Link>
+            <Link
+              href="/admin/clients"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+            >
+              Müşteriler
             </Link>
             <Link
               href="/admin/appointments"
