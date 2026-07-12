@@ -1,4 +1,5 @@
 import { CalendarDays } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CustomerLogoutButton } from "./CustomerLogoutButton";
 import { CustomerOrganizationSelector } from "./CustomerOrganizationSelector";
@@ -43,7 +44,8 @@ export default async function CustomerHomePage() {
               Bu hesap herhangi bir işletmeye bağlı değil.
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Devam etmek için işletme tarafından müşteri kaydınızın oluşturulması gerekir.
+              Devam etmek için işletme tarafından müşteri kaydınızın oluşturulması
+              gerekir.
             </p>
           </section>
         ) : selectedOrganization ? (
@@ -58,9 +60,17 @@ export default async function CustomerHomePage() {
               Hoş geldiniz, {selectedOrganization.client_name}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Müşteri hesabınıza güvenli şekilde giriş yaptınız. Randevu işlemleri sonraki
-              kartta eklenecek.
+              Hizmetleri inceleyebilir ve sonraki adımda randevu akışına devam
+              edebilirsiniz.
             </p>
+            <div className="mt-6">
+              <Link
+                href="/customer/services"
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 sm:w-auto"
+              >
+                Hizmetleri Gör
+              </Link>
+            </div>
           </section>
         ) : (
           <CustomerOrganizationSelector organizations={organizations} />

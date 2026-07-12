@@ -8,25 +8,60 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+type IosInstallGuide = "ios-safari" | "ios-chrome" | null;
+
 function isStandalone() {
+  const navigatorWithStandalone = navigator as Navigator & {
+    standalone?: boolean;
+  };
+
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
-    ("standalone" in navigator && navigator.standalone === true)
+    navigatorWithStandalone.standalone === true
   );
 }
 
-function isIosSafari() {
+function isIosDevice() {
   const userAgent = window.navigator.userAgent;
-  const isIos = /iPad|iPhone|iPod/.test(userAgent);
+  const platform = window.navigator.platform;
+
+  return (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
+  );
+}
+
+function getIosInstallGuide(): IosInstallGuide {
+  if (!isIosDevice()) {
+    return null;
+  }
+
+  const userAgent = window.navigator.userAgent;
+
+  if (/CriOS/.test(userAgent)) {
+    return "ios-chrome";
+  }
+
   const isSafari = /Safari/.test(userAgent) && !/CriOS|FxiOS|EdgiOS/.test(userAgent);
 
-  return isIos && isSafari;
+  return isSafari ? "ios-safari" : null;
+}
+
+function getInstallHelpText(iosGuide: IosInstallGuide) {
+  if (iosGuide === "ios-chrome") {
+    return [
+      "Artexo’yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
+      "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari’de açarak aynı işlemi yapabilirsiniz.",
+    ];
+  }
+
+  return ["Paylaş menüsünden “Ana Ekrana Ekle” seçeneğini kullanın."];
 }
 
 export function InstallAppButton({ compact = false }: { compact?: boolean }) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showIosHelp, setShowIosHelp] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [iosGuide, setIosGuide] = useState<IosInstallGuide>(null);
   const [installed, setInstalled] = useState(true);
 
   useEffect(() => {
@@ -37,18 +72,24 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
 
       const standalone = isStandalone();
       setInstalled(standalone);
-      setIsIos(!standalone && isIosSafari());
+      setIosGuide(standalone ? null : getIosInstallGuide());
     });
 
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
+
+      if (isStandalone()) {
+        return;
+      }
+
       setInstallPrompt(event as BeforeInstallPromptEvent);
       setInstalled(false);
     };
 
     const handleInstalled = () => {
       setInstallPrompt(null);
-      setShowIosHelp(false);
+      setShowHelp(false);
+      setIosGuide(null);
       setInstalled(true);
     };
 
@@ -62,7 +103,7 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
     };
   }, []);
 
-  if (installed || (!installPrompt && !isIos)) {
+  if (installed || (!installPrompt && !iosGuide)) {
     return null;
   }
 
@@ -75,8 +116,11 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
       return;
     }
 
-    setShowIosHelp((current) => !current);
+    setShowHelp((current) => !current);
   }
+
+  const isManualInstall = Boolean(iosGuide);
+  const helpText = getInstallHelpText(iosGuide);
 
   return (
     <div className={compact ? "relative" : "space-y-2"}>
@@ -88,22 +132,24 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
             ? "rounded-md border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             : "flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
         }
-        aria-label={isIos ? "Kurulum yardımını göster" : "Uygulamayı yükle"}
+        aria-label={isManualInstall ? "Kurulum yardımını göster" : "Uygulamayı yükle"}
       >
-        {isIos ? <Share className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-        {!compact && (isIos ? "Kurulum Yardımı" : "Uygulamayı Yükle")}
+        {isManualInstall ? <Share className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+        {!compact && (isManualInstall ? "Kurulum Yardımı" : "Uygulamayı Yükle")}
       </button>
 
-      {showIosHelp && (
+      {showHelp && isManualInstall && (
         <div
           role="status"
           className={
             compact
-              ? "absolute right-0 top-11 z-20 w-64 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-lg"
-              : "rounded-lg bg-muted p-3 text-xs text-muted-foreground"
+              ? "absolute right-0 top-11 z-20 w-72 space-y-2 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-lg"
+              : "space-y-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground"
           }
         >
-          Safari paylaş menüsünden “Ana Ekrana Ekle” seçeneğini kullanın.
+          {helpText.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
         </div>
       )}
     </div>
