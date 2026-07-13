@@ -2,6 +2,7 @@ import {
   SupabaseAdminConfigError,
   createSupabaseAdminClient,
 } from "@/lib/supabase/admin";
+import { maskEmail } from "@/lib/notifications/email-masking";
 import {
   renderAppointmentReminderEmail,
   renderBookingConfirmationEmail,
@@ -54,6 +55,18 @@ type NotificationData = {
   staff: StaffRow;
 };
 
+type ProcessResult =
+  | {
+      status: "sent";
+      recipient: string | null;
+      providerMessageId: string | null;
+    }
+  | {
+      status: "skipped";
+      recipient: string | null;
+      errorMessage: string;
+    };
+
 function jsonError(error: string, status: number) {
   return NextResponse.json({ success: false, error }, { status });
 }
@@ -86,6 +99,49 @@ function safeErrorMessage(error: unknown) {
     error instanceof Error ? error.message : String(error ?? "Bilinmeyen hata");
 
   return message.slice(0, 500);
+}
+
+function isNonRetryableError(value: string) {
+  return value.startsWith("non_retryable:");
+}
+
+async function insertNotificationLog({
+  supabase,
+  job,
+  status,
+  recipient,
+  providerMessageId = null,
+  errorMessage = null,
+}: {
+  supabase: ReturnType<typeof createSupabaseAdminClient>;
+  job: ClaimedNotificationJob;
+  status: "sent" | "failed" | "skipped";
+  recipient: string | null;
+  providerMessageId?: string | null;
+  errorMessage?: string | null;
+}) {
+  const { error } = await supabase.from("notification_logs").insert({
+    org_id: job.org_id,
+    notification_job_id: job.id,
+    appointment_id: job.appointment_id,
+    client_id: job.client_id,
+    type: job.type,
+    channel: "email",
+    provider: "resend",
+    status,
+    attempt_number: job.attempt_count + 1,
+    recipient,
+    provider_message_id: providerMessageId,
+    error_message: errorMessage,
+  });
+
+  if (error) {
+    console.error("Notification log insert failed:", {
+      jobId: job.id,
+      status,
+      error,
+    });
+  }
 }
 
 async function markJobFailed(
@@ -150,18 +206,27 @@ async function sendEmailWithResend({
     }),
   });
 
-  if (!response.ok) {
-    let errorText = `Resend request failed with status ${response.status}.`;
+  let json: { id?: string; message?: string; error?: string } | null = null;
 
-    try {
-      const json = (await response.json()) as { message?: string; error?: string };
-      errorText = json.message ?? json.error ?? errorText;
-    } catch {
-      // Keep the generic safe error message.
-    }
-
-    throw new Error(errorText);
+  try {
+    json = (await response.json()) as {
+      id?: string;
+      message?: string;
+      error?: string;
+    };
+  } catch {
+    json = null;
   }
+
+  if (!response.ok) {
+    throw new Error(
+      json?.message ??
+        json?.error ??
+        `Resend request failed with status ${response.status}.`,
+    );
+  }
+
+  return json?.id ?? null;
 }
 
 async function getNotificationData(
@@ -219,10 +284,6 @@ async function getNotificationData(
     throw new Error("Personel kaydı bulunamadı.");
   }
 
-  if (!client.email) {
-    throw new Error("non_retryable:client_email_missing");
-  }
-
   return {
     appointment,
     client,
@@ -234,14 +295,23 @@ async function getNotificationData(
 async function processBookingConfirmationJob(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   job: ClaimedNotificationJob,
-) {
+): Promise<ProcessResult> {
   const { appointment, client, service, staff } = await getNotificationData(
     supabase,
     job,
   );
+  const recipient = maskEmail(client.email);
 
-  await sendEmailWithResend({
-    to: client.email!,
+  if (!client.email) {
+    return {
+      status: "skipped",
+      recipient,
+      errorMessage: "non_retryable:client_email_missing",
+    };
+  }
+
+  const providerMessageId = await sendEmailWithResend({
+    to: client.email,
     subject: "Randevunuz Onaylandı — Artexo",
     html: renderBookingConfirmationEmail({
       organizationName: organizationLabel(appointment.org_id),
@@ -255,28 +325,49 @@ async function processBookingConfirmationJob(
     idempotencyKey: `notification-job-${job.id}`,
   });
 
-  await markJobSent(supabase, job.id);
+  return {
+    status: "sent",
+    recipient,
+    providerMessageId,
+  };
 }
 
 async function processAppointmentReminderJob(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   job: ClaimedNotificationJob,
-) {
+): Promise<ProcessResult> {
   const { appointment, client, service, staff } = await getNotificationData(
     supabase,
     job,
   );
+  const recipient = maskEmail(client.email);
 
   if (appointment.status !== "confirmed") {
-    throw new Error("non_retryable:appointment_not_confirmed");
+    return {
+      status: "skipped",
+      recipient,
+      errorMessage: "non_retryable:appointment_not_confirmed",
+    };
   }
 
   if (new Date(appointment.start_at).getTime() <= Date.now()) {
-    throw new Error("non_retryable:appointment_already_started");
+    return {
+      status: "skipped",
+      recipient,
+      errorMessage: "non_retryable:appointment_already_started",
+    };
   }
 
-  await sendEmailWithResend({
-    to: client.email!,
+  if (!client.email) {
+    return {
+      status: "skipped",
+      recipient,
+      errorMessage: "non_retryable:client_email_missing",
+    };
+  }
+
+  const providerMessageId = await sendEmailWithResend({
+    to: client.email,
     subject: "Randevu Hatırlatması — Artexo",
     html: renderAppointmentReminderEmail({
       organizationName: organizationLabel(appointment.org_id),
@@ -290,7 +381,11 @@ async function processAppointmentReminderJob(
     idempotencyKey: `notification-job-${job.id}`,
   });
 
-  await markJobSent(supabase, job.id);
+  return {
+    status: "sent",
+    recipient,
+    providerMessageId,
+  };
 }
 
 async function processNotificationJob(
@@ -298,13 +393,11 @@ async function processNotificationJob(
   job: ClaimedNotificationJob,
 ) {
   if (job.type === "booking_confirmation") {
-    await processBookingConfirmationJob(supabase, job);
-    return;
+    return processBookingConfirmationJob(supabase, job);
   }
 
   if (job.type === "appointment_reminder") {
-    await processAppointmentReminderJob(supabase, job);
-    return;
+    return processAppointmentReminderJob(supabase, job);
   }
 
   throw new Error(`Unsupported notification type: ${job.type}`);
@@ -335,16 +428,47 @@ export async function POST(request: NextRequest) {
 
     for (const job of jobs) {
       try {
-        await processNotificationJob(supabase, job);
-        sentCount += 1;
+        const result = await processNotificationJob(supabase, job);
+
+        if (result.status === "sent") {
+          await markJobSent(supabase, job.id);
+          await insertNotificationLog({
+            supabase,
+            job,
+            status: "sent",
+            recipient: result.recipient,
+            providerMessageId: result.providerMessageId,
+          });
+          sentCount += 1;
+          continue;
+        }
+
+        await markJobFailed(supabase, job, result.errorMessage);
+        await insertNotificationLog({
+          supabase,
+          job,
+          status: "skipped",
+          recipient: result.recipient,
+          errorMessage: result.errorMessage,
+        });
+        failedCount += 1;
       } catch (jobError) {
+        const errorMessage = safeErrorMessage(jobError);
+
         console.error("Notification job processing failed:", {
           jobId: job.id,
           type: job.type,
-          error: safeErrorMessage(jobError),
+          error: errorMessage,
         });
 
-        await markJobFailed(supabase, job, jobError);
+        await markJobFailed(supabase, job, errorMessage);
+        await insertNotificationLog({
+          supabase,
+          job,
+          status: isNonRetryableError(errorMessage) ? "skipped" : "failed",
+          recipient: null,
+          errorMessage,
+        });
         failedCount += 1;
       }
     }
