@@ -67,6 +67,9 @@ type ProcessResult =
       errorMessage: string;
     };
 
+const MAX_NOTIFICATION_ATTEMPTS = 2;
+const RETRY_DELAY_MINUTES = 5;
+
 function jsonError(error: string, status: number) {
   return NextResponse.json({ success: false, error }, { status });
 }
@@ -103,6 +106,14 @@ function safeErrorMessage(error: unknown) {
 
 function isNonRetryableError(value: string) {
   return value.startsWith("non_retryable:");
+}
+
+function hasReachedMaxAttempts(job: ClaimedNotificationJob) {
+  return job.attempt_count + 1 >= MAX_NOTIFICATION_ATTEMPTS;
+}
+
+function shouldRetryNotificationError(job: ClaimedNotificationJob, errorMessage: string) {
+  return !isNonRetryableError(errorMessage) && !hasReachedMaxAttempts(job);
 }
 
 async function insertNotificationLog({
@@ -158,6 +169,37 @@ async function markJobFailed(
       processed_at: new Date().toISOString(),
     })
     .eq("id", job.id);
+}
+
+async function scheduleJobRetry(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  job: ClaimedNotificationJob,
+  errorMessage: string,
+) {
+  const scheduledFor = new Date(
+    Date.now() + RETRY_DELAY_MINUTES * 60 * 1000,
+  ).toISOString();
+
+  const { error } = await supabase
+    .from("notification_jobs")
+    .update({
+      status: "pending",
+      attempt_count: job.attempt_count + 1,
+      scheduled_for: scheduledFor,
+      processed_at: null,
+      last_error: errorMessage,
+    })
+    .eq("id", job.id);
+
+  if (error) {
+    console.error("Notification retry scheduling failed:", {
+      jobId: job.id,
+      error,
+    });
+
+    await markJobFailed(supabase, job, errorMessage);
+    throw error;
+  }
 }
 
 async function markJobSent(
@@ -219,11 +261,20 @@ async function sendEmailWithResend({
   }
 
   if (!response.ok) {
-    throw new Error(
+    const message =
       json?.message ??
-        json?.error ??
-        `Resend request failed with status ${response.status}.`,
-    );
+      json?.error ??
+      `Resend request failed with status ${response.status}.`;
+
+    if (response.status === 429 || response.status >= 500) {
+      throw new Error(message);
+    }
+
+    if (response.status >= 400 && response.status < 500) {
+      throw new Error(`non_retryable:resend_client_error:${message}`);
+    }
+
+    throw new Error(message);
   }
 
   return json?.id ?? null;
@@ -244,7 +295,7 @@ async function getNotificationData(
     .maybeSingle<AppointmentRow>();
 
   if (appointmentError || !appointment) {
-    throw new Error("Randevu kaydı bulunamadı.");
+    throw new Error("non_retryable:appointment_not_found");
   }
 
   const [
@@ -273,15 +324,15 @@ async function getNotificationData(
   ]);
 
   if (clientError || !client) {
-    throw new Error("Müşteri kaydı bulunamadı.");
+    throw new Error("non_retryable:client_not_found");
   }
 
   if (serviceError || !service) {
-    throw new Error("Hizmet kaydı bulunamadı.");
+    throw new Error("non_retryable:service_not_found");
   }
 
   if (staffError || !staff) {
-    throw new Error("Personel kaydı bulunamadı.");
+    throw new Error("non_retryable:staff_not_found");
   }
 
   return {
@@ -400,7 +451,7 @@ async function processNotificationJob(
     return processAppointmentReminderJob(supabase, job);
   }
 
-  throw new Error(`Unsupported notification type: ${job.type}`);
+  throw new Error(`non_retryable:unsupported_notification_type:${job.type}`);
 }
 
 export async function POST(request: NextRequest) {
@@ -424,6 +475,7 @@ export async function POST(request: NextRequest) {
 
     const jobs = (data ?? []) as ClaimedNotificationJob[];
     let sentCount = 0;
+    let retryScheduledCount = 0;
     let failedCount = 0;
 
     for (const job of jobs) {
@@ -454,6 +506,7 @@ export async function POST(request: NextRequest) {
         failedCount += 1;
       } catch (jobError) {
         const errorMessage = safeErrorMessage(jobError);
+        const retryable = shouldRetryNotificationError(job, errorMessage);
 
         console.error("Notification job processing failed:", {
           jobId: job.id,
@@ -461,7 +514,18 @@ export async function POST(request: NextRequest) {
           error: errorMessage,
         });
 
-        await markJobFailed(supabase, job, errorMessage);
+        if (retryable) {
+          try {
+            await scheduleJobRetry(supabase, job, errorMessage);
+            retryScheduledCount += 1;
+          } catch {
+            failedCount += 1;
+          }
+        } else {
+          await markJobFailed(supabase, job, errorMessage);
+          failedCount += 1;
+        }
+
         await insertNotificationLog({
           supabase,
           job,
@@ -469,7 +533,6 @@ export async function POST(request: NextRequest) {
           recipient: null,
           errorMessage,
         });
-        failedCount += 1;
       }
     }
 
@@ -477,6 +540,7 @@ export async function POST(request: NextRequest) {
       success: true,
       claimedCount: jobs.length,
       sentCount,
+      retryScheduledCount,
       failedCount,
     });
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import {
+  Bell,
   BriefcaseBusiness,
   CalendarDays,
   Clock3,
@@ -22,6 +23,7 @@ const navigationItems = [
   { href: "/admin/staff", label: "Personeller", icon: Users },
   { href: "/admin/clients", label: "Müşteriler", icon: ContactRound },
   { href: "/admin/appointments", label: "Randevular", icon: CalendarDays },
+  { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
   { href: "/admin/hours", label: "Çalışma Saatleri", icon: Clock3 },
 ] as const;
 

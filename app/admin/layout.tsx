@@ -87,6 +87,12 @@ export default async function AdminLayout({
               Randevular
             </Link>
             <Link
+              href="/admin/notifications"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+            >
+              Bildirimler
+            </Link>
+            <Link
               href="/admin/hours"
               className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
             >
