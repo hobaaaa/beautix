@@ -7,7 +7,7 @@ export type DashboardAppointmentItem = {
   id: string;
   start_at: string;
   end_at: string;
-  status: "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
+  status: "confirmed" | "completed" | "cancelled" | "no_show";
   client_name: string;
   service_name: string;
   staff_name: string;

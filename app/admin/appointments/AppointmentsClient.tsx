@@ -54,6 +54,7 @@ export function AppointmentsClient({
     useState<AppointmentListItem | null>(null);
   const [message, setMessage] = useState<Message>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [currentTimeMs] = useState(() => Date.now());
 
   const tomorrow = useMemo(() => addDays(selectedDate, 1), [selectedDate]);
 
@@ -265,6 +266,7 @@ export function AppointmentsClient({
       <AppointmentsTable
         appointments={appointments}
         cancellingId={cancellingId}
+        currentTimeMs={currentTimeMs}
         onCancelAppointment={handleCancelAppointment}
         onEditAppointment={openEditDialog}
         showDate={selectedView === "all"}

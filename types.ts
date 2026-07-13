@@ -39,7 +39,6 @@ export type StaffAppointmentType = {
 };
 
 export type AppointmentStatus =
-  | "pending"
   | "confirmed"
   | "completed"
   | "cancelled"

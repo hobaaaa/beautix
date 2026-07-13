@@ -1,9 +1,9 @@
 ﻿"use client";
 
 import { AppointmentListItem, AppointmentStatus } from "../../../types";
+import { AppointmentLifecycleActions } from "./AppointmentLifecycleActions";
 
 const STATUS_STYLES: Record<AppointmentStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-700",
   confirmed: "bg-blue-100 text-blue-700",
   completed: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
@@ -11,26 +11,11 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: "Bekliyor",
   confirmed: "Onaylandı",
   completed: "Tamamlandı",
   cancelled: "İptal Edildi",
   no_show: "Gelmedi",
 };
-
-function getEffectiveStatus(appointment: AppointmentListItem): AppointmentStatus {
-  if (appointment.status === "cancelled" || appointment.status === "no_show") {
-    return appointment.status;
-  }
-
-  if (appointment.status === "completed") {
-    return "completed";
-  }
-
-  return new Date(appointment.end_at).getTime() <= Date.now()
-    ? "completed"
-    : "confirmed";
-}
 
 function formatTimeRange(startAt: string, endAt: string) {
   const start = new Date(startAt);
@@ -65,10 +50,12 @@ export function AppointmentsTable({
   emptyMessage,
   onCancelAppointment,
   onEditAppointment,
+  currentTimeMs,
   showDate,
 }: {
   appointments: AppointmentListItem[];
   cancellingId: string | null;
+  currentTimeMs: number;
   emptyMessage: string;
   onCancelAppointment: (id: string) => void;
   onEditAppointment: (appointment: AppointmentListItem) => void;
@@ -85,9 +72,11 @@ export function AppointmentsTable({
   return (
     <div className="space-y-3">
       {appointments.map((appointment) => {
-        const effectiveStatus = getEffectiveStatus(appointment);
-        const isEditable =
-          effectiveStatus === "confirmed" || effectiveStatus === "pending";
+        const appointmentStart = new Date(appointment.start_at).getTime();
+        const isFutureConfirmed =
+          appointment.status === "confirmed" && appointmentStart > currentTimeMs;
+        const isPastConfirmed =
+          appointment.status === "confirmed" && appointmentStart <= currentTimeMs;
 
         return (
           <div
@@ -134,9 +123,9 @@ export function AppointmentsTable({
             <div>
               <div className="text-sm text-muted-foreground">Durum</div>
               <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[effectiveStatus]}`}
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[appointment.status]}`}
               >
-                {STATUS_LABELS[effectiveStatus]}
+                {STATUS_LABELS[appointment.status]}
               </span>
             </div>
 
@@ -147,7 +136,7 @@ export function AppointmentsTable({
           </div>
 
           <div className="flex min-w-36 flex-wrap justify-end gap-2">
-            {isEditable && (
+            {isFutureConfirmed && (
               <>
                 <button
                   type="button"
@@ -165,6 +154,9 @@ export function AppointmentsTable({
                   {cancellingId === appointment.id ? "İptal ediliyor..." : "İptal et"}
                 </button>
               </>
+            )}
+            {isPastConfirmed && (
+              <AppointmentLifecycleActions appointmentId={appointment.id} />
             )}
           </div>
           </div>

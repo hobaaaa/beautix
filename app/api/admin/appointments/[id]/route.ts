@@ -42,13 +42,14 @@ export async function PATCH(
         .update({ status: "cancelled" })
         .eq("id", id)
         .eq("org_id", orgId)
+        .eq("status", "confirmed")
         .select("id, status")
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return NextResponse.json(
-          { success: false, error: "Randevu iptal edilemedi." },
-          { status: 500 },
+          { success: false, error: "Bu randevu artık iptal edilemiyor." },
+          { status: error ? 500 : 409 },
         );
       }
 
@@ -99,9 +100,9 @@ export async function PATCH(
       );
     }
 
-    if (existingAppointment.status === "cancelled") {
+    if (existingAppointment.status !== "confirmed") {
       return NextResponse.json(
-        { success: false, error: "İptal edilmiş randevu düzenlenemez." },
+        { success: false, error: "Bu randevu düzenlenemez." },
         { status: 400 },
       );
     }

@@ -9,10 +9,8 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function getStatusLabel(status: "pending" | "confirmed" | "completed" | "cancelled" | "no_show") {
+function getStatusLabel(status: "confirmed" | "completed" | "cancelled" | "no_show") {
   switch (status) {
-    case "pending":
-      return "Bekliyor";
     case "confirmed":
       return "Onaylandı";
     case "completed":

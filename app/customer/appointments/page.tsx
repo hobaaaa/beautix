@@ -11,7 +11,6 @@ import type { CustomerAppointmentListItem } from "../queries";
 import { CancelAppointmentButton } from "./CancelAppointmentButton";
 
 const STATUS_STYLES: Record<AppointmentStatus, string> = {
-  pending: "bg-yellow-500/15 text-yellow-200",
   confirmed: "bg-blue-500/15 text-blue-200",
   completed: "bg-emerald-500/15 text-emerald-200",
   cancelled: "bg-red-500/15 text-red-200",
@@ -19,7 +18,6 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: "Bekliyor",
   confirmed: "Onaylandı",
   completed: "Tamamlandı",
   cancelled: "İptal Edildi",
@@ -41,21 +39,6 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function getDisplayStatus(
-  appointment: CustomerAppointmentListItem,
-  isPastSection: boolean,
-): AppointmentStatus {
-  if (appointment.status === "cancelled") {
-    return "cancelled";
-  }
-
-  if (isPastSection && appointment.status === "confirmed") {
-    return "completed";
-  }
-
-  return appointment.status;
-}
-
 function canCancelAppointment(appointment: CustomerAppointmentListItem) {
   return (
     appointment.status === "confirmed" &&
@@ -65,12 +48,9 @@ function canCancelAppointment(appointment: CustomerAppointmentListItem) {
 
 function AppointmentCard({
   appointment,
-  isPastSection,
 }: {
   appointment: CustomerAppointmentListItem;
-  isPastSection: boolean;
 }) {
-  const displayStatus = getDisplayStatus(appointment, isPastSection);
   const canCancel = canCancelAppointment(appointment);
 
   return (
@@ -81,9 +61,9 @@ function AppointmentCard({
           <h3 className="mt-1 text-xl font-semibold">{appointment.service.name}</h3>
         </div>
         <span
-          className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[displayStatus]}`}
+          className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[appointment.status]}`}
         >
-          {STATUS_LABELS[displayStatus]}
+          {STATUS_LABELS[appointment.status]}
         </span>
       </div>
 
@@ -128,12 +108,10 @@ function AppointmentSection({
   title,
   emptyMessage,
   appointments,
-  isPastSection,
 }: {
   title: string;
   emptyMessage: string;
   appointments: CustomerAppointmentListItem[];
-  isPastSection: boolean;
 }) {
   return (
     <section className="space-y-4">
@@ -148,7 +126,6 @@ function AppointmentSection({
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
-              isPastSection={isPastSection}
             />
           ))}
         </div>
@@ -224,13 +201,11 @@ export default async function CustomerAppointmentsPage() {
               title="Yaklaşan Randevular"
               emptyMessage="Yaklaşan randevunuz bulunmuyor."
               appointments={upcomingAppointments}
-              isPastSection={false}
             />
             <AppointmentSection
               title="Geçmiş Randevular"
               emptyMessage="Geçmiş randevunuz bulunmuyor."
               appointments={pastAppointments}
-              isPastSection
             />
           </div>
         )}

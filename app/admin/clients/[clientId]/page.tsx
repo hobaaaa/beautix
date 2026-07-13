@@ -10,7 +10,6 @@ import {
 } from "../queries";
 
 const STATUS_STYLES: Record<AppointmentStatus, string> = {
-  pending: "bg-yellow-500/15 text-yellow-200",
   confirmed: "bg-blue-500/15 text-blue-200",
   completed: "bg-emerald-500/15 text-emerald-200",
   cancelled: "bg-red-500/15 text-red-200",
@@ -18,7 +17,6 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  pending: "Bekliyor",
   confirmed: "Onaylandı",
   completed: "Tamamlandı",
   cancelled: "İptal Edildi",
@@ -40,30 +38,11 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
-function getDisplayStatus(
-  appointment: AdminClientAppointmentListItem,
-  isPastSection: boolean,
-): AppointmentStatus {
-  if (appointment.status === "cancelled") {
-    return "cancelled";
-  }
-
-  if (isPastSection && appointment.status === "confirmed") {
-    return "completed";
-  }
-
-  return appointment.status;
-}
-
 function AppointmentCard({
   appointment,
-  isPastSection,
 }: {
   appointment: AdminClientAppointmentListItem;
-  isPastSection: boolean;
 }) {
-  const displayStatus = getDisplayStatus(appointment, isPastSection);
-
   return (
     <article className="rounded-3xl border border-border bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -72,9 +51,9 @@ function AppointmentCard({
           <h3 className="mt-1 text-xl font-semibold">{appointment.service.name}</h3>
         </div>
         <span
-          className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[displayStatus]}`}
+          className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[appointment.status]}`}
         >
-          {STATUS_LABELS[displayStatus]}
+          {STATUS_LABELS[appointment.status]}
         </span>
       </div>
 
@@ -124,12 +103,10 @@ function AppointmentSection({
   title,
   emptyMessage,
   appointments,
-  isPastSection,
 }: {
   title: string;
   emptyMessage: string;
   appointments: AdminClientAppointmentListItem[];
-  isPastSection: boolean;
 }) {
   return (
     <section className="space-y-4">
@@ -144,7 +121,6 @@ function AppointmentSection({
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
-              isPastSection={isPastSection}
             />
           ))}
         </div>
@@ -216,13 +192,11 @@ export default async function AdminClientAppointmentsPage({
         title="Yaklaşan Randevular"
         emptyMessage="Bu müşteri için yaklaşan randevu bulunmuyor."
         appointments={data.upcomingAppointments}
-        isPastSection={false}
       />
       <AppointmentSection
         title="Geçmiş Randevular"
         emptyMessage="Bu müşteri için geçmiş randevu bulunmuyor."
         appointments={data.pastAppointments}
-        isPastSection
       />
     </div>
   );
