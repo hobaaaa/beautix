@@ -1,3 +1,4 @@
+import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -9,7 +10,9 @@ export default function CustomerBookingSuccessPage() {
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-300">
             <CheckCircle2 className="h-7 w-7" />
           </div>
-          <div className="text-sm font-medium text-blue-400">Artexo</div>
+          <div className="flex justify-center">
+            <ArtexoBrand />
+          </div>
           <h1 className="mt-2 text-3xl font-semibold">Randevunuz oluşturuldu</h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">
             Randevu kaydınız başarıyla alındı. Müşteri paneline dönebilir veya

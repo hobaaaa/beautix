@@ -1,3 +1,4 @@
+import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { ArrowLeft, CalendarDays, Clock, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -122,7 +123,7 @@ export default async function CustomerBookingConfirmPage({
               <ArrowLeft className="h-4 w-4" />
               Saati Değiştir
             </Link>
-            <div className="text-sm font-medium text-blue-400">Artexo</div>
+            <ArtexoBrand compact />
             <h1 className="text-2xl font-semibold">Randevu Onayı</h1>
           </div>
           <CustomerLogoutButton />

@@ -1,8 +1,9 @@
-import {
+﻿import {
   AuthRequiredError,
   OrgMembershipRequiredError,
   getCurrentOrgContext,
 } from "@/lib/supabase/org";
+import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -39,7 +40,7 @@ export default async function AdminLayout({
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <MobileAdminNav />
-            <div className="font-semibold">Artexo Yönetim</div>
+            <ArtexoBrand compact suffix="Yönetim" />
             <div className="hidden text-sm text-muted-foreground md:block">
               Panel
             </div>
@@ -102,3 +103,4 @@ export default async function AdminLayout({
     </div>
   );
 }
+

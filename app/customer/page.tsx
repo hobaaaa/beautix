@@ -1,3 +1,4 @@
+import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -32,7 +33,7 @@ export default async function CustomerHomePage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="flex items-center justify-between gap-4">
           <div>
-            <div className="text-sm font-medium text-blue-400">Artexo</div>
+            <ArtexoBrand compact />
             <h1 className="text-xl font-semibold">Müşteri Paneli</h1>
           </div>
           <CustomerLogoutButton />

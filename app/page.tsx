@@ -1,3 +1,4 @@
+import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -48,9 +49,7 @@ export default async function Home() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10 sm:px-6">
       <main className="w-full max-w-md rounded-3xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
         <div className="space-y-3">
-          <div className="text-sm font-medium text-blue-400">
-            Artexo
-          </div>
+          <ArtexoBrand />
           <h1 className="text-3xl font-semibold tracking-tight">
             Giriş türünü seçin
           </h1>
