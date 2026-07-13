@@ -211,6 +211,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const { error: reminderJobError } = await supabase.rpc(
+      "enqueue_appointment_reminder_notification_job",
+      {
+        p_appointment_id: data.id,
+      },
+    );
+
+    if (reminderJobError) {
+      console.error("Error creating appointment reminder notification job:", {
+        appointmentId: data.id,
+        error: reminderJobError,
+      });
+    }
+
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {

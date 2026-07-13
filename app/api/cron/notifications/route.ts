@@ -2,7 +2,10 @@ import {
   SupabaseAdminConfigError,
   createSupabaseAdminClient,
 } from "@/lib/supabase/admin";
-import { renderBookingConfirmationEmail } from "@/lib/notifications/booking-confirmation-email";
+import {
+  renderAppointmentReminderEmail,
+  renderBookingConfirmationEmail,
+} from "@/lib/notifications/booking-confirmation-email";
 import { NextRequest, NextResponse } from "next/server";
 
 type ClaimedNotificationJob = {
@@ -22,6 +25,7 @@ type AppointmentRow = {
   staff_id: string;
   start_at: string;
   end_at: string;
+  status: string;
 };
 
 type ClientRow = {
@@ -41,6 +45,13 @@ type ServiceRow = {
 type StaffRow = {
   id: string;
   name: string;
+};
+
+type NotificationData = {
+  appointment: AppointmentRow;
+  client: ClientRow;
+  service: ServiceRow;
+  staff: StaffRow;
 };
 
 function jsonError(error: string, status: number) {
@@ -153,13 +164,15 @@ async function sendEmailWithResend({
   }
 }
 
-async function getBookingConfirmationData(
+async function getNotificationData(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   job: ClaimedNotificationJob,
-) {
+): Promise<NotificationData> {
   const { data: appointment, error: appointmentError } = await supabase
     .from("appointments")
-    .select("id, org_id, client_id, appointment_type_id, staff_id, start_at, end_at")
+    .select(
+      "id, org_id, client_id, appointment_type_id, staff_id, start_at, end_at, status",
+    )
     .eq("id", job.appointment_id)
     .eq("org_id", job.org_id)
     .eq("client_id", job.client_id)
@@ -207,7 +220,7 @@ async function getBookingConfirmationData(
   }
 
   if (!client.email) {
-    throw new Error("Müşteri e-posta adresi bulunamadı.");
+    throw new Error("non_retryable:client_email_missing");
   }
 
   return {
@@ -222,7 +235,7 @@ async function processBookingConfirmationJob(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   job: ClaimedNotificationJob,
 ) {
-  const { appointment, client, service, staff } = await getBookingConfirmationData(
+  const { appointment, client, service, staff } = await getNotificationData(
     supabase,
     job,
   );
@@ -243,6 +256,58 @@ async function processBookingConfirmationJob(
   });
 
   await markJobSent(supabase, job.id);
+}
+
+async function processAppointmentReminderJob(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  job: ClaimedNotificationJob,
+) {
+  const { appointment, client, service, staff } = await getNotificationData(
+    supabase,
+    job,
+  );
+
+  if (appointment.status !== "confirmed") {
+    throw new Error("non_retryable:appointment_not_confirmed");
+  }
+
+  if (new Date(appointment.start_at).getTime() <= Date.now()) {
+    throw new Error("non_retryable:appointment_already_started");
+  }
+
+  await sendEmailWithResend({
+    to: client.email!,
+    subject: "Randevu Hatırlatması — Artexo",
+    html: renderAppointmentReminderEmail({
+      organizationName: organizationLabel(appointment.org_id),
+      clientName: clientDisplayName(client),
+      serviceName: service.name,
+      staffName: staff.name,
+      startAt: appointment.start_at,
+      endAt: appointment.end_at,
+      durationMinutes: service.duration_minutes,
+    }),
+    idempotencyKey: `notification-job-${job.id}`,
+  });
+
+  await markJobSent(supabase, job.id);
+}
+
+async function processNotificationJob(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  job: ClaimedNotificationJob,
+) {
+  if (job.type === "booking_confirmation") {
+    await processBookingConfirmationJob(supabase, job);
+    return;
+  }
+
+  if (job.type === "appointment_reminder") {
+    await processAppointmentReminderJob(supabase, job);
+    return;
+  }
+
+  throw new Error(`Unsupported notification type: ${job.type}`);
 }
 
 export async function POST(request: NextRequest) {
@@ -270,11 +335,7 @@ export async function POST(request: NextRequest) {
 
     for (const job of jobs) {
       try {
-        if (job.type !== "booking_confirmation") {
-          throw new Error(`Unsupported notification type: ${job.type}`);
-        }
-
-        await processBookingConfirmationJob(supabase, job);
+        await processNotificationJob(supabase, job);
         sentCount += 1;
       } catch (jobError) {
         console.error("Notification job processing failed:", {

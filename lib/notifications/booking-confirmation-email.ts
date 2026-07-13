@@ -1,6 +1,6 @@
 import "server-only";
 
-type BookingConfirmationEmailInput = {
+type AppointmentEmailInput = {
   organizationName: string;
   clientName: string;
   serviceName: string;
@@ -38,7 +38,25 @@ export function formatAppointmentTime(value: string) {
   return TIME_FORMATTER.format(new Date(value));
 }
 
-export function renderBookingConfirmationEmail({
+export function renderBookingConfirmationEmail(input: AppointmentEmailInput) {
+  return renderAppointmentEmail({
+    ...input,
+    title: "Randevunuz onaylandı",
+    intro: `${input.clientName}, ${input.organizationName} için oluşturduğunuz randevu başarıyla onaylandı.`,
+    footer: "Bu e-posta randevunuzun onaylandığını bildirmek için gönderilmiştir.",
+  });
+}
+
+export function renderAppointmentReminderEmail(input: AppointmentEmailInput) {
+  return renderAppointmentEmail({
+    ...input,
+    title: "Randevu hatırlatması",
+    intro: `${input.clientName}, ${input.organizationName} için randevunuz yarın. Randevu bilgilerinizi aşağıda görebilirsiniz.`,
+    footer: "Bu e-posta yaklaşan randevunuzu hatırlatmak için gönderilmiştir.",
+  });
+}
+
+function renderAppointmentEmail({
   organizationName,
   clientName,
   serviceName,
@@ -46,11 +64,21 @@ export function renderBookingConfirmationEmail({
   startAt,
   endAt,
   durationMinutes,
-}: BookingConfirmationEmailInput) {
+  title,
+  intro,
+  footer,
+}: AppointmentEmailInput & {
+  title: string;
+  intro: string;
+  footer: string;
+}) {
   const safeOrganizationName = escapeHtml(organizationName);
   const safeClientName = escapeHtml(clientName);
   const safeServiceName = escapeHtml(serviceName);
   const safeStaffName = escapeHtml(staffName);
+  const safeTitle = escapeHtml(title);
+  const safeIntro = escapeHtml(intro);
+  const safeFooter = escapeHtml(footer);
   const date = escapeHtml(formatAppointmentDate(startAt));
   const startTime = escapeHtml(formatAppointmentTime(startAt));
   const endTime = escapeHtml(formatAppointmentTime(endAt));
@@ -60,7 +88,7 @@ export function renderBookingConfirmationEmail({
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Randevunuz Onaylandı</title>
+    <title>${safeTitle}</title>
   </head>
   <body style="margin:0;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:24px 12px;">
@@ -70,10 +98,8 @@ export function renderBookingConfirmationEmail({
             <tr>
               <td style="padding:28px 28px 10px;">
                 <div style="font-size:14px;font-weight:700;letter-spacing:0.08em;color:#2563eb;text-transform:uppercase;">Artexo</div>
-                <h1 style="margin:14px 0 8px;font-size:26px;line-height:1.2;color:#0f172a;">Randevunuz onaylandı</h1>
-                <p style="margin:0;color:#475569;font-size:15px;line-height:1.6;">
-                  ${safeClientName}, ${safeOrganizationName} için oluşturduğunuz randevu başarıyla onaylandı.
-                </p>
+                <h1 style="margin:14px 0 8px;font-size:26px;line-height:1.2;color:#0f172a;">${safeTitle}</h1>
+                <p style="margin:0;color:#475569;font-size:15px;line-height:1.6;">${safeIntro}</p>
               </td>
             </tr>
             <tr>
@@ -88,9 +114,7 @@ export function renderBookingConfirmationEmail({
                   ${renderDetailRow("Bitiş", endTime)}
                   ${renderDetailRow("Süre", `${durationMinutes} dakika`)}
                 </table>
-                <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6;">
-                  Bu e-posta randevunuzun onaylandığını bildirmek için gönderilmiştir.
-                </p>
+                <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6;">${safeFooter}</p>
               </td>
             </tr>
           </table>
