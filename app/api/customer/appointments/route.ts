@@ -197,6 +197,20 @@ export async function POST(request: NextRequest) {
       return jsonError("Randevu oluşturulamadı.", 500);
     }
 
+    const { error: notificationJobError } = await supabase.rpc(
+      "enqueue_booking_confirmation_notification_job",
+      {
+        p_appointment_id: data.id,
+      },
+    );
+
+    if (notificationJobError) {
+      console.error("Error creating booking confirmation notification job:", {
+        appointmentId: data.id,
+        error: notificationJobError,
+      });
+    }
+
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {
