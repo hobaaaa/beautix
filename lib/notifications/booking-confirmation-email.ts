@@ -10,6 +10,12 @@ type AppointmentEmailInput = {
   durationMinutes: number;
 };
 
+type BusinessBookingNotificationEmailInput = AppointmentEmailInput & {
+  clientPhone: string | null;
+  clientEmail: string | null;
+  notes: string | null;
+};
+
 const DATE_FORMATTER = new Intl.DateTimeFormat("tr-TR", {
   dateStyle: "full",
   timeZone: "Europe/Istanbul",
@@ -56,6 +62,42 @@ export function renderAppointmentReminderEmail(input: AppointmentEmailInput) {
   });
 }
 
+export function renderBusinessBookingNotificationEmail({
+  organizationName,
+  clientName,
+  clientPhone,
+  clientEmail,
+  serviceName,
+  staffName,
+  startAt,
+  endAt,
+  durationMinutes,
+  notes,
+}: BusinessBookingNotificationEmailInput) {
+  const safeClientPhone = clientPhone ? escapeHtml(clientPhone) : "-";
+  const safeClientEmail = clientEmail ? escapeHtml(clientEmail) : "-";
+  const safeNotes = notes?.trim() ? escapeHtml(notes.trim()) : "-";
+
+  return renderAppointmentEmail({
+    organizationName,
+    clientName,
+    serviceName,
+    staffName,
+    startAt,
+    endAt,
+    durationMinutes,
+    title: "Yeni randevu oluşturuldu",
+    intro: `${clientName} tarafından yeni bir randevu oluşturuldu. Randevu bilgilerini aşağıda görebilirsiniz.`,
+    footer:
+      "Bu e-posta işletmenize yeni bir müşteri randevusu oluşturulduğunu bildirmek için gönderilmiştir.",
+    extraRows: [
+      renderDetailRow("Müşteri Telefonu", safeClientPhone),
+      renderDetailRow("Müşteri E-postası", safeClientEmail),
+      renderDetailRow("Not", safeNotes),
+    ],
+  });
+}
+
 function renderAppointmentEmail({
   organizationName,
   clientName,
@@ -67,10 +109,12 @@ function renderAppointmentEmail({
   title,
   intro,
   footer,
+  extraRows = [],
 }: AppointmentEmailInput & {
   title: string;
   intro: string;
   footer: string;
+  extraRows?: string[];
 }) {
   const safeOrganizationName = escapeHtml(organizationName);
   const safeClientName = escapeHtml(clientName);
@@ -113,6 +157,7 @@ function renderAppointmentEmail({
                   ${renderDetailRow("Başlangıç", startTime)}
                   ${renderDetailRow("Bitiş", endTime)}
                   ${renderDetailRow("Süre", `${durationMinutes} dakika`)}
+                  ${extraRows.join("")}
                 </table>
                 <p style="margin:18px 0 0;color:#64748b;font-size:13px;line-height:1.6;">${safeFooter}</p>
               </td>

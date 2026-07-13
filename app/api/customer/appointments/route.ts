@@ -225,6 +225,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const { error: businessNotificationJobError } = await supabase.rpc(
+      "enqueue_business_booking_notification_job",
+      {
+        p_appointment_id: data.id,
+      },
+    );
+
+    if (businessNotificationJobError) {
+      console.error("Error creating business booking notification job:", {
+        appointmentId: data.id,
+        error: businessNotificationJobError,
+      });
+    }
+
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {

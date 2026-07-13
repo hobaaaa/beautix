@@ -6,8 +6,11 @@ import { maskEmail } from "@/lib/notifications/email-masking";
 import {
   renderAppointmentReminderEmail,
   renderBookingConfirmationEmail,
+  renderBusinessBookingNotificationEmail,
 } from "@/lib/notifications/booking-confirmation-email";
 import { NextRequest, NextResponse } from "next/server";
+
+type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
 
 type ClaimedNotificationJob = {
   id: string;
@@ -27,6 +30,7 @@ type AppointmentRow = {
   start_at: string;
   end_at: string;
   status: string;
+  notes: string | null;
 };
 
 type ClientRow = {
@@ -34,6 +38,7 @@ type ClientRow = {
   first_name: string | null;
   last_name: string | null;
   name: string | null;
+  phone: string | null;
   email: string | null;
 };
 
@@ -112,7 +117,10 @@ function hasReachedMaxAttempts(job: ClaimedNotificationJob) {
   return job.attempt_count + 1 >= MAX_NOTIFICATION_ATTEMPTS;
 }
 
-function shouldRetryNotificationError(job: ClaimedNotificationJob, errorMessage: string) {
+function shouldRetryNotificationError(
+  job: ClaimedNotificationJob,
+  errorMessage: string,
+) {
   return !isNonRetryableError(errorMessage) && !hasReachedMaxAttempts(job);
 }
 
@@ -124,7 +132,7 @@ async function insertNotificationLog({
   providerMessageId = null,
   errorMessage = null,
 }: {
-  supabase: ReturnType<typeof createSupabaseAdminClient>;
+  supabase: SupabaseAdminClient;
   job: ClaimedNotificationJob;
   status: "sent" | "failed" | "skipped";
   recipient: string | null;
@@ -156,7 +164,7 @@ async function insertNotificationLog({
 }
 
 async function markJobFailed(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
   error: unknown,
 ) {
@@ -172,7 +180,7 @@ async function markJobFailed(
 }
 
 async function scheduleJobRetry(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
   errorMessage: string,
 ) {
@@ -202,10 +210,7 @@ async function scheduleJobRetry(
   }
 }
 
-async function markJobSent(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
-  jobId: string,
-) {
+async function markJobSent(supabase: SupabaseAdminClient, jobId: string) {
   await supabase
     .from("notification_jobs")
     .update({
@@ -281,13 +286,13 @@ async function sendEmailWithResend({
 }
 
 async function getNotificationData(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<NotificationData> {
   const { data: appointment, error: appointmentError } = await supabase
     .from("appointments")
     .select(
-      "id, org_id, client_id, appointment_type_id, staff_id, start_at, end_at, status",
+      "id, org_id, client_id, appointment_type_id, staff_id, start_at, end_at, status, notes",
     )
     .eq("id", job.appointment_id)
     .eq("org_id", job.org_id)
@@ -305,7 +310,7 @@ async function getNotificationData(
   ] = await Promise.all([
     supabase
       .from("clients")
-      .select("id, first_name, last_name, name, email")
+      .select("id, first_name, last_name, name, phone, email")
       .eq("id", appointment.client_id)
       .eq("org_id", appointment.org_id)
       .maybeSingle<ClientRow>(),
@@ -343,8 +348,26 @@ async function getNotificationData(
   };
 }
 
+async function getBusinessRecipientEmail(
+  supabase: SupabaseAdminClient,
+  orgId: string,
+) {
+  const { data, error } = await supabase.rpc(
+    "get_business_notification_recipient_email",
+    {
+      p_org_id: orgId,
+    },
+  );
+
+  if (error) {
+    throw new Error("non_retryable:business_email_missing");
+  }
+
+  return typeof data === "string" && data.includes("@") ? data : null;
+}
+
 async function processBookingConfirmationJob(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
   const { appointment, client, service, staff } = await getNotificationData(
@@ -384,7 +407,7 @@ async function processBookingConfirmationJob(
 }
 
 async function processAppointmentReminderJob(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
   const { appointment, client, service, staff } = await getNotificationData(
@@ -439,8 +462,55 @@ async function processAppointmentReminderJob(
   };
 }
 
+async function processBusinessBookingNotificationJob(
+  supabase: SupabaseAdminClient,
+  job: ClaimedNotificationJob,
+): Promise<ProcessResult> {
+  const { appointment, client, service, staff } = await getNotificationData(
+    supabase,
+    job,
+  );
+  const recipientEmail = await getBusinessRecipientEmail(
+    supabase,
+    appointment.org_id,
+  );
+  const recipient = maskEmail(recipientEmail);
+
+  if (!recipientEmail) {
+    return {
+      status: "skipped",
+      recipient,
+      errorMessage: "non_retryable:business_email_missing",
+    };
+  }
+
+  const providerMessageId = await sendEmailWithResend({
+    to: recipientEmail,
+    subject: "Yeni Randevu Oluşturuldu — Artexo",
+    html: renderBusinessBookingNotificationEmail({
+      organizationName: organizationLabel(appointment.org_id),
+      clientName: clientDisplayName(client),
+      clientPhone: client.phone,
+      clientEmail: client.email,
+      serviceName: service.name,
+      staffName: staff.name,
+      startAt: appointment.start_at,
+      endAt: appointment.end_at,
+      durationMinutes: service.duration_minutes,
+      notes: appointment.notes,
+    }),
+    idempotencyKey: `notification-job-${job.id}`,
+  });
+
+  return {
+    status: "sent",
+    recipient,
+    providerMessageId,
+  };
+}
+
 async function processNotificationJob(
-  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ) {
   if (job.type === "booking_confirmation") {
@@ -449,6 +519,10 @@ async function processNotificationJob(
 
   if (job.type === "appointment_reminder") {
     return processAppointmentReminderJob(supabase, job);
+  }
+
+  if (job.type === "business_booking_notification") {
+    return processBusinessBookingNotificationJob(supabase, job);
   }
 
   throw new Error(`non_retryable:unsupported_notification_type:${job.type}`);
