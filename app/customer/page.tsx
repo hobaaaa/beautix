@@ -63,12 +63,18 @@ export default async function CustomerHomePage() {
               Hizmetleri inceleyebilir ve sonraki adımda randevu akışına devam
               edebilirsiniz.
             </p>
-            <div className="mt-6">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Link
                 href="/customer/services"
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 sm:w-auto"
               >
                 Hizmetleri Gör
+              </Link>
+              <Link
+                href="/customer/appointments"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:w-auto"
+              >
+                Randevularım
               </Link>
             </div>
           </section>

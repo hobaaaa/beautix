@@ -3,6 +3,7 @@ import "server-only";
 import { getAvailableSlots } from "@/lib/slots/availability-engine";
 import type { AvailableSlot } from "@/lib/slots/availability-engine";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { AppointmentStatus } from "../../types";
 import { cookies } from "next/headers";
 import { cache } from "react";
 
@@ -56,6 +57,31 @@ export type CustomerBookingAvailability = {
 
 export type CustomerBookingConfirmation = CustomerBookingAvailability & {
   selectedSlot: AvailableSlot | null;
+};
+
+export type CustomerAppointmentListItem = {
+  id: string;
+  start_at: string;
+  end_at: string;
+  status: AppointmentStatus;
+  service: {
+    id: string;
+    name: string;
+    duration_minutes: number;
+  };
+  staff: {
+    id: string;
+    name: string;
+  };
+};
+
+export type CustomerAppointmentsData = {
+  context: CustomerDashboardContext;
+  activeClient: {
+    id: string;
+  } | null;
+  upcomingAppointments: CustomerAppointmentListItem[];
+  pastAppointments: CustomerAppointmentListItem[];
 };
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -188,6 +214,73 @@ function normalizeStaffRows(value: unknown): CustomerBookingStaff[] {
       };
     })
     .filter((item): item is CustomerBookingStaff => item !== null);
+}
+
+function pickSingleRelation<T>(value: T | T[] | null): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function normalizeAppointmentRows(value: unknown): CustomerAppointmentListItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = item as Record<string, unknown>;
+      const service = pickSingleRelation(
+        row.service as
+          | {
+              id: string;
+              name: string;
+              duration_minutes: number;
+            }
+          | {
+              id: string;
+              name: string;
+              duration_minutes: number;
+            }[]
+          | null,
+      );
+      const staff = pickSingleRelation(
+        row.staff as
+          | {
+              id: string;
+              name: string;
+            }
+          | {
+              id: string;
+              name: string;
+            }[]
+          | null,
+      );
+
+      if (
+        typeof row.id !== "string" ||
+        typeof row.start_at !== "string" ||
+        typeof row.end_at !== "string" ||
+        typeof row.status !== "string"
+      ) {
+        return null;
+      }
+
+      return {
+        id: row.id,
+        start_at: row.start_at,
+        end_at: row.end_at,
+        status: row.status as AppointmentStatus,
+        service: service ?? {
+          id: "",
+          name: "Bilinmeyen hizmet",
+          duration_minutes: 0,
+        },
+        staff: staff ?? {
+          id: "",
+          name: "Bilinmeyen personel",
+        },
+      };
+    })
+    .filter((item): item is CustomerAppointmentListItem => item !== null);
 }
 
 const resolveCustomerDashboardContext = cache(async () => {
@@ -441,5 +534,92 @@ export async function getCustomerBookingConfirmation({
       availability.selectedStaff && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)
         ? availability.slots.find((slot) => slot.start_time === time) ?? null
         : null,
+  };
+}
+
+export async function getCustomerAppointments(): Promise<CustomerAppointmentsData> {
+  const context = await getCustomerDashboardContext();
+
+  if (!context.selectedOrganization) {
+    return {
+      context,
+      activeClient: null,
+      upcomingAppointments: [],
+      pastAppointments: [],
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: activeClient, error: clientError } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("id", context.selectedOrganization.client_id)
+    .eq("org_id", context.selectedOrganization.org_id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (clientError) {
+    throw clientError;
+  }
+
+  if (!activeClient) {
+    return {
+      context,
+      activeClient: null,
+      upcomingAppointments: [],
+      pastAppointments: [],
+    };
+  }
+
+  const nowIso = new Date().toISOString();
+  const selectFields = `
+    id,
+    start_at,
+    end_at,
+    status,
+    service:appointment_types (
+      id,
+      name,
+      duration_minutes
+    ),
+    staff:staff (
+      id,
+      name
+    )
+  `;
+
+  const [
+    { data: upcomingAppointments, error: upcomingError },
+    { data: pastAppointments, error: pastError },
+  ] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select(selectFields)
+      .eq("org_id", context.selectedOrganization.org_id)
+      .eq("client_id", activeClient.id)
+      .gte("start_at", nowIso)
+      .order("start_at", { ascending: true }),
+    supabase
+      .from("appointments")
+      .select(selectFields)
+      .eq("org_id", context.selectedOrganization.org_id)
+      .eq("client_id", activeClient.id)
+      .lt("start_at", nowIso)
+      .order("start_at", { ascending: false }),
+  ]);
+
+  if (upcomingError) {
+    throw upcomingError;
+  }
+
+  if (pastError) {
+    throw pastError;
+  }
+
+  return {
+    context,
+    activeClient,
+    upcomingAppointments: normalizeAppointmentRows(upcomingAppointments),
+    pastAppointments: normalizeAppointmentRows(pastAppointments),
   };
 }

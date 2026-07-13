@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Client } from "../../../types";
 
 function formatDate(value: string) {
@@ -38,7 +39,7 @@ function ClientSection({
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">{title}</h2>
       <div className="overflow-hidden rounded-2xl border border-border">
-        <div className="hidden grid-cols-[1fr_1fr_1fr_1.2fr_1.2fr_130px_270px] gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-medium text-muted-foreground xl:grid">
+        <div className="hidden grid-cols-[1fr_1fr_1fr_1.2fr_1.2fr_130px_360px] gap-3 border-b border-border bg-muted/40 px-4 py-3 text-xs font-medium text-muted-foreground xl:grid">
           <div>Ad</div>
           <div>Soyad</div>
           <div>Telefon</div>
@@ -52,7 +53,7 @@ function ClientSection({
           {clients.map((client) => (
             <div
               key={client.id}
-              className="grid gap-4 px-4 py-4 xl:grid-cols-[1fr_1fr_1fr_1.2fr_1.2fr_130px_270px] xl:items-center xl:gap-3"
+              className="grid gap-4 px-4 py-4 xl:grid-cols-[1fr_1fr_1fr_1.2fr_1.2fr_130px_360px] xl:items-center xl:gap-3"
             >
               <div>
                 <div className="text-xs text-muted-foreground xl:hidden">Ad</div>
@@ -84,6 +85,12 @@ function ClientSection({
                 <span className="w-full text-xs text-muted-foreground xl:text-right">
                   {client.user_id ? "Hesap aktif" : "Hesap oluşturulmamış"}
                 </span>
+                <Link
+                  href={`/admin/clients/${client.id}`}
+                  className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+                >
+                  Randevular
+                </Link>
                 <button
                   type="button"
                   onClick={() => onInvite(client)}
