@@ -7,11 +7,8 @@ import { CustomerOrganizationSelector } from "./CustomerOrganizationSelector";
 import {
   CustomerAuthRequiredError,
   getCustomerDashboardContext,
+  getCustomerOrganizationDisplayName,
 } from "./queries";
-
-function organizationLabel(orgId: string) {
-  return `İşletme ${orgId.slice(0, 8)}`;
-}
 
 export default async function CustomerHomePage() {
   let context;
@@ -31,12 +28,14 @@ export default async function CustomerHomePage() {
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div>
-            <ArtexoBrand compact />
-            <h1 className="text-xl font-semibold">Müşteri Paneli</h1>
+        <header className="space-y-5">
+          <div className="flex justify-end">
+            <CustomerLogoutButton />
           </div>
-          <CustomerLogoutButton />
+          <div className="flex justify-center">
+            <ArtexoBrand />
+          </div>
+          <h1 className="text-xl font-semibold">Müşteri Paneli</h1>
         </header>
 
         {organizations.length === 0 ? (
@@ -55,7 +54,7 @@ export default async function CustomerHomePage() {
               <CalendarDays className="h-6 w-6" />
             </div>
             <div className="text-sm font-medium text-blue-400">
-              {organizationLabel(selectedOrganization.org_id)}
+              {getCustomerOrganizationDisplayName(selectedOrganization)}
             </div>
             <h2 className="mt-2 text-2xl font-semibold">
               Hoş geldiniz, {selectedOrganization.client_name}

@@ -163,19 +163,21 @@ export default async function CustomerAppointmentsPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div>
+        <header className="space-y-5">
+          <div className="flex items-center justify-between gap-4">
             <Link
               href="/customer"
-              className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
               Müşteri paneline dön
             </Link>
-            <ArtexoBrand compact />
-            <h1 className="text-2xl font-semibold">Randevularım</h1>
+            <CustomerLogoutButton />
           </div>
-          <CustomerLogoutButton />
+          <div className="flex justify-center">
+            <ArtexoBrand />
+          </div>
+          <h1 className="text-2xl font-semibold">Randevularım</h1>
         </header>
 
         {organizations.length === 0 ? (
@@ -204,8 +206,8 @@ export default async function CustomerAppointmentsPage() {
               appointments={upcomingAppointments}
             />
             <AppointmentSection
-              title="Geçmiş Randevular"
-              emptyMessage="Geçmiş randevunuz bulunmuyor."
+              title="Geçmiş ve İptal Edilen Randevular"
+              emptyMessage="Geçmiş veya iptal edilmiş randevunuz bulunmuyor."
               appointments={pastAppointments}
             />
           </div>

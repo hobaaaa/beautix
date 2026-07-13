@@ -3,11 +3,11 @@ import { ArrowLeft, CalendarPlus, Clock } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CustomerLogoutButton } from "../CustomerLogoutButton";
-import { CustomerAuthRequiredError, getCustomerServices } from "../queries";
-
-function organizationLabel(orgId: string) {
-  return `İşletme ${orgId.slice(0, 8)}`;
-}
+import {
+  CustomerAuthRequiredError,
+  getCustomerOrganizationDisplayName,
+  getCustomerServices,
+} from "../queries";
 
 function formatPrice(price: string) {
   const numericPrice = Number(price);
@@ -46,24 +46,28 @@ export default async function CustomerServicesPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div>
+        <header className="space-y-5">
+          <div className="flex items-center justify-between gap-4">
             <Link
               href="/customer"
-              className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
               Müşteri paneline dön
             </Link>
-            <ArtexoBrand compact />
+            <CustomerLogoutButton />
+          </div>
+          <div className="flex justify-center">
+            <ArtexoBrand />
+          </div>
+          <div>
             <h1 className="text-2xl font-semibold">Hizmetler</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {selectedOrganization
-                ? `${organizationLabel(selectedOrganization.org_id)} için aktif hizmetler.`
+                ? `${getCustomerOrganizationDisplayName(selectedOrganization)} için aktif hizmetler.`
                 : "Hizmetleri görüntülemek için bir işletme bağlantısı gerekir."}
             </p>
           </div>
-          <CustomerLogoutButton />
         </header>
 
         {organizations.length === 0 ? (

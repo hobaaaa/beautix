@@ -58,6 +58,7 @@ type NotificationData = {
   client: ClientRow;
   service: ServiceRow;
   staff: StaffRow;
+  organizationName: string;
 };
 
 type ProcessResult =
@@ -340,11 +341,19 @@ async function getNotificationData(
     throw new Error("non_retryable:staff_not_found");
   }
 
+  const { data: organizationProfile } = await supabase
+    .from("organization_profiles")
+    .select("name")
+    .eq("org_id", appointment.org_id)
+    .maybeSingle<{ name: string }>();
+
   return {
     appointment,
     client,
     service,
     staff,
+    organizationName:
+      organizationProfile?.name?.trim() || organizationLabel(appointment.org_id),
   };
 }
 
@@ -370,10 +379,8 @@ async function processBookingConfirmationJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff } = await getNotificationData(
-    supabase,
-    job,
-  );
+  const { appointment, client, service, staff, organizationName } =
+    await getNotificationData(supabase, job);
   const recipient = maskEmail(client.email);
 
   if (!client.email) {
@@ -388,7 +395,7 @@ async function processBookingConfirmationJob(
     to: client.email,
     subject: "Randevunuz Onaylandı — Artexo",
     html: renderBookingConfirmationEmail({
-      organizationName: organizationLabel(appointment.org_id),
+      organizationName,
       clientName: clientDisplayName(client),
       serviceName: service.name,
       staffName: staff.name,
@@ -410,10 +417,8 @@ async function processAppointmentReminderJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff } = await getNotificationData(
-    supabase,
-    job,
-  );
+  const { appointment, client, service, staff, organizationName } =
+    await getNotificationData(supabase, job);
   const recipient = maskEmail(client.email);
 
   if (appointment.status !== "confirmed") {
@@ -444,7 +449,7 @@ async function processAppointmentReminderJob(
     to: client.email,
     subject: "Randevu Hatırlatması — Artexo",
     html: renderAppointmentReminderEmail({
-      organizationName: organizationLabel(appointment.org_id),
+      organizationName,
       clientName: clientDisplayName(client),
       serviceName: service.name,
       staffName: staff.name,
@@ -466,10 +471,8 @@ async function processBusinessBookingNotificationJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff } = await getNotificationData(
-    supabase,
-    job,
-  );
+  const { appointment, client, service, staff, organizationName } =
+    await getNotificationData(supabase, job);
   const recipientEmail = await getBusinessRecipientEmail(
     supabase,
     appointment.org_id,
@@ -488,7 +491,7 @@ async function processBusinessBookingNotificationJob(
     to: recipientEmail,
     subject: "Yeni Randevu Oluşturuldu — Artexo",
     html: renderBusinessBookingNotificationEmail({
-      organizationName: organizationLabel(appointment.org_id),
+      organizationName,
       clientName: clientDisplayName(client),
       clientPhone: client.phone,
       clientEmail: client.email,

@@ -18,6 +18,7 @@ export type CustomerOrganization = {
   client_id: string;
   client_name: string;
   client_email: string | null;
+  organization_name: string | null;
 };
 
 export type CustomerDashboardContext = {
@@ -99,28 +100,36 @@ const isValidUuid = (value: string) =>
 function normalizeOrganizations(value: unknown): CustomerOrganization[] {
   if (!Array.isArray(value)) return [];
 
-  return value
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const row = item as Record<string, unknown>;
+  const organizations: CustomerOrganization[] = [];
 
-      if (
-        typeof row.org_id !== "string" ||
-        typeof row.client_id !== "string" ||
-        typeof row.client_name !== "string"
-      ) {
-        return null;
-      }
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
 
-      return {
-        org_id: row.org_id,
-        client_id: row.client_id,
-        client_name: row.client_name,
-        client_email:
-          typeof row.client_email === "string" ? row.client_email : null,
-      };
-    })
-    .filter((item): item is CustomerOrganization => item !== null);
+    if (
+      typeof row.org_id !== "string" ||
+      typeof row.client_id !== "string" ||
+      typeof row.client_name !== "string"
+    ) {
+      continue;
+    }
+
+    organizations.push({
+      org_id: row.org_id,
+      client_id: row.client_id,
+      client_name: row.client_name,
+      client_email: typeof row.client_email === "string" ? row.client_email : null,
+      organization_name: null,
+    });
+  }
+
+  return organizations;
+}
+
+export function getCustomerOrganizationDisplayName(
+  organization: Pick<CustomerOrganization, "org_id" | "organization_name">,
+) {
+  return organization.organization_name?.trim() || `İşletme ${organization.org_id.slice(0, 8)}`;
 }
 
 function normalizeService(value: unknown): CustomerServiceListItem | null {
@@ -301,6 +310,30 @@ const resolveCustomerDashboardContext = cache(async () => {
   }
 
   const organizations = normalizeOrganizations(data);
+
+  if (organizations.length > 0) {
+    const { data: profileRows, error: profileError } = await supabase
+      .from("organization_profiles")
+      .select("org_id, name")
+      .in(
+        "org_id",
+        organizations.map((organization) => organization.org_id),
+      );
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    const profileNames = new Map(
+      (profileRows ?? [])
+        .filter((row) => typeof row.org_id === "string" && typeof row.name === "string")
+        .map((row) => [row.org_id, row.name.trim()]),
+    );
+
+    for (const organization of organizations) {
+      organization.organization_name = profileNames.get(organization.org_id) ?? null;
+    }
+  }
   const cookieStore = await cookies();
   const selectedOrgId = cookieStore.get(CUSTOMER_ORG_COOKIE)?.value;
   const selectedOrganization =
@@ -597,6 +630,7 @@ export async function getCustomerAppointments(): Promise<CustomerAppointmentsDat
       .select(selectFields)
       .eq("org_id", context.selectedOrganization.org_id)
       .eq("client_id", activeClient.id)
+      .neq("status", "cancelled")
       .gte("start_at", nowIso)
       .order("start_at", { ascending: true }),
     supabase
@@ -604,7 +638,7 @@ export async function getCustomerAppointments(): Promise<CustomerAppointmentsDat
       .select(selectFields)
       .eq("org_id", context.selectedOrganization.org_id)
       .eq("client_id", activeClient.id)
-      .lt("start_at", nowIso)
+      .or(`start_at.lt.${nowIso},status.eq.cancelled`)
       .order("start_at", { ascending: false }),
   ]);
 

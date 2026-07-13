@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 function organizationLabel(organization: CustomerOrganization) {
-  return `İşletme ${organization.org_id.slice(0, 8)}`;
+  return (
+    organization.organization_name?.trim() ||
+    `İşletme ${organization.org_id.slice(0, 8)}`
+  );
 }
 
 export function CustomerOrganizationSelector({
@@ -63,7 +66,9 @@ export function CustomerOrganizationSelector({
             className="flex w-full items-center justify-between gap-4 rounded-2xl border border-border bg-background px-4 py-3 text-left transition hover:border-blue-500 hover:bg-blue-950/20 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span>
-              <span className="block font-medium">{organizationLabel(organization)}</span>
+              <span className="block font-medium">
+                {organizationLabel(organization)}
+              </span>
               <span className="block text-sm text-muted-foreground">
                 {organization.client_name}
               </span>
