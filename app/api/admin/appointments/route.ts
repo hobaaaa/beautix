@@ -164,6 +164,7 @@ export async function POST(request: NextRequest) {
         .select("start_at, end_at, status")
         .eq("org_id", orgId)
         .eq("staff_id", staff_id)
+        .neq("status", "cancelled")
         .gte("start_at", dayStart)
         .lt("start_at", nextDayStart),
     ]);

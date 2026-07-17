@@ -220,6 +220,7 @@ export async function PATCH(
         .eq("org_id", orgId)
         .eq("staff_id", staff_id)
         .neq("id", id)
+        .neq("status", "cancelled")
         .gte("start_at", dayStart)
         .lt("start_at", nextDayStart),
     ]);

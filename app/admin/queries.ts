@@ -3,6 +3,8 @@
 import { logServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 
+const DASHBOARD_APPOINTMENT_LIST_LIMIT = 8;
+
 export type DashboardAppointmentItem = {
   id: string;
   start_at: string;
@@ -148,7 +150,8 @@ export async function getAdminDashboardData(logLabel = "admin-dashboard-page") {
       .neq("status", "cancelled")
       .gte("start_at", todayStart)
       .lt("start_at", tomorrowStart)
-      .order("start_at", { ascending: true }),
+      .order("start_at", { ascending: true })
+      .limit(DASHBOARD_APPOINTMENT_LIST_LIMIT),
     supabase
       .from("appointments")
       .select(listSelect)
@@ -156,7 +159,8 @@ export async function getAdminDashboardData(logLabel = "admin-dashboard-page") {
       .neq("status", "cancelled")
       .gte("start_at", tomorrowStart)
       .lt("start_at", dayAfterTomorrowStart)
-      .order("start_at", { ascending: true }),
+      .order("start_at", { ascending: true })
+      .limit(DASHBOARD_APPOINTMENT_LIST_LIMIT),
   ]);
 
   if (
