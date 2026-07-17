@@ -19,7 +19,7 @@ Artexo'nun temel modeli organization bazlıdır. Her müşteri, hizmet, personel
 - Working hours yönetimi
 - Slot engine ve availability engine
 - Customer booking akışı
-- Public booking URL ve aktif hizmet seçimi altyapısı: `/book/[slug]`
+- Public booking URL, aktif hizmet, tarih, personel ve slot seçimi altyapısı: `/book/[slug]`
 - Appointment cancellation
 - Appointment lifecycle: `confirmed`, `cancelled`, `completed`, `no_show`
 - PWA kurulum deneyimi
@@ -191,13 +191,13 @@ Kurallar:
 
 ## Public Booking URL Altyapısı
 
-İşletmeler için global unique public slug ve aktif hizmet seçimi altyapısı hazırlanmıştır. Public URL formatı:
+İşletmeler için global unique public slug, aktif hizmet seçimi, tarih seçimi, personel seçimi ve uygun slot seçimi altyapısı hazırlanmıştır. Public URL formatı:
 
 ```txt
 /book/[slug]
 ```
 
-Bu route şu anda işletme adını ve online randevuya açık aktif hizmetleri gösterir. Hizmet seçimi URL'de `serviceId` query parametresiyle taşınır. Tarih seçimi, staff/slot seçimi, guest form ve public appointment create akışı henüz bu kart kapsamında tamamlanmamıştır.
+Bu route şu anda işletme adını, online randevuya açık aktif hizmetleri, tarih/personel seçimini ve uygun slotları gösterir. Seçimler URL'de `serviceId`, `date` ve `staffId` query parametreleriyle taşınır. Guest form ve public appointment create akışı henüz sonraki kart kapsamındadır.
 
 ## Demo Data
 
