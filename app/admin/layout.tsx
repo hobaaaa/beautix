@@ -98,6 +98,12 @@ export default async function AdminLayout({
             >
               Çalışma Saatleri
             </Link>
+            <Link
+              href="/admin/settings"
+              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+            >
+              Ayarlar
+            </Link>
             <div className="mt-auto space-y-3 pt-4">
               <InstallAppButton />
               <div className="text-xs text-muted-foreground">v0.1 (MVP)</div>

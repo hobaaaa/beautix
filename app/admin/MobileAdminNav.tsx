@@ -9,6 +9,7 @@ import {
   ContactRound,
   LayoutDashboard,
   Menu,
+  Settings,
   Users,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const navigationItems = [
   { href: "/admin/appointments", label: "Randevular", icon: CalendarDays },
   { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
   { href: "/admin/hours", label: "Çalışma Saatleri", icon: Clock3 },
+  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
 ] as const;
 
 function isActivePath(pathname: string, href: string) {
