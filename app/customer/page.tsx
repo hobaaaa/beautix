@@ -26,7 +26,7 @@ export default async function CustomerHomePage() {
   const { organizations, selectedOrganization } = context;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="space-y-5">
           <div className="flex justify-end">
@@ -85,4 +85,5 @@ export default async function CustomerHomePage() {
     </main>
   );
 }
+
 

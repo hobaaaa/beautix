@@ -67,7 +67,7 @@ export function ConfirmAppointmentButton({
         type="button"
         onClick={handleConfirm}
         disabled={loading}
-        className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? "Randevu oluşturuluyor..." : "Randevuyu Onayla"}
       </button>

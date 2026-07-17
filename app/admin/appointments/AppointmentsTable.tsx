@@ -81,9 +81,9 @@ export function AppointmentsTable({
         return (
           <div
             key={appointment.id}
-            className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
+            className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
           >
-          <div className="min-w-36">
+          <div className="min-w-0 md:min-w-36">
             <div className="text-sm text-muted-foreground">Saat</div>
             <div className="font-medium">
               {formatTimeRange(appointment.start_at, appointment.end_at)}
@@ -95,26 +95,26 @@ export function AppointmentsTable({
             )}
           </div>
 
-          <div className="grid flex-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <div>
+          <div className="grid min-w-0 flex-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div className="min-w-0">
               <div className="text-sm text-muted-foreground">Müşteri</div>
-              <div className="font-medium">{appointment.client.name}</div>
-              <div className="text-sm text-muted-foreground">
+              <div className="break-words font-medium">{appointment.client.name}</div>
+              <div className="break-all text-sm text-muted-foreground">
                 {appointment.client.phone || appointment.client.email || "-"}
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="text-sm text-muted-foreground">Hizmet</div>
-              <div className="font-medium">{appointment.service.name}</div>
+              <div className="break-words font-medium">{appointment.service.name}</div>
               <div className="text-sm text-muted-foreground">
                 {appointment.service.duration_minutes} dk
               </div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="text-sm text-muted-foreground">Personel</div>
-              <div className="font-medium">{appointment.staff.name}</div>
+              <div className="break-words font-medium">{appointment.staff.name}</div>
               <div className="text-sm text-muted-foreground">
                 {appointment.staff.is_active ? "Aktif" : "Pasif"}
               </div>
@@ -131,17 +131,17 @@ export function AppointmentsTable({
 
             <div className="xl:col-span-2">
               <div className="text-sm text-muted-foreground">Notlar</div>
-              <div className="text-sm">{truncateNotes(appointment.notes)}</div>
+              <div className="break-words text-sm">{truncateNotes(appointment.notes)}</div>
             </div>
           </div>
 
-          <div className="flex min-w-36 flex-wrap justify-end gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2 sm:justify-end md:min-w-36">
             {isFutureConfirmed && (
               <>
                 <button
                   type="button"
                   onClick={() => onEditAppointment(appointment)}
-                  className="rounded-md border bg-slate-900 px-3 py-2 text-sm"
+                  className="min-h-11 flex-1 rounded-md border bg-slate-900 px-3 py-2 text-sm sm:flex-none"
                 >
                   Düzenle
                 </button>
@@ -149,7 +149,7 @@ export function AppointmentsTable({
                   type="button"
                   onClick={() => onCancelAppointment(appointment.id)}
                   disabled={cancellingId === appointment.id}
-                  className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
+                  className="min-h-11 flex-1 rounded-md border border-red-200 px-3 py-2 text-sm text-red-700 disabled:opacity-50 sm:flex-none"
                 >
                   {cancellingId === appointment.id ? "İptal ediliyor..." : "İptal et"}
                 </button>

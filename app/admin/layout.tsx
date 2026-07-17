@@ -35,17 +35,17 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <div className="flex items-center gap-3">
+    <div className="min-h-dvh bg-background">
+      <header className="sticky top-[env(safe-area-inset-top)] z-10 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <MobileAdminNav />
             <ArtexoBrand compact suffix="Yönetim" />
             <div className="hidden text-sm text-muted-foreground md:block">
               Panel
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             <div className="hidden text-sm text-muted-foreground sm:block">
               {userEmail}
             </div>
@@ -58,7 +58,7 @@ export default async function AdminLayout({
       </header>
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-0 md:grid-cols-[240px_1fr]">
         <aside className="hidden border-r md:block">
-          <nav className="flex h-[calc(100vh-56px)] flex-col gap-1 p-4">
+          <nav className="flex h-[calc(100dvh_-_56px_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] flex-col gap-1 p-4">
             <Link href="/admin" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">
               Gösterge Paneli
             </Link>
@@ -104,9 +104,10 @@ export default async function AdminLayout({
             </div>
           </nav>
         </aside>
-        <main className="min-w-0 p-4 md:p-6">{children}</main>
+        <main className="safe-bottom min-w-0 px-3 py-4 sm:px-4 md:p-6">{children}</main>
       </div>
     </div>
   );
 }
+
 

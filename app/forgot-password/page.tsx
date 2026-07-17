@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6 py-12">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-6 py-12 pb-[max(2rem,env(safe-area-inset-bottom))]">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-card-foreground shadow-sm">
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">Şifremi Unuttum</h1>
@@ -114,5 +114,6 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+
 
 

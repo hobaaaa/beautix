@@ -44,12 +44,12 @@ export default async function CustomerServicesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <header className="space-y-5">
-          <div className="flex items-center justify-between gap-4">
-            <Link
-              href="/customer"
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Link
+                href="/customer"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -95,8 +95,8 @@ export default async function CustomerServicesPage() {
                 className="flex min-h-56 flex-col rounded-3xl border border-border bg-card p-5 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-semibold">{service.name}</h2>
+                  <div className="min-w-0">
+                    <h2 className="break-words text-xl font-semibold">{service.name}</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {service.description ??
                         "Bu hizmet için detaylı açıklama henüz eklenmemiş."}
@@ -122,7 +122,7 @@ export default async function CustomerServicesPage() {
                 <div className="mt-auto pt-6">
                   <Link
                     href={`/customer/booking?serviceId=${service.id}`}
-                    className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                    className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                   >
                     Randevu Al
                   </Link>
@@ -135,5 +135,6 @@ export default async function CustomerServicesPage() {
     </main>
   );
 }
+
 
 

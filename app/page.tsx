@@ -46,7 +46,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10 sm:px-6">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
       <main className="w-full max-w-md rounded-3xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
         <div className="space-y-3">
           <ArtexoBrand />
@@ -76,4 +76,5 @@ export default async function Home() {
     </div>
   );
 }
+
 

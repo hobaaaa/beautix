@@ -112,10 +112,10 @@ export default async function CustomerBookingConfirmPage({
   });
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <Link
               href={changeSlotHref}
               className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -156,9 +156,9 @@ export default async function CustomerBookingConfirmPage({
         ) : (
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <div className="space-y-5">
-              <div>
+              <div className="min-w-0">
                 <div className="text-sm text-muted-foreground">Hizmet</div>
-                <h2 className="mt-1 text-2xl font-semibold">{service.name}</h2>
+                <h2 className="mt-1 break-words text-2xl font-semibold">{service.name}</h2>
               </div>
 
               <div className="grid gap-3 text-sm sm:grid-cols-2">
@@ -167,7 +167,7 @@ export default async function CustomerBookingConfirmPage({
                     <UserRound className="h-4 w-4" />
                     Personel
                   </div>
-                  <div className="font-semibold">{selectedStaff.name}</div>
+                  <div className="break-words font-semibold">{selectedStaff.name}</div>
                 </div>
                 <div className="rounded-2xl border border-border bg-background/60 p-4">
                   <div className="mb-2 flex items-center gap-2 text-muted-foreground">
@@ -200,7 +200,7 @@ export default async function CustomerBookingConfirmPage({
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                 <Link
                   href={changeSlotHref}
-                  className="inline-flex w-full items-center justify-center rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
                 >
                   Saati Değiştir
                 </Link>
@@ -218,4 +218,5 @@ export default async function CustomerBookingConfirmPage({
     </main>
   );
 }
+
 

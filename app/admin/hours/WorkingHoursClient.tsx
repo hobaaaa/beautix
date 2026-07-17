@@ -156,7 +156,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         {days.map((day) => (
           <div
             key={day.day_of_week}
-            className="rounded-lg border p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+            className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-center md:justify-between"
           >
             <div className="min-w-36">
               <div className="font-medium">{day.day_name}</div>
@@ -179,7 +179,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
               Aktif
             </label>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
                   Başlangıç saati
@@ -194,7 +194,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
                       start_time: event.target.value,
                     }))
                   }
-                  className="rounded-md border px-3 py-2 disabled:opacity-50"
+                  className="min-h-11 w-full rounded-md border px-3 py-2 disabled:opacity-50 sm:w-auto"
                 />
               </div>
 
@@ -212,7 +212,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
                       end_time: event.target.value,
                     }))
                   }
-                  className="rounded-md border px-3 py-2 disabled:opacity-50"
+                  className="min-h-11 w-full rounded-md border px-3 py-2 disabled:opacity-50 sm:w-auto"
                 />
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         type="button"
         onClick={handleSave}
         disabled={loading}
-        className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+        className="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50 sm:w-auto"
       >
         {loading ? "Kaydediliyor..." : "Çalışma Saatlerini Kaydet"}
       </button>

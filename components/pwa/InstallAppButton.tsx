@@ -129,8 +129,8 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
         onClick={handleClick}
         className={
           compact
-            ? "rounded-md border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
-            : "flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
+            ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "flex min-h-11 w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
         }
         aria-label={isManualInstall ? "Kurulum yardımını göster" : "Uygulamayı yükle"}
       >
@@ -143,7 +143,7 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
           role="status"
           className={
             compact
-              ? "absolute right-0 top-11 z-20 w-72 space-y-2 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-lg"
+              ? "absolute right-0 top-12 z-20 w-[min(18rem,calc(100vw-2rem))] space-y-2 rounded-lg border border-border bg-popover p-3 text-xs text-popover-foreground shadow-lg"
               : "space-y-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground"
           }
         >

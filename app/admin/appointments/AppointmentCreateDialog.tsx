@@ -312,8 +312,8 @@ export function AppointmentCreateDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 dark-scrollbar">
-      <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-border bg-card p-6 text-card-foreground shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] dark-scrollbar sm:p-4">
+      <div className="max-h-[calc(100dvh_-_2rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] w-full max-w-xl overflow-y-auto rounded-lg border border-border bg-card p-4 text-card-foreground shadow-xl sm:p-6">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
@@ -329,7 +329,7 @@ export function AppointmentCreateDialog({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-md border border-border bg-background px-3 py-1 text-sm text-foreground disabled:opacity-50"
+            className="min-h-11 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-50"
           >
             Kapat
           </button>
@@ -355,3 +355,4 @@ export function AppointmentCreateDialog({
     </div>
   );
 }
+

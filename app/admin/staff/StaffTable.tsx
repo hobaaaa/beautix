@@ -31,8 +31,8 @@ function StaffTableSection({
           className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-start md:justify-between"
         >
           <div className="space-y-2">
-            <div>
-              <div className="font-medium">{staffMember.name}</div>
+            <div className="min-w-0">
+              <div className="break-words font-medium">{staffMember.name}</div>
               <div className="text-sm text-muted-foreground">
                 {staffMember.is_active ? "Aktif personel" : "Pasif personel"}
               </div>
@@ -51,12 +51,12 @@ function StaffTableSection({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <button
               type="button"
               onClick={() => onEdit(staffMember)}
               disabled={loadingId === staffMember.id}
-              className="rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
+              className="min-h-11 rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               Düzenle
             </button>
@@ -64,7 +64,7 @@ function StaffTableSection({
               type="button"
               onClick={() => onToggleActive(staffMember)}
               disabled={loadingId === staffMember.id}
-              className="rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
+              className="min-h-11 rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               {loadingId === staffMember.id
                 ? "Güncelleniyor..."
@@ -77,7 +77,7 @@ function StaffTableSection({
                 type="button"
                 onClick={() => onDelete(staffMember)}
                 disabled={loadingId === staffMember.id}
-                className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
+                className="min-h-11 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
               >
                 {loadingId === staffMember.id ? "Siliniyor..." : "Sil"}
               </button>

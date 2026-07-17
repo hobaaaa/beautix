@@ -131,7 +131,7 @@ function ClientSection({
           {clients.map((client) => (
             <article
               key={client.id}
-              className="grid gap-4 px-4 py-5 lg:grid-cols-[minmax(180px,1.1fr)_minmax(260px,1.7fr)_minmax(140px,0.8fr)_auto] lg:items-start"
+              className="grid min-w-0 gap-4 px-4 py-5 lg:grid-cols-[minmax(180px,1.1fr)_minmax(260px,1.7fr)_minmax(140px,0.8fr)_auto] lg:items-start"
             >
               <div className="min-w-0 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">

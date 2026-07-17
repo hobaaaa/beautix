@@ -57,9 +57,9 @@ function AppointmentCard({
   return (
     <article className="rounded-3xl border border-border bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <div className="text-sm text-muted-foreground">Hizmet</div>
-          <h3 className="mt-1 text-xl font-semibold">{appointment.service.name}</h3>
+          <h3 className="mt-1 break-words text-xl font-semibold">{appointment.service.name}</h3>
         </div>
         <span
           className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[appointment.status]}`}
@@ -88,7 +88,7 @@ function AppointmentCard({
             <UserRound className="h-4 w-4" />
             Personel
           </div>
-          <div className="font-semibold">{appointment.staff.name}</div>
+          <div className="break-words font-semibold">{appointment.staff.name}</div>
         </div>
         <div className="rounded-2xl border border-border bg-background/60 p-4">
           <div className="mb-2 text-muted-foreground">Süre</div>
@@ -161,10 +161,10 @@ export default async function CustomerAppointmentsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <header className="space-y-5">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/customer"
               className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -216,5 +216,6 @@ export default async function CustomerAppointmentsPage() {
     </main>
   );
 }
+
 
 

@@ -120,8 +120,21 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 
@@ -147,28 +160,8 @@
   .dark-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
   }
-}
 
-@layer utilities {
-  .dark-scrollbar {
-    scrollbar-color: #6b7280 oklch(0.145 0 0);
-  }
-
-  .dark-scrollbar::-webkit-scrollbar {
-    width: 10px;
-  }
-
-  .dark-scrollbar::-webkit-scrollbar-track {
-    background: oklch(0.145 0 0);
-  }
-
-  .dark-scrollbar::-webkit-scrollbar-thumb {
-    background: #6b7280;
-    border-radius: 9999px;
-    border: 2px solid oklch(0.145 0 0);
-  }
-
-  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }

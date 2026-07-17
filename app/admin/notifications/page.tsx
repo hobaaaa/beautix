@@ -47,11 +47,11 @@ function statusClassName(status: string) {
 
 function NotificationLogCard({ log }: { log: NotificationLogListItem }) {
   return (
-    <article className="rounded-2xl border bg-card p-4 text-card-foreground shadow-sm">
+    <article className="min-w-0 rounded-2xl border bg-card p-4 text-card-foreground shadow-sm">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold">
+            <h2 className="break-words text-base font-semibold">
               {labelFor(TYPE_LABELS, log.type)}
             </h2>
             <span
@@ -75,7 +75,7 @@ function NotificationLogCard({ log }: { log: NotificationLogListItem }) {
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <dt className="text-muted-foreground">Alıcı</dt>
-          <dd className="font-medium">{log.recipient ?? "-"}</dd>
+          <dd className="break-all font-medium">{log.recipient ?? "-"}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">Kanal</dt>
@@ -96,7 +96,7 @@ function NotificationLogCard({ log }: { log: NotificationLogListItem }) {
       {log.error_message && (
         <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 p-3">
           <div className="text-xs font-medium text-red-300">Hata</div>
-          <p className="mt-1 max-h-24 overflow-auto break-words text-sm text-red-200">
+          <p className="dark-scrollbar mt-1 max-h-24 overflow-auto break-words text-sm text-red-200">
             {log.error_message}
           </p>
         </div>

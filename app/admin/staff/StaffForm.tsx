@@ -66,7 +66,7 @@ export function StaffForm({
             })
           }
           disabled={loading}
-          className="w-full rounded-md border px-3 py-2 disabled:opacity-50"
+          className="min-h-11 w-full rounded-md border px-3 py-2 disabled:opacity-50"
           placeholder="Örn. Ayşe"
         />
       </div>
@@ -77,7 +77,7 @@ export function StaffForm({
           {services.map((service) => (
             <label
               key={service.id}
-              className="flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+              className="flex min-h-11 items-start gap-2 rounded-md border px-3 py-2 text-sm"
             >
               <input
                 type="checkbox"
@@ -97,13 +97,13 @@ export function StaffForm({
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+            className="min-h-11 rounded-md border px-4 py-2 text-sm disabled:opacity-50"
           >
             Vazgeç
           </button>
@@ -112,7 +112,7 @@ export function StaffForm({
           type="button"
           onClick={onSubmit}
           disabled={loading}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="min-h-11 rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
         >
           {loading ? "Kaydediliyor..." : submitLabel}
         </button>

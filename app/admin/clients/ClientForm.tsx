@@ -48,7 +48,7 @@ export function ClientForm({
             onChange={(event) => updateField("first_name", event.target.value)}
             disabled={loading}
             autoComplete="given-name"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
 
@@ -62,7 +62,7 @@ export function ClientForm({
             onChange={(event) => updateField("last_name", event.target.value)}
             disabled={loading}
             autoComplete="family-name"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
       </div>
@@ -78,7 +78,7 @@ export function ClientForm({
             disabled={loading}
             autoComplete="tel"
             placeholder="05xx xxx xx xx"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
 
@@ -93,7 +93,7 @@ export function ClientForm({
             onChange={(event) => updateField("email", event.target.value)}
             disabled={loading}
             autoComplete="email"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
       </div>
@@ -120,7 +120,7 @@ export function ClientForm({
             value={values.birth_date}
             onChange={(event) => updateField("birth_date", event.target.value)}
             disabled={loading}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           />
         </div>
       </div>
@@ -137,19 +137,19 @@ export function ClientForm({
         />
       </div>
 
-      <div className="flex justify-end gap-2 border-t border-border pt-4">
+      <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="rounded-xl border border-border px-4 py-2 text-sm disabled:opacity-50"
+          className="min-h-11 rounded-xl border border-border px-4 py-2 text-sm disabled:opacity-50"
         >
           Vazgeç
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+          className="min-h-11 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
         >
           {loading ? "Kaydediliyor..." : submitLabel}
         </button>

@@ -68,8 +68,8 @@ export function CancelAppointmentButton({
       {error && <div className="text-xs text-red-300">{error}</div>}
 
       {dialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-5 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="max-h-[calc(100dvh_-_2rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-3xl border border-border bg-card p-5 shadow-2xl">
             <h3 className="text-lg font-semibold">Randevu iptali</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Bu randevuyu iptal etmek istediğinize emin misiniz?
@@ -105,4 +105,5 @@ export function CancelAppointmentButton({
     </div>
   );
 }
+
 

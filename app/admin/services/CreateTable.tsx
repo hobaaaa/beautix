@@ -74,7 +74,7 @@ export const CreateTable = ({
           id="name"
           name="name"
           required
-          className="border border-gray-300 rounded px-2 py-1 w-full"
+          className="min-h-11 w-full rounded border border-gray-300 px-3 py-2"
         />
       </div>
       <div className="space-y-2">
@@ -84,13 +84,13 @@ export const CreateTable = ({
           id="duration_minutes"
           name="duration_minutes"
           required
-          className="border border-gray-300 rounded px-2 py-1 w-full"
+          className="min-h-11 w-full rounded border border-gray-300 px-3 py-2"
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        className="min-h-11 w-full rounded bg-blue-500 px-4 py-2 text-white sm:w-auto"
       >
         {loading ? "Oluşturuluyor..." : "Hizmet Oluştur"}
       </button>

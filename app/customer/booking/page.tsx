@@ -124,10 +124,10 @@ export default async function CustomerBookingPage({
     : null;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-6 sm:px-6">
+    <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex items-center justify-between gap-4">
-          <div>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <Link
               href="/customer/services"
               className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
@@ -210,16 +210,16 @@ export default async function CustomerBookingPage({
                       Uygun personel ve müsait saatleri aşağıdan seçebilirsiniz.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-sm">
+                  <div className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap">
                     <Link
                       href={buildBookingHref({ serviceId: service.id })}
-                      className="rounded-xl border border-border px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       Tarihi Değiştir
                     </Link>
                     <Link
                       href="/customer/services"
-                      className="rounded-xl border border-border px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                     >
                       Hizmetleri Değiştir
                     </Link>
@@ -242,7 +242,7 @@ export default async function CustomerBookingPage({
                             date: selectedDate,
                             staffId: staffMember.id,
                           })}
-                          className="rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm font-semibold transition hover:border-blue-500 hover:text-blue-300"
+                          className="min-h-11 rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm font-semibold transition hover:border-blue-500 hover:text-blue-300"
                         >
                           {staffMember.name}
                         </Link>
@@ -266,7 +266,7 @@ export default async function CustomerBookingPage({
                             staffId: availability.selectedStaff!.id,
                             time: slot.start_time,
                           })}
-                          className="rounded-2xl border border-border bg-background/60 px-4 py-3 text-center text-sm font-semibold transition hover:border-blue-500 hover:bg-blue-600 hover:text-white"
+                          className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-border bg-background/60 px-4 py-3 text-center text-sm font-semibold transition hover:border-blue-500 hover:bg-blue-600 hover:text-white"
                         >
                           {slot.label}
                         </Link>
@@ -282,6 +282,7 @@ export default async function CustomerBookingPage({
     </main>
   );
 }
+
 
 
 

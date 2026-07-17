@@ -28,27 +28,27 @@ export default async function AdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Gösterge Paneli</h1>
           <p className="text-sm text-muted-foreground">
             Günlük randevu özetinizi ve hızlı erişimleri görüntüleyin.
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
             href="/admin/appointments"
-            className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white"
+            className="inline-flex min-h-11 items-center justify-center rounded-md bg-blue-600 px-3 py-2 text-sm text-white"
           >
             Yeni Randevu
           </Link>
-          <Link href="/admin/services" className="rounded-md border px-3 py-2 text-sm">
+          <Link href="/admin/services" className="inline-flex min-h-11 items-center justify-center rounded-md border px-3 py-2 text-sm">
             Hizmetler
           </Link>
-          <Link href="/admin/staff" className="rounded-md border px-3 py-2 text-sm">
+          <Link href="/admin/staff" className="inline-flex min-h-11 items-center justify-center rounded-md border px-3 py-2 text-sm">
             Personeller
           </Link>
-          <Link href="/admin/hours" className="rounded-md border px-3 py-2 text-sm">
+          <Link href="/admin/hours" className="inline-flex min-h-11 items-center justify-center rounded-md border px-3 py-2 text-sm">
             Çalışma Saatleri
           </Link>
         </div>
@@ -95,9 +95,9 @@ export default async function AdminPage() {
                   className="grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-[72px_1fr]"
                 >
                   <div className="font-medium">{formatTime(appointment.start_at)}</div>
-                  <div className="space-y-1">
-                    <div className="font-medium">{appointment.client_name}</div>
-                    <div className="text-muted-foreground">
+                  <div className="min-w-0 space-y-1">
+                    <div className="break-words font-medium">{appointment.client_name}</div>
+                    <div className="break-words text-muted-foreground">
                       {appointment.service_name} - {appointment.staff_name}
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -124,9 +124,9 @@ export default async function AdminPage() {
                   className="grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-[72px_1fr]"
                 >
                   <div className="font-medium">{formatTime(appointment.start_at)}</div>
-                  <div className="space-y-1">
-                    <div className="font-medium">{appointment.client_name}</div>
-                    <div className="text-muted-foreground">
+                  <div className="min-w-0 space-y-1">
+                    <div className="break-words font-medium">{appointment.client_name}</div>
+                    <div className="break-words text-muted-foreground">
                       {appointment.service_name} - {appointment.staff_name}
                     </div>
                   </div>

@@ -29,6 +29,7 @@ export const metadata: Metadata = {
 
 export const viewport = {
   themeColor: "#171717",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -38,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="dark">
-      <body className="antialiased">
+      <body className="min-h-dvh antialiased">
         {children}
         <ServiceWorkerRegister />
       </body>

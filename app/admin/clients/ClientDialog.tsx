@@ -41,14 +41,14 @@ export function ClientDialog({
   if (!isOpen || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
       <button
         type="button"
         onClick={loading ? undefined : onClose}
         className="absolute inset-0 bg-black/80"
         aria-label="Müşteri formunu kapat"
       />
-      <section className="dark-scrollbar relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#1f1f1f] p-5 text-zinc-100 shadow-2xl sm:p-6">
+      <section className="dark-scrollbar relative max-h-[calc(100dvh_-_2rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#1f1f1f] p-5 text-zinc-100 shadow-2xl sm:p-6">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">{title}</h2>
@@ -58,7 +58,7 @@ export function ClientDialog({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white disabled:opacity-50"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-zinc-400 hover:bg-white/10 hover:text-white disabled:opacity-50"
             aria-label="Kapat"
           >
             <X className="h-5 w-5" />
@@ -78,4 +78,5 @@ export function ClientDialog({
     document.body,
   );
 }
+
 

@@ -77,7 +77,7 @@ export function MobileAdminNav() {
 
             <aside
               id="mobile-admin-navigation"
-              className="relative flex h-full w-[min(82vw,320px)] flex-col border-r border-white/10 bg-[#171717] p-4 text-zinc-100 shadow-2xl"
+              className="relative flex h-dvh w-[min(86vw,320px)] flex-col overflow-y-auto border-r border-white/10 bg-[#171717] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] text-zinc-100 shadow-2xl"
               aria-label="Yönetim menüsü"
             >
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">

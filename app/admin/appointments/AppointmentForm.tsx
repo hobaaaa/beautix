@@ -68,7 +68,7 @@ export function AppointmentForm({
           value={values.client_id}
           onChange={(event) => onChange("client_id", event.target.value)}
           disabled={loading}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+          className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
           <option value="">Müşteri seçin</option>
           {clients.map((client) => (
@@ -87,7 +87,7 @@ export function AppointmentForm({
             onChange("appointment_type_id", event.target.value)
           }
           disabled={loading}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+          className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         >
           <option value="">Hizmet seçin</option>
           {services.map((service) => (
@@ -107,7 +107,7 @@ export function AppointmentForm({
             value={values.staff_id}
             onChange={(event) => onChange("staff_id", event.target.value)}
             disabled={loading}
-            className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+            className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
           >
             <option value="">Personel seçin</option>
             {eligibleStaff.map((staffMember) => (
@@ -140,7 +140,7 @@ export function AppointmentForm({
           min={new Intl.DateTimeFormat("en-CA", {
             timeZone: "Europe/Istanbul",
           }).format(new Date())}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
+          className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
         />
       </div>
 
@@ -179,7 +179,7 @@ export function AppointmentForm({
                       onChange("selected_slot_start", slot.start_at)
                     }
                     disabled={loading}
-                    className={`rounded-md border px-3 py-2 text-sm transition ${
+                    className={`min-h-11 rounded-md border px-3 py-2 text-sm transition ${
                       isSelected
                         ? "border-blue-600 bg-blue-600 text-white"
                         : "border-border bg-background text-foreground hover:bg-muted"
@@ -206,12 +206,12 @@ export function AppointmentForm({
         />
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pb-[env(safe-area-inset-bottom)]">
         <button
           type="button"
           onClick={onSubmit}
           disabled={loading}
-          className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
+          className="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50 sm:w-auto"
         >
           {loading ? "Kaydediliyor..." : submitLabel}
         </button>
