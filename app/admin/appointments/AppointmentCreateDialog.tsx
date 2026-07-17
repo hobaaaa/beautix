@@ -222,11 +222,12 @@ export function AppointmentCreateDialog({
         [field]: value,
       };
 
-      if (
-        field === "appointment_type_id" ||
-        field === "staff_id" ||
-        field === "date"
-      ) {
+      if (field === "appointment_type_id") {
+        nextValues.staff_id = "";
+        nextValues.selected_slot_start = "";
+      }
+
+      if (field === "staff_id" || field === "date") {
         nextValues.selected_slot_start = "";
       }
 

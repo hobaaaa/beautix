@@ -40,6 +40,10 @@ function cleanResetUrl(params: URLSearchParams) {
   );
 }
 
+function normalizeLoginReturnPath(value: string | null) {
+  return value === "/customer/login" ? value : "/login";
+}
+
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
@@ -54,11 +58,7 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     let active = true;
     const params = new URLSearchParams(window.location.search);
-    const nextPath = params.get("next");
-
-    if (nextPath?.startsWith("/")) {
-      setReturnPath(nextPath);
-    }
+    setReturnPath(normalizeLoginReturnPath(params.get("next")));
 
     if (params.get("error")) {
       setError("Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.");
@@ -167,8 +167,8 @@ export default function ResetPasswordPage() {
 
       setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
-        const nextPath = params.get("next") ?? "/login";
-        router.replace(nextPath.startsWith("/") ? nextPath : "/login");
+        const nextPath = normalizeLoginReturnPath(params.get("next"));
+        router.replace(nextPath);
         router.refresh();
       }, 1500);
     } catch (updateError) {

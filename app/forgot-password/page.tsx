@@ -11,6 +11,10 @@ function isValidEmail(value: string) {
 const RESET_REQUEST_MESSAGE =
   "Eğer bu e-posta sistemde kayıtlıysa birkaç dakika içinde şifre sıfırlama bağlantısı gelir. Gelmezse spam klasörünü kontrol edin veya işletmeden hesap daveti isteyin.";
 
+function normalizeLoginReturnPath(value: string | null) {
+  return value === "/customer/login" ? value : "/login";
+}
+
 export default function ForgotPasswordPage() {
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [email, setEmail] = useState("");
@@ -37,7 +41,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const nextPath = params.get("next") ?? "/login";
+      const nextPath = normalizeLoginReturnPath(params.get("next"));
       const redirectTo = `${window.location.origin}/reset-password?next=${encodeURIComponent(nextPath)}`;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         trimmedEmail,
