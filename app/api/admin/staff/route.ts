@@ -1,4 +1,4 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type CreateStaffBody = {
@@ -105,3 +105,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

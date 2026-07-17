@@ -1,5 +1,9 @@
 ﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -115,10 +119,10 @@ export function AppointmentsClient({
         body: JSON.stringify({ status: "cancelled" }),
       });
 
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Randevu iptal edilemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Randevu iptal edilemedi."),
+        );
       }
 
       setMessage({ type: "success", text: "Randevu iptal edildi." });
@@ -126,8 +130,7 @@ export function AppointmentsClient({
     } catch (error) {
       setMessage({
         type: "error",
-        text:
-          error instanceof Error ? error.message : "Randevu iptal edilemedi.",
+        text: getClientErrorMessage(error, "Randevu iptal edilemedi."),
       });
     } finally {
       setCancellingId(null);
@@ -272,8 +275,8 @@ export function AppointmentsClient({
         showDate={selectedView === "all"}
         emptyMessage={
           selectedView === "all"
-            ? "Son 3 ay için randevu bulunmuyor."
-            : "Bu gün için randevu bulunmuyor."
+            ? "Son 3 ay için henüz randevu bulunmuyor."
+            : "Bu gün için henüz randevu bulunmuyor."
         }
       />
 

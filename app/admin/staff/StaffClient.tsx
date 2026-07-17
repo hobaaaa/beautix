@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Message, Service, StaffListItem } from "../../../types";
@@ -77,10 +81,8 @@ export function StaffClient({
         },
       );
 
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Personel kaydedilemedi.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "Personel kaydedilemedi."));
       }
 
       setMessage({
@@ -94,7 +96,7 @@ export function StaffClient({
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Personel kaydedilemedi.",
+        text: getClientErrorMessage(error, "Personel kaydedilemedi."),
       });
     } finally {
       setLoading(false);
@@ -118,10 +120,10 @@ export function StaffClient({
         }),
       });
 
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Personel durumu güncellenemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Personel durumu güncellenemedi."),
+        );
       }
 
       setMessage({
@@ -140,7 +142,7 @@ export function StaffClient({
       setMessage({
         type: "error",
         text:
-          error instanceof Error ? error.message : "Personel durumu güncellenemedi.",
+          getClientErrorMessage(error, "Personel durumu güncellenemedi."),
       });
     } finally {
       setLoadingId(null);
@@ -156,10 +158,8 @@ export function StaffClient({
         method: "DELETE",
       });
 
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Personel silinemedi.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "Personel silinemedi."));
       }
 
       setMessage({
@@ -175,7 +175,7 @@ export function StaffClient({
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Personel silinemedi.",
+        text: getClientErrorMessage(error, "Personel silinemedi."),
       });
     } finally {
       setLoadingId(null);
@@ -221,3 +221,4 @@ export function StaffClient({
     </div>
   );
 }
+

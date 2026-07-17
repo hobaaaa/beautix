@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useState } from "react";
 import { Message } from "../../../types";
 import { useRouter } from "next/navigation";
@@ -42,10 +46,9 @@ export const CreateTable = ({
         },
         body: JSON.stringify(payload),
       });
-      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Hizmet oluşturulamadı.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "Hizmet oluşturulamadı."));
       }
       setMessage({ type: "success", text: "Hizmet başarıyla oluşturuldu." });
 
@@ -53,7 +56,7 @@ export const CreateTable = ({
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Bir hata oluştu.",
+        text: getClientErrorMessage(error, "Bir hata oluştu."),
       });
     } finally {
       setLoading(false);
@@ -94,3 +97,4 @@ export const CreateTable = ({
     </form>
   );
 };
+

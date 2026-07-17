@@ -1,4 +1,4 @@
-import { CUSTOMER_ORG_COOKIE, isValidOrganizationId } from "@/app/customer/queries";
+﻿import { CUSTOMER_ORG_COOKIE, isValidOrganizationId } from "@/app/customer/queries";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -83,3 +83,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

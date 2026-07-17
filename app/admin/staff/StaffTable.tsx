@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { StaffListItem } from "../../../types";
 
 function StaffTableSection({
@@ -103,9 +104,10 @@ export function StaffTable({
 }) {
   if (staff.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-        Henüz personel bulunmuyor.
-      </div>
+      <EmptyState
+        title="Henüz personel bulunmuyor."
+        description="Personel eklediğinizde aktif ve pasif personeller burada listelenir."
+      />
     );
   }
 
@@ -134,3 +136,4 @@ export function StaffTable({
     </div>
   );
 }
+

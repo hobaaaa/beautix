@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Download, Share } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -50,12 +50,12 @@ function getIosInstallGuide(): IosInstallGuide {
 function getInstallHelpText(iosGuide: IosInstallGuide) {
   if (iosGuide === "ios-chrome") {
     return [
-      "Artexo’yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
-      "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari’de açarak aynı işlemi yapabilirsiniz.",
+      "Artexo'yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
+      "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari'de açarak aynı işlemi yapabilirsiniz.",
     ];
   }
 
-  return ["Paylaş menüsünden “Ana Ekrana Ekle” seçeneğini kullanın."];
+  return ['Paylaş menüsünden "Ana Ekrana Ekle" seçeneğini kullanın.'];
 }
 
 export function InstallAppButton({ compact = false }: { compact?: boolean }) {
@@ -155,3 +155,4 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
     </div>
   );
 }
+

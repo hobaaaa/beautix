@@ -1,5 +1,9 @@
 ﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useEffect, useMemo, useState } from "react";
 import type { AvailableSlot } from "@/lib/slots/availability-engine";
 import {
@@ -155,12 +159,13 @@ export function AppointmentCreateDialog({
         const response = await fetch(
           `/api/admin/appointments/available-slots?${searchParams.toString()}`,
         );
-        const json = await response.json();
-
-        if (!response.ok || !json.success) {
-          throw new Error(json.error || "Müsait saatler yüklenemedi.");
+        if (!response.ok) {
+          throw new Error(
+            await readApiErrorMessage(response, "Müsait saatler yüklenemedi."),
+          );
         }
 
+        const json = (await response.json()) as { data?: AvailableSlot[] };
         if (isCancelled) {
           return;
         }
@@ -185,9 +190,7 @@ export function AppointmentCreateDialog({
         setAvailableSlots([]);
         setValues((current) => ({ ...current, selected_slot_start: "" }));
         setSlotError(
-          slotLoadError instanceof Error
-            ? slotLoadError.message
-            : "Müsait saatler yüklenemedi.",
+          getClientErrorMessage(slotLoadError, "Müsait saatler yüklenemedi."),
         );
       } finally {
         if (!isCancelled) {
@@ -280,25 +283,24 @@ export function AppointmentCreateDialog({
         },
       );
 
-      const json = await response.json();
-
-      if (!response.ok || !json.success) {
+      if (!response.ok) {
         throw new Error(
-          json.error ||
-            (mode === "edit"
+          await readApiErrorMessage(
+            response,
+            mode === "edit"
               ? "Randevu güncellenemedi."
-              : "Randevu oluşturulamadı."),
+              : "Randevu oluşturulamadı.",
+          ),
         );
       }
 
       onSuccess(mode);
     } catch (submitError) {
       setError(
-        submitError instanceof Error
-          ? submitError.message
-          : mode === "edit"
-            ? "Randevu güncellenemedi."
-            : "Randevu oluşturulamadı.",
+        getClientErrorMessage(
+          submitError,
+          mode === "edit" ? "Randevu güncellenemedi." : "Randevu oluşturulamadı.",
+        ),
       );
     } finally {
       setLoading(false);

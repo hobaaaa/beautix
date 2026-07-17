@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -85,3 +85,4 @@ export default async function CustomerHomePage() {
     </main>
   );
 }
+

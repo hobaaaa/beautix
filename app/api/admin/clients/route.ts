@@ -1,4 +1,4 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type CreateClientBody = {
@@ -97,3 +97,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+

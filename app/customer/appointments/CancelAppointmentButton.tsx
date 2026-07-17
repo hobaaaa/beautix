@@ -1,15 +1,14 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 type CancelAppointmentButtonProps = {
   appointmentId: string;
-};
-
-type CancelAppointmentResponse = {
-  success?: boolean;
-  error?: string;
 };
 
 export function CancelAppointmentButton({
@@ -33,17 +32,18 @@ export function CancelAppointmentButton({
           method: "PATCH",
         },
       );
-      const result = (await response.json()) as CancelAppointmentResponse;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Randevu iptal edilemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Randevu iptal edilemedi."),
+        );
       }
 
       setMessage("Randevu iptal edildi.");
       setDialogOpen(false);
       router.refresh();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Randevu iptal edilemedi.");
+      setError(getClientErrorMessage(error, "Randevu iptal edilemedi."));
     } finally {
       setLoading(false);
     }
@@ -105,3 +105,4 @@ export function CancelAppointmentButton({
     </div>
   );
 }
+

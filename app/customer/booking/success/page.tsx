@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,3 +37,4 @@ export default function CustomerBookingSuccessPage() {
     </main>
   );
 }
+

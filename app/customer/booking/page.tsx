@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { ArrowLeft, Clock, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -228,7 +228,7 @@ export default async function CustomerBookingPage({
 
                 {availability.staffMembers.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border bg-background/50 p-6 text-center text-sm text-muted-foreground">
-                    Bu hizmet için aktif personel bulunamadı.
+                    Bu hizmet için uygun personel bulunamadı.
                   </div>
                 ) : availability.staffMembers.length > 1 && !availability.selectedStaff ? (
                   <div className="space-y-3">
@@ -282,3 +282,6 @@ export default async function CustomerBookingPage({
     </main>
   );
 }
+
+
+

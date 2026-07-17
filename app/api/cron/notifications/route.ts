@@ -1,4 +1,4 @@
-import {
+﻿import {
   SupabaseAdminConfigError,
   createSupabaseAdminClient,
 } from "@/lib/supabase/admin";
@@ -393,7 +393,7 @@ async function processBookingConfirmationJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: client.email,
-    subject: "Randevunuz Onaylandı — Artexo",
+    subject: "Randevunuz Onaylandı - Artexo",
     html: renderBookingConfirmationEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -447,7 +447,7 @@ async function processAppointmentReminderJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: client.email,
-    subject: "Randevu Hatırlatması — Artexo",
+    subject: "Randevu Hatırlatması - Artexo",
     html: renderAppointmentReminderEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -489,7 +489,7 @@ async function processBusinessBookingNotificationJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: recipientEmail,
-    subject: "Yeni Randevu Oluşturuldu — Artexo",
+    subject: "Yeni Randevu Oluşturuldu - Artexo",
     html: renderBusinessBookingNotificationEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -630,3 +630,5 @@ export async function POST(request: NextRequest) {
     return jsonError("Notification cron failed.", 500);
   }
 }
+
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Service } from "../../../types";
 
@@ -89,7 +89,7 @@ export function StaffForm({
                 <span className="block font-medium">{service.name}</span>
                 <span className="block text-muted-foreground">
                   {service.duration_minutes} dk
-                  {!service.is_active ? " • Pasif hizmet" : ""}
+                  {!service.is_active ? " - Pasif hizmet" : ""}
                 </span>
               </span>
             </label>
@@ -120,3 +120,5 @@ export function StaffForm({
     </div>
   );
 }
+
+

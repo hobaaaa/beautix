@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+﻿import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 type WorkingHoursDayPayload = {
@@ -184,3 +184,4 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+

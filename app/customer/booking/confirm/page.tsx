@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { ArrowLeft, CalendarDays, Clock, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -218,3 +218,4 @@ export default async function CustomerBookingConfirmPage({
     </main>
   );
 }
+

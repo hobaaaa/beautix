@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+﻿import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextResponse, NextRequest } from "next/server";
 
 export async function DELETE(
@@ -140,3 +140,4 @@ export async function PATCH(
     );
   }
 }
+

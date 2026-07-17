@@ -1,4 +1,4 @@
-import { getAvailableSlots } from "@/lib/slots/availability-engine";
+﻿import { getAvailableSlots } from "@/lib/slots/availability-engine";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -181,3 +181,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

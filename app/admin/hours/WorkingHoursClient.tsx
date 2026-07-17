@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WorkingHour } from "../../../types";
@@ -115,10 +119,11 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         }),
       });
 
-      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Çalışma saatleri kaydedilemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Çalışma saatleri kaydedilemedi."),
+        );
       }
 
       setMessage({
@@ -130,9 +135,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       setMessage({
         type: "error",
         text:
-          error instanceof Error
-            ? error.message
-            : "Çalışma saatleri kaydedilemedi.",
+          getClientErrorMessage(error, "Çalışma saatleri kaydedilemedi."),
       });
     } finally {
       setLoading(false);
@@ -228,3 +231,4 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
     </div>
   );
 }
+

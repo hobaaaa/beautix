@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import {
@@ -129,3 +129,4 @@ export function MobileAdminNav() {
     </div>
   );
 }
+

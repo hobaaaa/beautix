@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 type AppointmentEmailInput = {
   organizationName: string;
@@ -176,3 +176,4 @@ function renderDetailRow(label: string, value: string) {
     <td style="padding:12px 14px;background:#f8fafc;border-radius:0 12px 12px 0;color:#0f172a;font-size:14px;font-weight:700;">${value}</td>
   </tr>`;
 }
+

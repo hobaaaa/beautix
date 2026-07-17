@@ -1,4 +1,4 @@
-import {
+﻿import {
   getAvailableSlots,
 } from "../slots/availability-engine.ts";
 import type { AvailabilityAppointment } from "../slots/availability-engine.ts";
@@ -215,3 +215,4 @@ export function validateBookingWindowAndAvailability({
     endAt: new Date(startAt.getTime() + serviceDurationMinutes * 60000),
   };
 }
+

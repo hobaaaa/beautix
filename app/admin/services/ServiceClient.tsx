@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { ServiceTable } from "./ServiceTable";
@@ -27,3 +27,4 @@ export function ServiceClient({ services }: { services: Service[] }) {
     </>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { X } from "lucide-react";
 import { useEffect } from "react";
@@ -78,3 +78,4 @@ export function ClientDialog({
     document.body,
   );
 }
+

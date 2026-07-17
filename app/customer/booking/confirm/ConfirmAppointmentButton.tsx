@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -8,11 +12,6 @@ type ConfirmAppointmentButtonProps = {
   staffId: string;
   date: string;
   time: string;
-};
-
-type CreateAppointmentResponse = {
-  success?: boolean;
-  error?: string;
 };
 
 export function ConfirmAppointmentButton({
@@ -42,16 +41,17 @@ export function ConfirmAppointmentButton({
           time,
         }),
       });
-      const result = (await response.json()) as CreateAppointmentResponse;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Randevu oluşturulamadı.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Randevu oluşturulamadı."),
+        );
       }
 
       router.replace("/customer/booking/success");
       router.refresh();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Randevu oluşturulamadı.");
+      setError(getClientErrorMessage(error, "Randevu oluşturulamadı."));
       setLoading(false);
     }
   }
@@ -74,3 +74,4 @@ export function ConfirmAppointmentButton({
     </div>
   );
 }
+

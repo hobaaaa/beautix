@@ -1,4 +1,4 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import {
   SupabaseAdminConfigError,
   createSupabaseAdminClient,
@@ -271,3 +271,4 @@ export async function POST(
     );
   }
 }
+

@@ -1,3 +1,7 @@
+﻿import {
+  API_ERROR_MESSAGES,
+  apiError,
+} from "@/lib/api/error-response";
 import {
   APPOINTMENT_RACE_CONDITION_MESSAGE,
   buildDayRange,
@@ -25,16 +29,12 @@ type CreateCustomerAppointmentBody = {
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-function jsonError(error: string, status: number) {
-  return NextResponse.json({ success: false, error }, { status });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const context = await getCustomerDashboardContext();
 
     if (!context.selectedOrganization) {
-      return jsonError("Randevu oluşturmak için işletme seçmelisiniz.", 400);
+      return apiError("Randevu oluşturmak için işletme seçmelisiniz.", 400, "BAD_REQUEST");
     }
 
     const body = (await request.json()) as CreateCustomerAppointmentBody;
@@ -44,19 +44,19 @@ export async function POST(request: NextRequest) {
     const time = body.time ?? "";
 
     if (!isValidUuid(serviceId)) {
-      return jsonError("Geçerli bir hizmet seçimi zorunludur.", 400);
+      return apiError("Geçerli bir hizmet seçimi zorunludur.", 400, "BAD_REQUEST");
     }
 
     if (!isValidUuid(staffId)) {
-      return jsonError("Geçerli bir personel seçimi zorunludur.", 400);
+      return apiError("Geçerli bir personel seçimi zorunludur.", 400, "BAD_REQUEST");
     }
 
     if (!DATE_PATTERN.test(date)) {
-      return jsonError("Geçerli bir tarih zorunludur.", 400);
+      return apiError("Geçerli bir tarih zorunludur.", 400, "BAD_REQUEST");
     }
 
     if (!TIME_PATTERN.test(time)) {
-      return jsonError("Geçerli bir saat seçimi zorunludur.", 400);
+      return apiError("Geçerli bir saat seçimi zorunludur.", 400, "BAD_REQUEST");
     }
 
     const supabase = await createSupabaseServerClient();
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const startAt = combineDateAndTimeInTimezone(date, time);
 
     if (startAt.getTime() <= Date.now()) {
-      return jsonError("Geçmiş tarih veya saate randevu oluşturulamaz.", 400);
+      return apiError("Geçmiş tarih veya saate randevu oluşturulamaz.", 422, "VALIDATION_ERROR");
     }
 
     const [
@@ -94,31 +94,31 @@ export async function POST(request: NextRequest) {
     ]);
 
     if (clientError || !client) {
-      return jsonError("Müşteri kaydınız bulunamadı.", 400);
+      return apiError("Müşteri kaydınız bulunamadı.", 404, "NOT_FOUND");
     }
 
     if (!client.is_active) {
-      return jsonError("Pasif müşteri hesabıyla randevu oluşturulamaz.", 400);
+      return apiError("Pasif müşteri hesabıyla randevu oluşturulamaz.", 422, "VALIDATION_ERROR");
     }
 
     if (serviceError || !service) {
-      return jsonError("Seçilen hizmet bulunamadı.", 400);
+      return apiError("Seçilen hizmet bulunamadı.", 404, "NOT_FOUND");
     }
 
     if (!service.is_active) {
-      return jsonError("Seçilen hizmet aktif değil.", 400);
+      return apiError("Seçilen hizmet aktif değil.", 422, "VALIDATION_ERROR");
     }
 
     if (!Number.isInteger(service.duration_minutes) || service.duration_minutes <= 0) {
-      return jsonError("Seçilen hizmetin süresi geçersiz.", 400);
+      return apiError("Seçilen hizmetin süresi geçersiz.", 422, "VALIDATION_ERROR");
     }
 
     if (staffError || !staff) {
-      return jsonError("Seçilen personel bulunamadı.", 400);
+      return apiError("Seçilen personel bulunamadı.", 404, "NOT_FOUND");
     }
 
     if (!staff.is_active) {
-      return jsonError("Pasif personele randevu oluşturulamaz.", 400);
+      return apiError("Pasif personele randevu oluşturulamaz.", 422, "VALIDATION_ERROR");
     }
 
     const dayOfWeek = getDayOfWeek(date);
@@ -150,15 +150,15 @@ export async function POST(request: NextRequest) {
     ]);
 
     if (mappingError || !mapping) {
-      return jsonError("Seçilen personel bu hizmeti veremiyor.", 400);
+      return apiError("Seçilen personel bu hizmeti veremiyor.", 422, "VALIDATION_ERROR");
     }
 
     if (workingHourError) {
-      return jsonError("Çalışma saatleri kontrol edilemedi.", 500);
+      return apiError(API_ERROR_MESSAGES.generic, 500, "SERVER_ERROR");
     }
 
     if (appointmentsError) {
-      return jsonError("Müsaitlik kontrol edilemedi.", 500);
+      return apiError(API_ERROR_MESSAGES.generic, 500, "SERVER_ERROR");
     }
 
     const slotValidation = validateBookingWindowAndAvailability({
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!slotValidation.ok) {
-      return jsonError(slotValidation.error, slotValidation.status);
+      return apiError(slotValidation.error, slotValidation.status, "VALIDATION_ERROR");
     }
 
     const { data, error } = await supabase
@@ -191,10 +191,10 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       if (isOverlapConstraintError(error)) {
-        return jsonError(APPOINTMENT_RACE_CONDITION_MESSAGE, 409);
+        return apiError(APPOINTMENT_RACE_CONDITION_MESSAGE, 409, "CONFLICT");
       }
 
-      return jsonError("Randevu oluşturulamadı.", 500);
+      return apiError("Randevu oluşturulamadı.", 500, "SERVER_ERROR");
     }
 
     const { error: notificationJobError } = await supabase.rpc(
@@ -242,10 +242,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {
-      return jsonError("Oturum açmanız gerekiyor.", 401);
+      return apiError(API_ERROR_MESSAGES.unauthorized, 401, "UNAUTHORIZED");
     }
 
     console.error("Error creating customer appointment:", error);
-    return jsonError("Randevu oluşturulamadı.", 500);
+    return apiError("Randevu oluşturulamadı.", 500, "SERVER_ERROR");
   }
 }
+

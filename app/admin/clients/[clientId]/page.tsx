@@ -1,4 +1,4 @@
-import { measureServerTiming } from "@/lib/perf";
+﻿import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { ArrowLeft, CalendarDays, Clock, StickyNote, UserRound } from "lucide-react";
 import Link from "next/link";
@@ -201,3 +201,4 @@ export default async function AdminClientAppointmentsPage({
     </div>
   );
 }
+

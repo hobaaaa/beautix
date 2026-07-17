@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -23,19 +27,18 @@ export function LogoutButton({
       const response = await fetch("/api/auth/logout", {
         method: "POST",
       });
-      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Çıkış yapılırken bir hata oluştu.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Çıkış yapılırken bir hata oluştu."),
+        );
       }
 
       router.replace("/login");
       router.refresh();
     } catch (logoutError) {
       setError(
-        logoutError instanceof Error
-          ? logoutError.message
-          : "Çıkış yapılırken bir hata oluştu.",
+        getClientErrorMessage(logoutError, "Çıkış yapılırken bir hata oluştu."),
       );
       setLoading(false);
     }
@@ -62,3 +65,4 @@ export function LogoutButton({
     </div>
   );
 }
+

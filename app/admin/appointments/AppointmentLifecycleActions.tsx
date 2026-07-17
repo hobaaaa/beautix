@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -7,11 +11,6 @@ type LifecycleStatus = "completed" | "no_show";
 
 type AppointmentLifecycleActionsProps = {
   appointmentId: string;
-};
-
-type StatusResponse = {
-  success?: boolean;
-  error?: string;
 };
 
 const ACTIONS: Record<
@@ -58,10 +57,11 @@ export function AppointmentLifecycleActions({
         },
         body: JSON.stringify({ status: selectedStatus }),
       });
-      const result = (await response.json()) as StatusResponse;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Randevu durumu güncellenemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Randevu durumu güncellenemedi."),
+        );
       }
 
       setMessage(ACTIONS[selectedStatus].successText);
@@ -69,7 +69,7 @@ export function AppointmentLifecycleActions({
       router.refresh();
     } catch (error) {
       setError(
-        error instanceof Error ? error.message : "Randevu durumu güncellenemedi.",
+        getClientErrorMessage(error, "Randevu durumu güncellenemedi."),
       );
     } finally {
       setLoading(false);
@@ -137,3 +137,4 @@ export function AppointmentLifecycleActions({
     </div>
   );
 }
+

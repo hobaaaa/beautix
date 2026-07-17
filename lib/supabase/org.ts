@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { logServerTiming } from "@/lib/perf";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -79,3 +79,4 @@ export async function getCurrentOrgContext(logLabel?: string): Promise<OrgContex
     orgId: context.orgId,
   };
 }
+

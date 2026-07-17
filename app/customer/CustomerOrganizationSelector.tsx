@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import type { CustomerOrganization } from "./queries";
 import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -31,16 +35,15 @@ export function CustomerOrganizationSelector({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ org_id: orgId }),
       });
-      const result = (await response.json()) as { success?: boolean; error?: string };
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "İşletme seçilemedi.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "İşletme seçilemedi."));
       }
 
       router.refresh();
     } catch (selectError) {
       setError(
-        selectError instanceof Error ? selectError.message : "İşletme seçilemedi.",
+        getClientErrorMessage(selectError, "İşletme seçilemedi."),
       );
       setLoadingOrgId(null);
     }
@@ -88,3 +91,4 @@ export function CustomerOrganizationSelector({
     </section>
   );
 }
+

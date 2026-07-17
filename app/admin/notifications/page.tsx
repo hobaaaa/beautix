@@ -1,3 +1,4 @@
+﻿import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { getNotificationLogs } from "./queries";
 import type { NotificationLogListItem } from "./queries";
@@ -5,6 +6,7 @@ import type { NotificationLogListItem } from "./queries";
 const TYPE_LABELS: Record<string, string> = {
   booking_confirmation: "Randevu Onayı",
   appointment_reminder: "Randevu Hatırlatması",
+  business_booking_notification: "Yeni Randevu Bildirimi",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -117,9 +119,7 @@ export default async function AdminNotificationsPage() {
       </div>
 
       {logs.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">
-          Henüz bildirim kaydı bulunmuyor.
-        </div>
+        <EmptyState title="Henüz bildirim kaydı bulunmuyor." />
       ) : (
         <div className="space-y-3">
           {logs.map((log) => (

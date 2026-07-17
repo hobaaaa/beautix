@@ -1,4 +1,4 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type UpdateClientBody = {
@@ -126,3 +126,4 @@ export async function PATCH(
     );
   }
 }
+

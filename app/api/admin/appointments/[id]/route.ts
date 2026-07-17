@@ -1,4 +1,4 @@
-import {
+﻿import {
   APPOINTMENT_RACE_CONDITION_MESSAGE,
   buildDayRange,
   DEFAULT_SLOT_INTERVAL_MINUTES,
@@ -299,3 +299,4 @@ export async function PATCH(
     );
   }
 }
+

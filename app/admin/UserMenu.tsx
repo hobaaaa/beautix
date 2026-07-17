@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { LogoutButton } from "./LogoutButton";
@@ -92,3 +92,4 @@ export function UserMenu({ userId }: { userId: string }) {
     </div>
   );
 }
+

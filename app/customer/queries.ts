@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { getAvailableSlots } from "@/lib/slots/availability-engine";
 import type { AvailableSlot } from "@/lib/slots/availability-engine";
@@ -657,3 +657,4 @@ export async function getCustomerAppointments(): Promise<CustomerAppointmentsDat
     pastAppointments: normalizeAppointmentRows(pastAppointments),
   };
 }
+

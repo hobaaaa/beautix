@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { ArrowLeft, CalendarDays, Clock, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -202,12 +202,12 @@ export default async function CustomerAppointmentsPage() {
           <div className="space-y-8">
             <AppointmentSection
               title="Yaklaşan Randevular"
-              emptyMessage="Yaklaşan randevunuz bulunmuyor."
+              emptyMessage="Henüz yaklaşan randevunuz bulunmuyor."
               appointments={upcomingAppointments}
             />
             <AppointmentSection
               title="Geçmiş ve İptal Edilen Randevular"
-              emptyMessage="Geçmiş veya iptal edilmiş randevunuz bulunmuyor."
+              emptyMessage="Henüz geçmiş veya iptal edilmiş randevunuz bulunmuyor."
               appointments={pastAppointments}
             />
           </div>
@@ -216,3 +216,5 @@ export default async function CustomerAppointmentsPage() {
     </main>
   );
 }
+
+

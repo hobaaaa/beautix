@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -254,3 +254,5 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
+
+

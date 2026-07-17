@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import type { AvailableSlot } from "@/lib/slots/availability-engine";
 import { Client, Service, StaffListItem } from "../../../types";
@@ -219,3 +219,4 @@ export function AppointmentForm({
     </div>
   );
 }
+

@@ -1,4 +1,9 @@
-"use client";
+﻿"use client";
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Message, Service } from "../../../types";
@@ -14,7 +19,12 @@ export const ServiceTable = ({
   const router = useRouter();
 
   if (services.length === 0) {
-    return <div>Henüz hizmet bulunmuyor.</div>;
+    return (
+      <EmptyState
+        title="Henüz hizmet bulunmuyor."
+        description="İlk hizmetinizi oluşturduğunuzda burada listelenir."
+      />
+    );
   }
 
   async function handleDelete(id: string) {
@@ -24,10 +34,9 @@ export const ServiceTable = ({
       const response = await fetch(`/api/admin/services/${id}`, {
         method: "DELETE",
       });
-      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Hizmet silinemedi.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "Hizmet silinemedi."));
       }
 
       setMessage({ type: "success", text: "Hizmet başarıyla silindi." });
@@ -36,7 +45,7 @@ export const ServiceTable = ({
       console.error("Error deleting service:", error);
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Hizmet silinemedi.",
+        text: getClientErrorMessage(error, "Hizmet silinemedi."),
       });
     } finally {
       setLoadingId(null);
@@ -53,10 +62,11 @@ export const ServiceTable = ({
         },
         body: JSON.stringify({ is_active: !currentIsActive }),
       });
-      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.error || "Hizmet durumu güncellenemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Hizmet durumu güncellenemedi."),
+        );
       }
 
       setMessage({
@@ -69,9 +79,7 @@ export const ServiceTable = ({
       setMessage({
         type: "error",
         text:
-          error instanceof Error
-            ? error.message
-            : "Hizmet durumu güncellenemedi.",
+          getClientErrorMessage(error, "Hizmet durumu güncellenemedi."),
       });
     } finally {
       setLoadingId(null);
@@ -121,3 +129,4 @@ export const ServiceTable = ({
     </div>
   );
 };
+

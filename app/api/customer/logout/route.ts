@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+﻿import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CUSTOMER_ORG_COOKIE } from "@/app/customer/queries";
 import { NextResponse } from "next/server";
 
@@ -29,3 +29,4 @@ export async function POST() {
     );
   }
 }
+

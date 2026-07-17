@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 
 import { logServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -196,3 +196,4 @@ export async function getAdminDashboardData(logLabel = "admin-dashboard-page") {
     ),
   };
 }
+

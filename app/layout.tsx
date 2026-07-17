@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import "./globals.css";
 
@@ -45,3 +45,4 @@ export default function RootLayout({
     </html>
   );
 }
+

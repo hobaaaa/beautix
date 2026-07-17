@@ -1,4 +1,4 @@
-import { getCurrentOrgContext } from "@/lib/supabase/org";
+﻿import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { NextRequest, NextResponse } from "next/server";
 
 type UpdateStaffBody = {
@@ -303,3 +303,4 @@ export async function DELETE(
     );
   }
 }
+

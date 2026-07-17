@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getAdminDashboardData } from "./queries";
 
 function formatTime(value: string) {
@@ -98,7 +98,7 @@ export default async function AdminPage() {
                   <div className="space-y-1">
                     <div className="font-medium">{appointment.client_name}</div>
                     <div className="text-muted-foreground">
-                      {appointment.service_name} • {appointment.staff_name}
+                      {appointment.service_name} - {appointment.staff_name}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {getStatusLabel(appointment.status)}
@@ -127,7 +127,7 @@ export default async function AdminPage() {
                   <div className="space-y-1">
                     <div className="font-medium">{appointment.client_name}</div>
                     <div className="text-muted-foreground">
-                      {appointment.service_name} • {appointment.staff_name}
+                      {appointment.service_name} - {appointment.staff_name}
                     </div>
                   </div>
                 </div>
@@ -139,3 +139,6 @@ export default async function AdminPage() {
     </div>
   );
 }
+
+
+

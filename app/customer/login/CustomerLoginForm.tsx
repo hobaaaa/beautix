@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -166,3 +166,5 @@ export function CustomerLoginForm() {
     </div>
   );
 }
+
+

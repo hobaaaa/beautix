@@ -1,5 +1,9 @@
-"use client";
+﻿"use client";
 
+import {
+  getClientErrorMessage,
+  readApiErrorMessage,
+} from "@/lib/api/client-response";
 import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useDeferredValue, useState } from "react";
@@ -107,10 +111,9 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
           }),
         },
       );
-      const result = (await response.json()) as { success?: boolean; error?: string };
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Müşteri kaydedilemedi.");
+      if (!response.ok) {
+        throw new Error(await readApiErrorMessage(response, "Müşteri kaydedilemedi."));
       }
 
       setIsDialogOpen(false);
@@ -123,7 +126,7 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Müşteri kaydedilemedi.",
+        text: getClientErrorMessage(error, "Müşteri kaydedilemedi."),
       });
     } finally {
       setLoading(false);
@@ -140,10 +143,11 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: !client.is_active }),
       });
-      const result = (await response.json()) as { success?: boolean; error?: string };
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Müşteri durumu güncellenemedi.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(response, "Müşteri durumu güncellenemedi."),
+        );
       }
 
       setMessage({
@@ -154,7 +158,7 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
     } catch (error) {
       setMessage({
         type: "error",
-        text: error instanceof Error ? error.message : "Müşteri durumu güncellenemedi.",
+        text: getClientErrorMessage(error, "Müşteri durumu güncellenemedi."),
       });
     } finally {
       setInviteLoadingId(null);
@@ -177,10 +181,14 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
       const response = await fetch(`/api/admin/clients/${client.id}/invite`, {
         method: "POST",
       });
-      const result = (await response.json()) as { success?: boolean; error?: string };
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Davet gönderilirken bir hata oluştu.");
+      if (!response.ok) {
+        throw new Error(
+          await readApiErrorMessage(
+            response,
+            "Davet gönderilirken bir hata oluştu.",
+          ),
+        );
       }
 
       setMessage({ type: "success", text: "Hesap daveti gönderildi." });
@@ -189,9 +197,7 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
       setMessage({
         type: "error",
         text:
-          error instanceof Error
-            ? error.message
-            : "Davet gönderilirken bir hata oluştu.",
+          getClientErrorMessage(error, "Davet gönderilirken bir hata oluştu."),
       });
     } finally {
       setLoadingId(null);
@@ -240,7 +246,7 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
 
       {clients.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          Henüz müşteri eklenmemiş.
+          Henüz müşteri bulunmuyor.
         </div>
       ) : filteredClients.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -269,3 +275,5 @@ export function ClientsClient({ clients }: { clients: Client[] }) {
     </div>
   );
 }
+
+

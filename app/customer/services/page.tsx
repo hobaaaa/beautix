@@ -1,4 +1,4 @@
-import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { ArrowLeft, CalendarPlus, Clock } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -82,9 +82,9 @@ export default async function CustomerServicesPage() {
           </section>
         ) : services.length === 0 ? (
           <section className="rounded-3xl border border-dashed border-border bg-card/60 p-8 text-center">
-            <h2 className="text-xl font-semibold">Aktif hizmet bulunmuyor.</h2>
+            <h2 className="text-xl font-semibold">Şu anda randevu alınabilir aktif hizmet bulunmuyor.</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Bu işletme için şu anda randevu alınabilecek aktif hizmet yok.
+              İşletme hizmet eklediğinde burada listelenir.
             </p>
           </section>
         ) : (
@@ -135,3 +135,5 @@ export default async function CustomerServicesPage() {
     </main>
   );
 }
+
+
