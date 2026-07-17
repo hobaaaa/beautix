@@ -1,51 +1,89 @@
 # Artexo
 
-Artexo, randevu bazlı işletmeler için geliştirilen çok kiracılı bir yönetim ve müşteri randevu platformudur. Admin paneli işletme operasyonlarını yönetir; müşteri paneli ise hizmet seçimi, müsait slot görüntüleme, randevu oluşturma ve randevu takibi akışlarını sağlar.
+Artexo, randevu ile çalışan işletmeler için geliştirilen çok kiracılı bir yönetim ve müşteri randevu platformudur. Admin paneli işletme operasyonlarını yönetir; müşteri paneli hizmet seçimi, müsait saat görüntüleme, randevu oluşturma ve randevu takibi akışlarını sağlar.
 
-Proje kuaför, güzellik salonu, berber, diş hekimi, fizyoterapi, psikolog, veteriner ve benzeri randevu bazlı işletmeler için genel bir SaaS mimarisi hedefler.
+Hedef kullanım alanları: kuaför, berber, güzellik salonu, diş hekimi, poliklinik, psikolog, fizyoterapist, diyetisyen, veteriner ve randevu ile çalışan diğer işletmeler.
 
-## Özellikler
+## Proje Hakkında
 
-- Admin paneli: hizmetler, personeller, müşteriler, çalışma saatleri, randevular ve bildirim logları.
-- Müşteri paneli: hizmet listesi, tarih/personel/saat seçimi, randevu onayı, randevularım ve randevu iptali.
-- Staff bazlı randevu mimarisi: her randevu bir personele bağlıdır.
-- Slot ve availability engine: çalışma saatleri, hizmet süresi ve mevcut randevulara göre müsait saat üretimi.
-- Appointment lifecycle: `confirmed`, `cancelled`, `completed`, `no_show`.
-- PWA desteği: mobil kurulum yönlendirmeleri ve standalone açılış.
-- E-posta bildirimleri: müşteri onayı, müşteri hatırlatma ve işletmeye yeni randevu bildirimi.
-- Supabase RLS ve organization izolasyonu.
+Artexo'nun temel modeli organization bazlıdır. Her müşteri, hizmet, personel, çalışma saati ve randevu bir organization altında izole edilir. Randevu mimarisi staff bazlıdır; her appointment mutlaka bir personele bağlıdır.
 
-## Teknoloji
+## Temel Özellikler
+
+- Multi-tenant organization izolasyonu
+- Admin auth ve ayrı customer auth
+- Customer public signup kapalı; customer hesabı admin-created client provisioning ile aktive edilir
+- Client management
+- Staff management ve staff-service mapping
+- Service management
+- Working hours yönetimi
+- Slot engine ve availability engine
+- Customer booking akışı
+- Appointment cancellation
+- Appointment lifecycle: `confirmed`, `cancelled`, `completed`, `no_show`
+- PWA kurulum deneyimi
+- Email notification sistemi
+- 24 saat öncesi appointment reminder
+- Business booking notification
+- Retry ve notification logs
+
+## Tech Stack
 
 - Next.js 16 App Router
 - React 19
 - TypeScript
 - TailwindCSS 4
-- Supabase Auth, PostgreSQL, RLS
-- Supabase Cron
+- Shadcn UI yaklaşımıyla yerel UI bileşenleri
+- Supabase Auth, PostgreSQL ve RLS
 - Resend
-- PWA manifest + service worker
+- Supabase Cron
+- PWA manifest ve service worker
 
 ## Mimari Kurallar
 
-Projede şu ayrım korunur:
-
-- READ işlemleri: Server Component + `queries.ts`
+- READ işlemleri: `queries.ts` + Server Component
 - WRITE işlemleri: API Routes
-- Server Actions kullanılmaz.
-- Kod, route, type ve database isimleri İngilizce kalır.
-- Kullanıcıya görünen metinler Türkçedir.
-- Service role sadece server-side API/cron tarafında kullanılır.
-- Multi-tenant güvenlik her sorguda `org_id` ve RLS ile korunur.
+- Server Actions kullanılmaz
+- Kod, route, type ve database isimleri İngilizce kalır
+- Kullanıcıya görünen UI metinleri Türkçedir
+- RLS aktiftir
+- Service role yalnızca server-side kodda kullanılabilir
+- Admin Auth ve Customer Auth ayrı akışlardır
+- Multi-tenant izolasyonu temel güvenlik kuralıdır
+
+## Proje Yapısı
+
+```txt
+app/admin                 Admin panel sayfaları
+app/customer              Customer panel sayfaları
+app/api                   Admin, customer ve cron API route'ları
+components                Ortak UI, brand ve PWA bileşenleri
+lib                       Supabase, slots, notifications ve yardımcı katmanlar
+supabase/migrations       Manuel uygulanan DB migration dosyaları
+scripts                   Manuel çalıştırılan yardımcı scriptler
+```
 
 ## Kurulum
 
 ```bash
+git clone <repo-url>
+cd <repo-klasoru>
 npm install
-npm.cmd run dev
 ```
 
-Lokal uygulama:
+Environment dosyasını oluştur:
+
+```bash
+cp .env.example .env.local
+```
+
+Supabase migrationlarını uygula, ardından geliştirme sunucusunu başlat:
+
+```bash
+npm run dev
+```
+
+Lokal adres:
 
 ```txt
 http://localhost:3000
@@ -53,27 +91,26 @@ http://localhost:3000
 
 ## Environment Variables
 
-`.env.local` örneği:
+`.env.example` yalnızca placeholder değerler içerir. Gerçek secret veya credential commit edilmemelidir.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SECRET_KEY=
-NEXT_PUBLIC_SITE_URL=
 RESEND_API_KEY=
 CRON_SECRET=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Açıklamalar:
+Ayrım:
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase proje URL’i.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase publishable/anon key.
-- `SUPABASE_SECRET_KEY`: Supabase server-side secret/service key. Client bundle’a gitmemelidir.
-- `NEXT_PUBLIC_SITE_URL`: Password reset ve davet linkleri için public site URL’i.
-- `RESEND_API_KEY`: E-posta gönderimi için Resend API key.
-- `CRON_SECRET`: Supabase Cron’un `/api/cron/notifications` endpoint’ini güvenli çağırması için kullanılan özel secret.
+- `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanımı içindir.
+- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` ve `CRON_SECRET` server-side kalmalıdır.
+- `NEXT_PUBLIC_SITE_URL`, invite/reset linkleri için public site URL değeridir.
+- `VERCEL_URL` ve `NODE_ENV` platform tarafından sağlanabilir.
+- `.env.local` commit edilmez.
 
-## Supabase
+## Supabase Kurulumu ve Migrationlar
 
 Migration dosyaları:
 
@@ -81,173 +118,135 @@ Migration dosyaları:
 supabase/migrations
 ```
 
-Önemli tablolar:
+Bu projede production migrationları Supabase SQL Editor üzerinden dependency sırasına göre manuel uygulanmaktadır. Sıra ve dependency detayları için:
 
-- `clients`
-- `appointment_types`
-- `staff`
-- `staff_appointment_types`
-- `appointments`
-- `working_hours`
-- `organization_profiles`
-- `notification_jobs`
-- `notification_logs`
+- [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 
-Migration’lar production Supabase üzerinde uygulanmadan ilgili özellikler çalışmaz.
+Notlar:
 
-## Organization Profile
+- RLS production tablolarında aktif olmalıdır.
+- Notification sistemi için Supabase Cron tarafında `pg_cron` ve HTTP request entegrasyonu gerekir.
+- Production reset veya destructive seed önerilmez.
 
-İşletme adının müşteri ekranlarında ve e-postalarda düzgün görünmesi için `organization_profiles` tablosunda kayıt olmalıdır.
+## Development
 
-Örnek:
+Mevcut scriptler:
 
-```sql
-insert into public.organization_profiles (org_id, name)
-values ('ORG_UUID', 'İşletme Adı')
-on conflict (org_id)
-do update set name = excluded.name, updated_at = now();
+```bash
+npm run dev
+npm run lint
+npm run build
+npm run seed:demo
+npm run test:booking
+npm run test:booking:race
 ```
 
-Kayıt yoksa sistem fallback olarak `İşletme <uuid>` gösterir.
+Booking ve slot testleri:
 
-## Supabase Cron
+```bash
+npm run test:booking
+```
 
-Bildirim worker endpoint’i:
+## Production Build
+
+```bash
+npm run lint
+npm run build
+```
+
+Build sırasında email gönderimi, seed veya cron çalışmaz.
+
+## Notification Sistemi
+
+Akış:
 
 ```txt
-POST /api/cron/notifications
+appointment create
+→ notification_jobs
+→ Supabase Cron
+→ POST /api/cron/notifications
+→ Resend
+→ notification_logs
 ```
 
-Önerilen cron schedule:
+Cron:
 
 ```txt
 */5 * * * *
 ```
 
-Header:
+Desteklenen notification type değerleri:
 
-```txt
-Authorization: Bearer <CRON_SECRET>
+- `booking_confirmation`
+- `appointment_reminder`
+- `business_booking_notification`
+
+Kurallar:
+
+- Reminder randevudan 24 saat önce planlanır.
+- Maksimum toplam deneme sayısı 2'dir.
+- `CRON_SECRET`, Vercel env ve Supabase Cron Authorization header değerinde aynı olmalıdır.
+- `RESEND_API_KEY` Supabase'e değil, yalnızca Vercel/server env'e eklenir.
+
+## Demo Data
+
+Demo seed otomatik çalışmaz. Ayrıntılar:
+
+- [docs/DEMO_DATA_GUIDE.md](./docs/DEMO_DATA_GUIDE.md)
+
+Dry-run örneği:
+
+```powershell
+$env:ALLOW_DEMO_SEED="true"
+$env:DEMO_ORG_ID="<organization-uuid>"
+npm run seed:demo -- --dry-run
 ```
 
-Örnek endpoint:
+Gerçek production organization üzerinde çalıştırılmamalıdır. Script auth user oluşturmaz, invite/reset email göndermez ve notification job üretmez.
 
-```txt
-https://app.artexo.app/api/cron/notifications
-```
+## Güvenlik
 
-Cron endpoint şu işleri yapar:
+Kısa özet:
 
-- `pending` notification job’larını atomik şekilde claim eder.
-- Booking confirmation e-postası gönderir.
-- Appointment reminder e-postası gönderir.
-- İşletmeye yeni randevu bildirimi gönderir.
-- Her denemeyi `notification_logs` içine yazar.
-- Retry edilebilir hatalarda job’u tekrar kuyruğa alır.
+- RLS aktif kalır
+- Her tenant verisi `org_id` üzerinden izole edilir
+- API route'larda resource ownership server-side doğrulanır
+- Customer işlemleri dar kapsamlı RPC'lerle sınırlandırılır
+- Service role browser bundle'a gitmez
+- Secret env değerleri loglanmaz veya dokümana yazılmaz
 
-## E-posta Bildirimleri
+Security review çıktısı önceki sprintte hazırlanmıştır. Doküman arşivlenmişse ilgili kayıt proje arşivinden geri alınmalıdır.
 
-Mevcut bildirim tipleri:
+## Production Deploy
 
-- `booking_confirmation`: müşteriye randevu onayı.
-- `appointment_reminder`: müşteriye randevu hatırlatma.
-- `business_booking_notification`: işletmeye yeni randevu bildirimi.
+Production deploy öncesi kontrol başlıkları:
 
-İşletme bildirimi için mevcut kural:
+- Vercel env değerleri
+- Supabase migrations
+- Supabase Auth Site URL / Redirect URLs
+- Supabase Cron job
+- Resend DNS: SPF, DKIM, DMARC
+- Domain, manifest, service worker ve PWA testleri
 
-- İlgili `org_id` için `org_members -> auth.users.email` üzerinden tek net işletme alıcısı bulunmalıdır.
-- Birden fazla org member varsa sistem rastgele seçim yapmaz ve bildirimi skipped/failed olarak kapatır.
+Ayrıntılı checklist:
 
-## Scriptler
+- [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 
-```bash
-npm.cmd run dev
-npm.cmd run lint
-npm.cmd run build
-npm.cmd run start
-npm.cmd run test:booking
-npm.cmd run test:booking:race
-```
+## Faydalı Dokümanlar
 
-## Test
+- [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
+- [docs/DEMO_DATA_GUIDE.md](./docs/DEMO_DATA_GUIDE.md)
 
-Slot, availability ve booking validation testleri:
+## Bilinen Sınırlar / V2 Roadmap
 
-```bash
-npm.cmd run test:booking
-```
+Henüz kapsamda olmayan başlıklar:
 
-Booking race condition kontrolü:
+- Web Push / PWA notifications
+- Google Calendar ve Outlook Calendar entegrasyonu
+- Online payment / deposit
+- Gelişmiş analytics ve reporting
+- Multi-location organization yapısı
+- Gelişmiş automation kuralları
+- AI assistant
 
-```bash
-npm.cmd run test:booking:race
-```
-
-## Build
-
-```bash
-npm.cmd run lint
-npm.cmd run build
-```
-
-## Deployment Notları
-
-Vercel production ortamında şu env değişkenleri tanımlı olmalıdır:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SECRET_KEY`
-- `NEXT_PUBLIC_SITE_URL`
-- `RESEND_API_KEY`
-- `CRON_SECRET`
-
-Env değişikliği sonrası Vercel redeploy gerekir.
-
-Supabase tarafında:
-
-- Migration’lar uygulanmalı.
-- Cron job tanımlanmalı.
-- RLS policy’leri korunmalı.
-
-## Sorun Giderme
-
-Notification job oluşuyor ama mail gitmiyorsa:
-
-```sql
-select
-  type,
-  status,
-  attempt_count,
-  scheduled_for,
-  processed_at,
-  last_error,
-  created_at
-from public.notification_jobs
-order by created_at desc
-limit 20;
-```
-
-Logları görmek için:
-
-```sql
-select
-  type,
-  status,
-  recipient,
-  provider_message_id,
-  error_message,
-  created_at
-from public.notification_logs
-order by created_at desc
-limit 20;
-```
-
-`pending` job’lar birikiyorsa cron endpoint çalışmıyordur. Vercel logs içinde şu route aranmalıdır:
-
-```txt
-/api/cron/notifications
-```
-
-## Lisans
-
-Bu proje özel geliştirme kapsamındadır.
+Bu başlıklar mevcut özellik gibi değerlendirilmemelidir.

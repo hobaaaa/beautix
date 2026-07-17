@@ -35,25 +35,25 @@ Kontrol:
 
 ## Supabase Migrations
 
-Production'a migrationlar dosya adina gore sirayla uygulanmalidir. Uygulanip uygulanmadigi koddan varsayilmamalidir.
+Production'a migrationlar dependency sirasina gore uygulanmalidir. Uygulanip uygulanmadigi koddan varsayilmamalidir.
 
 Sira:
 
 1. `20260626_admin_performance_indexes.sql`
-2. `20260626_staff_appointment_types_delete_policy.sql`
-3. `20260626_staff_appointments_architecture.sql`
+2. `20260626_staff_appointments_architecture.sql`
+3. `20260626_staff_appointment_types_delete_policy.sql`
 4. `20260710_staff_delete_policy.sql`
 5. `20260711_clients_management.sql`
 6. `20260711_customer_auth_identity.sql`
 7. `20260713_appointment_lifecycle_statuses.sql`
-8. `20260713_business_booking_notification.sql`
+8. `20260713_organization_profiles.sql`
 9. `20260713_customer_booking_availability.sql`
 10. `20260713_customer_cancel_appointment.sql`
-11. `20260713_notification_job_claiming.sql`
-12. `20260713_notification_jobs.sql`
-13. `20260713_notification_logs.sql`
+11. `20260713_notification_jobs.sql`
+12. `20260713_business_booking_notification.sql`
+13. `20260713_notification_job_claiming.sql`
 14. `20260713_notification_reminder_jobs.sql`
-15. `20260713_organization_profiles.sql`
+15. `20260713_notification_logs.sql`
 16. `20260717_notification_logs_admin_select_policy.sql`
 17. `20260717_performance_indexes_and_busy_slots.sql`
 
@@ -77,6 +77,7 @@ RLS kontrol:
 - RLS production tablolarinda aktif olmalidir.
 - Customer'a `notification_jobs` veya `notification_logs` genel read/write yetkisi acilmamalidir.
 - Production DB'ye destructive reset veya seed uygulanmamalidir.
+- Demo data seed otomatik uygulanmaz. Gerekirse yalnizca kontrollu demo organization uzerinde `DEMO_DATA_GUIDE.md` adimlariyla manuel calistirilir.
 
 ## Supabase Auth
 

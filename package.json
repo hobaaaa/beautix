@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "seed:demo": "node scripts/seed-demo-data.mjs",
     "test:booking": "node --test --experimental-strip-types tests/slots/slot-engine.test.ts tests/slots/availability-engine.test.ts tests/appointments/booking-validation.test.ts",
     "test:booking:race": "node --experimental-strip-types scripts/test-booking-race-condition.ts"
   },
