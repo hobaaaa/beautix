@@ -38,7 +38,13 @@ export type PublicBookingData = {
   today: string;
 };
 
+export type PublicBookingConfirmation = PublicBookingData & {
+  selectedSlot: AvailableSlot | null;
+  invalidSelectedSlot: boolean;
+};
+
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -351,5 +357,37 @@ export async function getPublicBookingData({
     invalidSelectedStaff,
     slots,
     today,
+  };
+}
+
+export async function getPublicBookingConfirmation({
+  slug,
+  serviceId,
+  date,
+  staffId,
+  time,
+}: {
+  slug: string;
+  serviceId?: string;
+  date?: string;
+  staffId?: string;
+  time?: string;
+}): Promise<PublicBookingConfirmation> {
+  const bookingData = await getPublicBookingData({
+    slug,
+    serviceId,
+    date,
+    staffId,
+  });
+  const hasTime = typeof time === "string" && time.trim() !== "";
+  const selectedSlot =
+    hasTime && TIME_PATTERN.test(time)
+      ? bookingData.slots.find((slot) => slot.start_time === time) ?? null
+      : null;
+
+  return {
+    ...bookingData,
+    selectedSlot,
+    invalidSelectedSlot: hasTime && !selectedSlot,
   };
 }
