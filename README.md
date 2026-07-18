@@ -209,6 +209,13 @@ Public booking MVP spam koruması:
 - Guest formda honeypot ve minimum 2 saniyelik form süresi kontrolü vardır.
 - CAPTCHA / reCAPTCHA / Turnstile henüz kullanılmıyor; bot trafiği artarsa V2 kapsamında değerlendirilecektir.
 
+Public booking login gerektirmez ve yeni müşteri kazanımı için kullanılır. Customer portal ise mevcut müşterilerin giriş yaparak randevularını takip etmesi içindir.
+
+Web sitesi entegrasyonu ve manuel test dokümanları:
+
+- [docs/WEBSITE_INTEGRATION_GUIDE.md](./docs/WEBSITE_INTEGRATION_GUIDE.md)
+- [docs/PUBLIC_BOOKING_E2E_CHECKLIST.md](./docs/PUBLIC_BOOKING_E2E_CHECKLIST.md)
+
 ## Demo Data
 
 Demo seed otomatik çalışmaz. Ayrıntılar:
@@ -257,6 +264,8 @@ Ayrıntılı checklist:
 
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 - [docs/DEMO_DATA_GUIDE.md](./docs/DEMO_DATA_GUIDE.md)
+- [docs/WEBSITE_INTEGRATION_GUIDE.md](./docs/WEBSITE_INTEGRATION_GUIDE.md)
+- [docs/PUBLIC_BOOKING_E2E_CHECKLIST.md](./docs/PUBLIC_BOOKING_E2E_CHECKLIST.md)
 
 ## Bilinen Sınırlar / V2 Roadmap
 

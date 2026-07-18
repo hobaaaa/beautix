@@ -194,6 +194,28 @@ Production test verileri gercek musteri kayitlarini etkilememelidir. Test sonund
 | Notification logs | Admin bildirim loglari kendi organizasyonunda gorunur. |
 | Mobil PWA | Manifest, service worker ve standalone acilis calisir. |
 
+## Public Booking Smoke Tests
+
+Bu testler kontrollu demo organization ile yapilmalidir. Gercek musteri verisi kullanilmamalidir.
+
+| Test | Beklenen Sonuc |
+| --- | --- |
+| Public slug | `/book/<slug>` acilir ve isletme adi gorunur. |
+| Aktif hizmetler | Aktif hizmetler listelenir. |
+| Pasif hizmetler | Pasif hizmetler listelenmez. |
+| Personel secimi | Tek personel otomatik secilir, birden fazla personel varsa secim gorunur. |
+| Slotlar | Dolu, gecmis ve mesai disi slotlar gorunmez. |
+| Guest form | Ad, soyad, telefon, e-posta ve onay zorunlu alanlari calisir. |
+| Appointment create | Basarili submit sonrasi appointment `confirmed` olusur. |
+| Notification jobs | `booking_confirmation` ve `business_booking_notification` joblari olusur; 24+ saat varsa `appointment_reminder` olusur. |
+| Success sayfasi | Success sayfasi acilir ve hassas veri gostermez. |
+| Rate limit | Honeypot, minimum submit suresi ve fazla denemede booking olusmadan request reddedilir. |
+| Website link | Test web sitesindeki “Online Randevu Al” butonu dogru slug sayfasina gider. |
+
+Detayli manuel public booking testleri icin:
+
+- [docs/PUBLIC_BOOKING_E2E_CHECKLIST.md](./PUBLIC_BOOKING_E2E_CHECKLIST.md)
+
 ## Rollback Notes
 
 - Destructive SQL veya production reset onerilmez.
