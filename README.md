@@ -100,6 +100,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SECRET_KEY=
 RESEND_API_KEY=
 CRON_SECRET=
+BOOKING_RATE_LIMIT_SECRET=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
@@ -107,6 +108,7 @@ Ayrım:
 
 - `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanımı içindir.
 - `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` ve `CRON_SECRET` server-side kalmalıdır.
+- `BOOKING_RATE_LIMIT_SECRET` public booking HMAC hashleri için server-side kalmalıdır.
 - `NEXT_PUBLIC_SITE_URL`, invite/reset linkleri için public site URL değeridir.
 - `VERCEL_URL` ve `NODE_ENV` platform tarafından sağlanabilir.
 - `.env.local` commit edilmez.
@@ -197,7 +199,15 @@ Kurallar:
 /book/[slug]
 ```
 
-Bu route şu anda işletme adını, online randevuya açık aktif hizmetleri, tarih/personel seçimini, uygun slotları, confirm ekranında guest bilgi formunu ve public appointment create akışını destekler. Başarılı booking sonrasında confirmation, business notification ve şart uygunsa reminder job oluşturulur. Rate limit, CAPTCHA ve spam koruması henüz sonraki kart kapsamındadır.
+Bu route şu anda işletme adını, online randevuya açık aktif hizmetleri, tarih/personel seçimini, uygun slotları, confirm ekranında guest bilgi formunu ve public appointment create akışını destekler. Başarılı booking sonrasında confirmation, business notification ve şart uygunsa reminder job oluşturulur.
+
+Public booking MVP spam koruması:
+
+- IP ve contact değerleri açık saklanmaz; server-side HMAC hash ile tutulur.
+- Aynı IP için 10 dakikada 5 deneme, aynı IP + organization için 1 dakikada 2 deneme limiti vardır.
+- Aynı normalize e-posta veya telefon için 30 dakikada en fazla 3 başarılı public booking oluşturulabilir.
+- Guest formda honeypot ve minimum 2 saniyelik form süresi kontrolü vardır.
+- CAPTCHA / reCAPTCHA / Turnstile henüz kullanılmıyor; bot trafiği artarsa V2 kapsamında değerlendirilecektir.
 
 ## Demo Data
 

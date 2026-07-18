@@ -4,8 +4,19 @@ import {
   type GuestBookingFormValues,
   validateGuestBookingValues,
 } from "@/lib/public-booking/guest-booking-schema";
+import {
+  createPublicBookingContactHashes,
+  createPublicBookingIpHash,
+  getPublicBookingRateLimitSecret,
+  isValidPublicBookingStartedAt,
+  PUBLIC_BOOKING_RATE_LIMIT_MESSAGE,
+} from "@/lib/public-booking/rate-limit";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getPublicBookingConfirmation } from "@/app/book/[slug]/queries";
+import {
+  getPublicBookingConfirmation,
+  getPublicOrganizationBySlug,
+} from "@/app/book/[slug]/queries";
 import { NextRequest, NextResponse } from "next/server";
 
 type PublicBookingBody = Partial<GuestBookingFormValues> & {
@@ -14,6 +25,8 @@ type PublicBookingBody = Partial<GuestBookingFormValues> & {
   staffId?: string;
   date?: string;
   time?: string;
+  website?: string;
+  startedAt?: string;
 };
 
 function getFirstValidationError(errors: Record<string, string | undefined>) {
@@ -38,8 +51,93 @@ function isNotFound(error: { message?: string }) {
   return error.message?.includes("public_booking_not_found") === true;
 }
 
+function rateLimitErrorResponse() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: PUBLIC_BOOKING_RATE_LIMIT_MESSAGE,
+    },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": "600",
+      },
+    },
+  );
+}
+
+async function checkPublicBookingRateLimit({
+  orgId,
+  ipHash,
+  contactHashes,
+}: {
+  orgId: string;
+  ipHash: string;
+  contactHashes: string[];
+}) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase.rpc("check_public_booking_rate_limit", {
+    p_org_id: orgId,
+    p_ip_hash: ipHash,
+    p_contact_hashes: contactHashes,
+  });
+
+  if (error) {
+    console.error("Public booking rate limit check failed:", error.code);
+    throw error;
+  }
+
+  const result = Array.isArray(data) ? data[0] : null;
+  const allowed = result?.allowed === true;
+  const reasonCode =
+    typeof result?.reason_code === "string" ? result.reason_code : null;
+
+  if (!allowed && reasonCode) {
+    console.info("Public booking blocked:", reasonCode);
+  }
+
+  return allowed;
+}
+
+async function recordPublicBookingSuccessAttempt({
+  orgId,
+  ipHash,
+  contactHashes,
+}: {
+  orgId: string;
+  ipHash: string;
+  contactHashes: string[];
+}) {
+  const rows = contactHashes.map((contactHash) => ({
+    org_id: orgId,
+    ip_hash: ipHash,
+    contact_hash: contactHash,
+    outcome: "success",
+  }));
+
+  if (rows.length === 0) {
+    return;
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { error } = await supabase.from("public_booking_attempts").insert(rows);
+
+    if (error) {
+      console.error("Public booking success attempt log failed:", error.code);
+    }
+  } catch {
+    console.error("Public booking success attempt log failed.");
+  }
+}
+
 export async function POST(request: NextRequest) {
   let body: PublicBookingBody;
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+
+  if (Number.isFinite(contentLength) && contentLength > 20_000) {
+    return apiError("İstek gövdesi çok büyük.", 413);
+  }
 
   try {
     body = (await request.json()) as PublicBookingBody;
@@ -68,6 +166,50 @@ export async function POST(request: NextRequest) {
       400,
       "BAD_REQUEST",
     );
+  }
+
+  if (typeof body.website === "string" && body.website.trim() !== "") {
+    return apiError("Bilgilerinizi kontrol edin.", 422, "VALIDATION_ERROR");
+  }
+
+  if (!isValidPublicBookingStartedAt(body.startedAt)) {
+    return apiError("Bilgilerinizi kontrol edin.", 422, "VALIDATION_ERROR");
+  }
+
+  const organization = await getPublicOrganizationBySlug(slug);
+
+  if (!organization) {
+    return apiError("Randevu baÄŸlantÄ±sÄ± bulunamadÄ±.", 404, "NOT_FOUND");
+  }
+
+  const rateLimitSecret = getPublicBookingRateLimitSecret();
+
+  if (!rateLimitSecret) {
+    console.error("Public booking rate limit secret is missing.");
+    return apiError("Randevu oluÅŸturulamadÄ±.", 500, "SERVER_ERROR");
+  }
+
+  const ipHash = createPublicBookingIpHash(request, rateLimitSecret);
+  const contactHashes = createPublicBookingContactHashes({
+    email: guestValidation.values.email,
+    phone: guestValidation.values.phone,
+    secret: rateLimitSecret,
+  });
+
+  let rateLimitAllowed = false;
+
+  try {
+    rateLimitAllowed = await checkPublicBookingRateLimit({
+      orgId: organization.id,
+      ipHash,
+      contactHashes,
+    });
+  } catch {
+    return apiError("Randevu oluÅŸturulamadÄ±.", 500, "SERVER_ERROR");
+  }
+
+  if (!rateLimitAllowed) {
+    return rateLimitErrorResponse();
   }
 
   const bookingConfirmation = await getPublicBookingConfirmation({
@@ -146,6 +288,12 @@ export async function POST(request: NextRequest) {
     console.error("Public booking create returned empty result.");
     return apiError("Randevu oluşturulamadı.", 500, "SERVER_ERROR");
   }
+
+  await recordPublicBookingSuccessAttempt({
+    orgId: organization.id,
+    ipHash,
+    contactHashes,
+  });
 
   return NextResponse.json(
     {

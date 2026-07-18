@@ -20,6 +20,7 @@ Kodda kullanilan env isimleri:
 - `SUPABASE_SECRET_KEY`
 - `RESEND_API_KEY`
 - `CRON_SECRET`
+- `BOOKING_RATE_LIMIT_SECRET`
 - `NEXT_PUBLIC_SITE_URL`
 - `VERCEL_URL`
 - `NODE_ENV`
@@ -27,7 +28,8 @@ Kodda kullanilan env isimleri:
 Kontrol:
 
 - `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanimi icindir.
-- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` ve `CRON_SECRET` server-side kalmalidir.
+- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `CRON_SECRET` ve `BOOKING_RATE_LIMIT_SECRET` server-side kalmalidir.
+- `BOOKING_RATE_LIMIT_SECRET` Production ortaminda tanimli olmalidir; eksikse public booking create endpoint'i fail-closed davranir.
 - `NEXT_PUBLIC_SITE_URL` production domain olmalidir. Yoksa invite reset linkleri Vercel'in `VERCEL_URL` degerine duser.
 - `.env*` dosyalari `.gitignore` icinde ignore ediliyor.
 - Repo taramasinda gercek secret degeri commitlenmis tracked env dosyasi bulunmadi. `README.md` yalnizca placeholder env isimleri iceriyor.
@@ -56,6 +58,11 @@ Sira:
 15. `20260713_notification_logs.sql`
 16. `20260717_notification_logs_admin_select_policy.sql`
 17. `20260717_performance_indexes_and_busy_slots.sql`
+18. `20260718_organization_public_slug.sql`
+19. `20260718_public_booking_services.sql`
+20. `20260718_public_booking_availability.sql`
+21. `20260718_public_booking_create.sql`
+22. `20260718_public_booking_rate_limit.sql`
 
 Production'da bulunmasi gereken kritik nesneler:
 
@@ -71,6 +78,7 @@ Production'da bulunmasi gereken kritik nesneler:
 - `notification_logs`
 - `notification_logs_org_members_select` policy
 - Performance indexleri ve busy slots RPC guncellemesi
+- Public booking slug, services, availability, create ve rate-limit RPC'leri
 
 RLS kontrol:
 
@@ -172,6 +180,8 @@ Production test verileri gercek musteri kayitlarini etkilememelidir. Test sonund
 | Password setup | Customer sifresini belirler ve `/customer/login` ile girer. |
 | Service/staff secimi | Yalnizca aktif hizmet/personel secilebilir. |
 | Customer booking | Tarih, personel, slot ve confirm akisi calisir. |
+| Public booking | `/book/[slug]` uzerinden guest randevu olusur. |
+| Public booking rate limit | Honeypot, minimum submit suresi ve fazla deneme durumunda booking olusmadan 429 doner. |
 | Slot availability | Dolu slotlar ve gecmis saatler gorunmez. |
 | Appointment confirmation | Appointment `confirmed` olusur. |
 | Customer appointments | Customer sadece kendi randevularini gorur. |

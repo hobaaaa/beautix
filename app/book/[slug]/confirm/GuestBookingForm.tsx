@@ -70,6 +70,8 @@ export function GuestBookingForm({
   const [message, setMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [website, setWebsite] = useState("");
+  const [startedAt] = useState(() => new Date().toISOString());
 
   function updateValue<K extends keyof GuestBookingFormValues>(
     key: K,
@@ -128,6 +130,8 @@ export function GuestBookingForm({
         body: JSON.stringify({
           ...bookingSelection,
           ...validatedValues,
+          website,
+          startedAt,
         }),
       });
 
@@ -246,6 +250,21 @@ export function GuestBookingForm({
         <p className="mt-1 text-sm text-muted-foreground">
           Randevu oluşturmak için iletişim bilgilerinizi doldurun.
         </p>
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden opacity-0"
+      >
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          name="website"
+          value={website}
+          onChange={(event) => setWebsite(event.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
