@@ -1,3 +1,7 @@
+import {
+  getPublicBookingConfirmation,
+  getPublicOrganizationBySlug,
+} from "@/app/book/[slug]/queries";
 import { apiError } from "@/lib/api/error-response";
 import { isOverlapConstraintError } from "@/lib/appointments/booking-validation";
 import {
@@ -13,10 +17,6 @@ import {
 } from "@/lib/public-booking/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  getPublicBookingConfirmation,
-  getPublicOrganizationBySlug,
-} from "@/app/book/[slug]/queries";
 import { NextRequest, NextResponse } from "next/server";
 
 type PublicBookingBody = Partial<GuestBookingFormValues> & {
@@ -28,6 +28,9 @@ type PublicBookingBody = Partial<GuestBookingFormValues> & {
   website?: string;
   startedAt?: string;
 };
+
+const PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE =
+  "Randevu sistemi geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin veya işletmeyle iletişime geçin.";
 
 function getFirstValidationError(errors: Record<string, string | undefined>) {
   return Object.values(errors).find((message) => typeof message === "string");
@@ -162,7 +165,8 @@ export async function POST(request: NextRequest) {
 
   if (!guestValidation.isValid) {
     return apiError(
-      getFirstValidationError(guestValidation.errors) ?? "Bilgilerinizi kontrol edin.",
+      getFirstValidationError(guestValidation.errors) ??
+        "Bilgilerinizi kontrol edin.",
       400,
       "BAD_REQUEST",
     );
@@ -179,14 +183,18 @@ export async function POST(request: NextRequest) {
   const organization = await getPublicOrganizationBySlug(slug);
 
   if (!organization) {
-    return apiError("Randevu baÄŸlantÄ±sÄ± bulunamadÄ±.", 404, "NOT_FOUND");
+    return apiError("Randevu bağlantısı bulunamadı.", 404, "NOT_FOUND");
   }
 
   const rateLimitSecret = getPublicBookingRateLimitSecret();
 
   if (!rateLimitSecret) {
     console.error("Public booking rate limit secret is missing.");
-    return apiError("Randevu oluÅŸturulamadÄ±.", 500, "SERVER_ERROR");
+    return apiError(
+      PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE,
+      503,
+      "SERVER_ERROR",
+    );
   }
 
   const ipHash = createPublicBookingIpHash(request, rateLimitSecret);
@@ -205,7 +213,11 @@ export async function POST(request: NextRequest) {
       contactHashes,
     });
   } catch {
-    return apiError("Randevu oluÅŸturulamadÄ±.", 500, "SERVER_ERROR");
+    return apiError(
+      PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE,
+      503,
+      "SERVER_ERROR",
+    );
   }
 
   if (!rateLimitAllowed) {

@@ -27,6 +27,7 @@ function buildBookingHref(
     serviceId?: string;
     date?: string;
     staffId?: string;
+    sectionId?: string;
   },
 ) {
   const query = new URLSearchParams();
@@ -36,8 +37,9 @@ function buildBookingHref(
   if (params.staffId) query.set("staffId", params.staffId);
 
   const queryString = query.toString();
+  const hash = params.sectionId ? `#${params.sectionId}` : "";
 
-  return `/book/${encodeURIComponent(slug)}${queryString ? `?${queryString}` : ""}`;
+  return `/book/${encodeURIComponent(slug)}${queryString ? `?${queryString}` : ""}${hash}`;
 }
 
 export async function generateMetadata({
@@ -169,6 +171,7 @@ export default async function PublicBookingPage({
                     <Link
                       href={buildBookingHref(organization.public_slug, {
                         serviceId: service.id,
+                        sectionId: "date-selection",
                       })}
                       className={`mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2 text-sm font-medium ${
                         isSelected
@@ -186,7 +189,10 @@ export default async function PublicBookingPage({
         </section>
 
         {selectedService ? (
-          <section className="rounded-3xl border bg-card p-5 shadow-sm">
+          <section
+            id="date-selection"
+            className="scroll-mt-6 rounded-3xl border bg-card p-5 shadow-sm"
+          >
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-2xl font-semibold">Tarih Seçin</h2>
@@ -218,7 +224,10 @@ export default async function PublicBookingPage({
         ) : null}
 
         {selectedService && selectedDate ? (
-          <section className="space-y-4 rounded-3xl border bg-card p-5 shadow-sm">
+          <section
+            id="staff-selection"
+            className="scroll-mt-6 space-y-4 rounded-3xl border bg-card p-5 shadow-sm"
+          >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-2xl font-semibold">Personel ve Saat</h2>
@@ -230,6 +239,7 @@ export default async function PublicBookingPage({
                 <Link
                   href={buildBookingHref(organization.public_slug, {
                     serviceId: selectedService.id,
+                    sectionId: "date-selection",
                   })}
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
                 >
@@ -267,6 +277,7 @@ export default async function PublicBookingPage({
                           serviceId: selectedService.id,
                           date: selectedDate,
                           staffId: staff.id,
+                          sectionId: "slot-selection",
                         })}
                         className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
                           isSelected ? "border-blue-500/70 bg-blue-500/10 text-blue-100" : ""
@@ -282,7 +293,7 @@ export default async function PublicBookingPage({
             ) : null}
 
             {selectedStaff ? (
-              <div className="space-y-3">
+              <div id="slot-selection" className="scroll-mt-6 space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="text-lg font-semibold">Uygun Saatler</h3>
@@ -295,6 +306,7 @@ export default async function PublicBookingPage({
                       href={buildBookingHref(organization.public_slug, {
                         serviceId: selectedService.id,
                         date: selectedDate,
+                        sectionId: "staff-selection",
                       })}
                       className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
                     >

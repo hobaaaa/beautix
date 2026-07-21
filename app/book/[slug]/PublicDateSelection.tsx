@@ -40,7 +40,9 @@ export function PublicDateSelection({
       date: selectedDate,
     });
 
-    router.push(`/book/${encodeURIComponent(slug)}?${params.toString()}`);
+    router.push(
+      `/book/${encodeURIComponent(slug)}?${params.toString()}#staff-selection`,
+    );
   }
 
   return (
