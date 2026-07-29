@@ -21,6 +21,8 @@ Kodda kullanilan env isimleri:
 - `RESEND_API_KEY`
 - `CRON_SECRET`
 - `BOOKING_RATE_LIMIT_SECRET`
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 - `VERCEL_URL`
 - `NODE_ENV`
@@ -28,8 +30,10 @@ Kodda kullanilan env isimleri:
 Kontrol:
 
 - `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanimi icindir.
-- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `CRON_SECRET` ve `BOOKING_RATE_LIMIT_SECRET` server-side kalmalidir.
+- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `CRON_SECRET`, `BOOKING_RATE_LIMIT_SECRET` ve `TURNSTILE_SECRET_KEY` server-side kalmalidir.
 - `BOOKING_RATE_LIMIT_SECRET` Production ortaminda tanimli olmalidir; eksikse public booking create endpoint'i fail-closed davranir.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` public site key oldugu icin client bundle'a gidebilir.
+- `TURNSTILE_SECRET_KEY` Cloudflare Siteverify icin kullanilir ve client bundle'a gitmemelidir.
 - `NEXT_PUBLIC_SITE_URL` production domain olmalidir. Yoksa invite reset linkleri Vercel'in `VERCEL_URL` degerine duser.
 - `.env*` dosyalari `.gitignore` icinde ignore ediliyor.
 - Repo taramasinda gercek secret degeri commitlenmis tracked env dosyasi bulunmadi. `README.md` yalnizca placeholder env isimleri iceriyor.
@@ -182,6 +186,7 @@ Production test verileri gercek musteri kayitlarini etkilememelidir. Test sonund
 | Customer booking | Tarih, personel, slot ve confirm akisi calisir. |
 | Public booking | `/book/[slug]` uzerinden guest randevu olusur. |
 | Public booking rate limit | Honeypot, minimum submit suresi ve fazla deneme durumunda booking olusmadan 429 doner. |
+| Turnstile | Isletme girisi, musteri girisi, sifremi unuttum ve public booking submit akislari guvenlik dogrulamasindan gecer. |
 | Slot availability | Dolu slotlar ve gecmis saatler gorunmez. |
 | Appointment confirmation | Appointment `confirmed` olusur. |
 | Customer appointments | Customer sadece kendi randevularini gorur. |
@@ -207,6 +212,7 @@ Bu testler kontrollu demo organization ile yapilmalidir. Gercek musteri verisi k
 | Slotlar | Dolu, gecmis ve mesai disi slotlar gorunmez. |
 | Guest form | Ad, soyad, telefon, e-posta ve onay zorunlu alanlari calisir. |
 | Appointment create | Basarili submit sonrasi appointment `confirmed` olusur. |
+| Turnstile | Public booking formunda Turnstile tamamlanmadan POST kabul edilmez. |
 | Notification jobs | `booking_confirmation` ve `business_booking_notification` joblari olusur; 24+ saat varsa `appointment_reminder` olusur. |
 | Success sayfasi | Success sayfasi acilir ve hassas veri gostermez. |
 | Rate limit | Honeypot, minimum submit suresi ve fazla denemede booking olusmadan request reddedilir. |

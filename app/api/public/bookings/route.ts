@@ -15,6 +15,10 @@ import {
   isValidPublicBookingStartedAt,
   PUBLIC_BOOKING_RATE_LIMIT_MESSAGE,
 } from "@/lib/public-booking/rate-limit";
+import {
+  TURNSTILE_ERROR_MESSAGE,
+  verifyTurnstileToken,
+} from "@/lib/security/turnstile";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -27,6 +31,7 @@ type PublicBookingBody = Partial<GuestBookingFormValues> & {
   time?: string;
   website?: string;
   startedAt?: string;
+  turnstileToken?: string;
 };
 
 const PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE =
@@ -178,6 +183,16 @@ export async function POST(request: NextRequest) {
 
   if (!isValidPublicBookingStartedAt(body.startedAt)) {
     return apiError("Bilgilerinizi kontrol edin.", 422, "VALIDATION_ERROR");
+  }
+
+  const turnstileOk = await verifyTurnstileToken({
+    request,
+    token: body.turnstileToken,
+    expectedAction: "public_booking",
+  });
+
+  if (!turnstileOk) {
+    return apiError(TURNSTILE_ERROR_MESSAGE, 400, "VALIDATION_ERROR");
   }
 
   const organization = await getPublicOrganizationBySlug(slug);

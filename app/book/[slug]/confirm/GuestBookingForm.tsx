@@ -6,10 +6,11 @@ import {
   type GuestBookingFormValues,
   validateGuestBookingValues,
 } from "@/lib/public-booking/guest-booking-schema";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import { readApiErrorMessage } from "@/lib/api/client-response";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 
 type AppointmentSummary = {
   organizationName: string;
@@ -70,8 +71,13 @@ export function GuestBookingForm({
   const [message, setMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [website, setWebsite] = useState("");
   const [startedAt] = useState(() => new Date().toISOString());
+  const handleTurnstileToken = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   function updateValue<K extends keyof GuestBookingFormValues>(
     key: K,
@@ -117,6 +123,11 @@ export function GuestBookingForm({
   async function handleConfirm() {
     if (!validatedValues || isSubmitting) return;
 
+    if (!turnstileToken && process.env.NODE_ENV === "production") {
+      setSubmitError("Güvenlik doğrulamasının tamamlanmasını bekleyin.");
+      return;
+    }
+
     setIsSubmitting(true);
     setMessage(null);
     setSubmitError(null);
@@ -132,6 +143,7 @@ export function GuestBookingForm({
           ...validatedValues,
           website,
           startedAt,
+          turnstileToken,
         }),
       });
 
@@ -139,6 +151,7 @@ export function GuestBookingForm({
         setSubmitError(
           await readApiErrorMessage(response, "Randevu oluşturulamadı."),
         );
+        setTurnstileResetKey((current) => current + 1);
         return;
       }
 
@@ -160,6 +173,7 @@ export function GuestBookingForm({
       setSubmitError(
         "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
       );
+      setTurnstileResetKey((current) => current + 1);
     } finally {
       setIsSubmitting(false);
     }
@@ -221,6 +235,13 @@ export function GuestBookingForm({
           </div>
         ) : null}
 
+        <TurnstileWidget
+          action="public_booking"
+          token={turnstileToken}
+          onTokenChange={handleTurnstileToken}
+          resetKey={turnstileResetKey}
+        />
+
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
@@ -233,7 +254,10 @@ export function GuestBookingForm({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              (!turnstileToken && process.env.NODE_ENV === "production")
+            }
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Oluşturuluyor..." : "Randevuyu Oluştur"}

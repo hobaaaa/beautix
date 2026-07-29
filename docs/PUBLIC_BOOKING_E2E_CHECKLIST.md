@@ -108,6 +108,8 @@ Test email adresleri gerçek kişilere ait olmamalıdır veya test için açık 
 | --- | --- | --- |
 | Honeypot dolu request gönderilir. | Write yok, booking oluşmaz. | [ ] |
 | 2 saniyeden kısa submit gönderilir. | Write yok, booking oluşmaz. | [ ] |
+| Turnstile token olmadan public booking POST gönderilir. | Request reddedilir, appointment oluşmaz. | [ ] |
+| Geçersiz Turnstile token ile public booking POST gönderilir. | Request reddedilir, appointment oluşmaz. | [ ] |
 | Future `startedAt` gönderilir. | Request reddedilir. | [ ] |
 | Aynı IP ile 10 dakikada 6. deneme yapılır. | 429 döner. | [ ] |
 | Aynı IP + org ile 1 dakikada 3. deneme yapılır. | 429 döner. | [ ] |

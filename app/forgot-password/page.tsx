@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { readApiErrorMessage } from "@/lib/api/client-response";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -16,11 +17,15 @@ function normalizeLoginReturnPath(value: string | null) {
 }
 
 export default function ForgotPasswordPage() {
-  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [email, setEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const handleTurnstileToken = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function handleSubmit() {
     const trimmedEmail = email.trim();
@@ -35,6 +40,11 @@ export default function ForgotPasswordPage() {
       return;
     }
 
+    if (!turnstileToken && process.env.NODE_ENV === "production") {
+      setError("Güvenlik doğrulamasının tamamlanmasını bekleyin.");
+      return;
+    }
+
     setError(null);
     setSuccess(null);
     setLoading(true);
@@ -42,22 +52,33 @@ export default function ForgotPasswordPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       const nextPath = normalizeLoginReturnPath(params.get("next"));
-      const redirectTo = `${window.location.origin}/reset-password?next=${encodeURIComponent(nextPath)}`;
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        trimmedEmail,
-        {
-          redirectTo,
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          email: trimmedEmail,
+          next: nextPath,
+          turnstileToken,
+        }),
+      });
 
-      if (resetError) {
-        throw resetError;
+      if (!response.ok) {
+        setError(
+          await readApiErrorMessage(
+            response,
+            "Şifre sıfırlama bağlantısı gönderilemedi.",
+          ),
+        );
+        setTurnstileResetKey((current) => current + 1);
+        return;
       }
 
       setSuccess(RESET_REQUEST_MESSAGE);
-    } catch (resetError) {
-      console.error("Password reset request failed:", resetError);
-      setSuccess(RESET_REQUEST_MESSAGE);
+    } catch {
+      setError("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
+      setTurnstileResetKey((current) => current + 1);
     } finally {
       setLoading(false);
     }
@@ -87,6 +108,13 @@ export default function ForgotPasswordPage() {
             />
           </div>
 
+          <TurnstileWidget
+            action="forgot_password"
+            token={turnstileToken}
+            onTokenChange={handleTurnstileToken}
+            resetKey={turnstileResetKey}
+          />
+
           {error && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
@@ -102,7 +130,9 @@ export default function ForgotPasswordPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={
+              loading || (!turnstileToken && process.env.NODE_ENV === "production")
+            }
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {loading ? "Gönderiliyor..." : "Sıfırlama Bağlantısı Gönder"}

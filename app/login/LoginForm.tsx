@@ -1,40 +1,27 @@
 ﻿"use client";
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { TurnstileWidget } from "@/components/security/TurnstileWidget";
+import { readApiErrorMessage } from "@/lib/api/client-response";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function mapAuthErrorMessage(message?: string) {
-  if (!message) {
-    return "Giriş yapılırken bir hata oluştu.";
-  }
-
-  const normalized = message.toLowerCase();
-
-  if (
-    normalized.includes("invalid login credentials") ||
-    normalized.includes("email not confirmed") ||
-    normalized.includes("invalid_credentials")
-  ) {
-    return "E-posta veya şifre hatalı.";
-  }
-
-  return "Giriş yapılırken bir hata oluştu.";
-}
-
 export function LoginForm() {
   const router = useRouter();
-  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const handleTurnstileToken = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
 
   async function onLogin() {
     const trimmedEmail = email.trim();
@@ -54,27 +41,39 @@ export function LoginForm() {
       return;
     }
 
+    if (!turnstileToken && process.env.NODE_ENV === "production") {
+      setError("Güvenlik doğrulamasının tamamlanmasını bekleyin.");
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: trimmedEmail,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          password,
+          turnstileToken,
+        }),
       });
 
-      if (authError) {
-        throw authError;
+      if (!response.ok) {
+        setError(await readApiErrorMessage(response, "Giriş yapılırken bir hata oluştu."));
+        setTurnstileResetKey((current) => current + 1);
+        return;
       }
 
       router.replace("/admin");
       router.refresh();
-    } catch (loginError) {
-      setError(
-        loginError instanceof Error
-          ? mapAuthErrorMessage(loginError.message)
-          : "Giriş yapılırken bir hata oluştu.",
-      );
+    } catch {
+      setError("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
+      setTurnstileResetKey((current) => current + 1);
+    } finally {
       setLoading(false);
     }
   }
@@ -120,6 +119,13 @@ export function LoginForm() {
             />
           </div>
 
+          <TurnstileWidget
+            action="admin_login"
+            token={turnstileToken}
+            onTokenChange={handleTurnstileToken}
+            resetKey={turnstileResetKey}
+          />
+
           {error && (
             <div className="rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-300">
               {error}
@@ -129,7 +135,9 @@ export function LoginForm() {
           <button
             type="button"
             onClick={onLogin}
-            disabled={loading}
+            disabled={
+              loading || (!turnstileToken && process.env.NODE_ENV === "production")
+            }
             className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Giriş yapılıyor..." : "Giriş Yap"}

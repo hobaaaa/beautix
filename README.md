@@ -101,6 +101,8 @@ SUPABASE_SECRET_KEY=
 RESEND_API_KEY=
 CRON_SECRET=
 BOOKING_RATE_LIMIT_SECRET=
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
@@ -109,6 +111,8 @@ Ayrım:
 - `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanımı içindir.
 - `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` ve `CRON_SECRET` server-side kalmalıdır.
 - `BOOKING_RATE_LIMIT_SECRET` public booking HMAC hashleri için server-side kalmalıdır.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` tarayıcıda kullanılan public Turnstile site key değeridir.
+- `TURNSTILE_SECRET_KEY` yalnızca server-side Siteverify doğrulaması için kullanılır.
 - `NEXT_PUBLIC_SITE_URL`, invite/reset linkleri için public site URL değeridir.
 - `VERCEL_URL` ve `NODE_ENV` platform tarafından sağlanabilir.
 - `.env.local` commit edilmez.
@@ -139,6 +143,7 @@ Mevcut scriptler:
 npm run dev
 npm run lint
 npm run build
+npm run demo:accounts
 npm run seed:demo
 npm run test:booking
 npm run test:booking:race
@@ -207,7 +212,8 @@ Public booking MVP spam koruması:
 - Aynı IP için 10 dakikada 5 deneme, aynı IP + organization için 1 dakikada 2 deneme limiti vardır.
 - Aynı normalize e-posta veya telefon için 30 dakikada en fazla 3 başarılı public booking oluşturulabilir.
 - Guest formda honeypot ve minimum 2 saniyelik form süresi kontrolü vardır.
-- CAPTCHA / reCAPTCHA / Turnstile henüz kullanılmıyor; bot trafiği artarsa V2 kapsamında değerlendirilecektir.
+- Public booking submit aşamasında Cloudflare Turnstile server-side doğrulaması kullanılır.
+- İşletme girişi, müşteri girişi ve şifremi unuttum akışları Turnstile ile korunur.
 
 Public booking login gerektirmez ve yeni müşteri kazanımı için kullanılır. Customer portal ise mevcut müşterilerin giriş yaparak randevularını takip etmesi içindir.
 
@@ -221,6 +227,7 @@ Web sitesi entegrasyonu ve manuel test dokümanları:
 Demo seed otomatik çalışmaz. Ayrıntılar:
 
 - [docs/DEMO_DATA_GUIDE.md](./docs/DEMO_DATA_GUIDE.md)
+- [docs/DEMO_ACCOUNT_GUIDE.md](./docs/DEMO_ACCOUNT_GUIDE.md)
 
 Dry-run örneği:
 
@@ -264,6 +271,7 @@ Ayrıntılı checklist:
 
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 - [docs/DEMO_DATA_GUIDE.md](./docs/DEMO_DATA_GUIDE.md)
+- [docs/DEMO_ACCOUNT_GUIDE.md](./docs/DEMO_ACCOUNT_GUIDE.md)
 - [docs/WEBSITE_INTEGRATION_GUIDE.md](./docs/WEBSITE_INTEGRATION_GUIDE.md)
 - [docs/PUBLIC_BOOKING_E2E_CHECKLIST.md](./docs/PUBLIC_BOOKING_E2E_CHECKLIST.md)
 
