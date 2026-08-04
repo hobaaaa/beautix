@@ -125,6 +125,7 @@ Public booking ekranı şu an Artexo domaininde çalışır. İşletme adı publ
 
 - İşletmeye özel logo
 - İşletmeye özel renk teması
+- İşletmeye özel public booking tema ayarları
 - White-label görünüm
 - Custom domain veya subdomain
 
@@ -155,6 +156,7 @@ Bu sprintin kapsamı dışında kalan seçenekler:
 - embedded modal
 - custom domain
 - custom subdomain
+- tenant branding
 - white-label branding
 - QR generator
 - analytics

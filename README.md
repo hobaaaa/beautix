@@ -280,6 +280,8 @@ Ayrıntılı checklist:
 Henüz kapsamda olmayan başlıklar:
 
 - Web Push / PWA notifications
+- Email verification kontrollerinin netleştirilmesi
+- Tenant branding: işletmeye özel logo, ana renk ve public booking tema ayarları
 - Google Calendar ve Outlook Calendar entegrasyonu
 - Online payment / deposit
 - Gelişmiş analytics ve reporting
