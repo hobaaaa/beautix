@@ -4,6 +4,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { AppointmentStatus } from "../../../types";
 import { CustomerLogoutButton } from "../CustomerLogoutButton";
+import type { Locale } from "@/lib/i18n/constants";
+import {
+  getCustomerHref,
+  getCustomerMessages,
+  type CustomerMessages,
+} from "@/lib/i18n/customer";
 import {
   CustomerAuthRequiredError,
   getCustomerAppointments,
@@ -18,22 +24,15 @@ const STATUS_STYLES: Record<AppointmentStatus, string> = {
   no_show: "bg-amber-500/15 text-amber-200",
 };
 
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  confirmed: "Onaylandı",
-  completed: "Tamamlandı",
-  cancelled: "İptal Edildi",
-  no_show: "Gelmedi",
-};
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", {
+function formatDate(value: string, locale?: Locale) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
     dateStyle: "long",
     timeZone: "Europe/Istanbul",
   }).format(new Date(value));
 }
 
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("tr-TR", {
+function formatTime(value: string, locale?: Locale) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Istanbul",
@@ -49,8 +48,12 @@ function canCancelAppointment(appointment: CustomerAppointmentListItem) {
 
 function AppointmentCard({
   appointment,
+  localePrefix,
+  messages,
 }: {
   appointment: CustomerAppointmentListItem;
+  localePrefix?: Locale;
+  messages: CustomerMessages;
 }) {
   const canCancel = canCancelAppointment(appointment);
 
@@ -58,13 +61,13 @@ function AppointmentCard({
     <article className="rounded-3xl border border-border bg-card p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <div className="text-sm text-muted-foreground">Hizmet</div>
+          <div className="text-sm text-muted-foreground">{messages.service}</div>
           <h3 className="mt-1 break-words text-xl font-semibold">{appointment.service.name}</h3>
         </div>
         <span
           className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[appointment.status]}`}
         >
-          {STATUS_LABELS[appointment.status]}
+          {messages.statusLabels[appointment.status]}
         </span>
       </div>
 
@@ -72,33 +75,39 @@ function AppointmentCard({
         <div className="rounded-2xl border border-border bg-background/60 p-4">
           <div className="mb-2 flex items-center gap-2 text-muted-foreground">
             <CalendarDays className="h-4 w-4" />
-            Tarih
+            {messages.date}
           </div>
-          <div className="font-semibold">{formatDate(appointment.start_at)}</div>
+          <div className="font-semibold">
+            {formatDate(appointment.start_at, localePrefix)}
+          </div>
         </div>
         <div className="rounded-2xl border border-border bg-background/60 p-4">
           <div className="mb-2 flex items-center gap-2 text-muted-foreground">
             <Clock className="h-4 w-4" />
-            Saat
+            {messages.time}
           </div>
-          <div className="font-semibold">{formatTime(appointment.start_at)}</div>
+          <div className="font-semibold">
+            {formatTime(appointment.start_at, localePrefix)}
+          </div>
         </div>
         <div className="rounded-2xl border border-border bg-background/60 p-4">
           <div className="mb-2 flex items-center gap-2 text-muted-foreground">
             <UserRound className="h-4 w-4" />
-            Personel
+            {messages.staff}
           </div>
           <div className="break-words font-semibold">{appointment.staff.name}</div>
         </div>
         <div className="rounded-2xl border border-border bg-background/60 p-4">
-          <div className="mb-2 text-muted-foreground">Süre</div>
-          <div className="font-semibold">{appointment.service.duration_minutes} dk</div>
+          <div className="mb-2 text-muted-foreground">{messages.duration}</div>
+          <div className="font-semibold">
+            {appointment.service.duration_minutes} {messages.minuteShort}
+          </div>
         </div>
       </div>
 
       {canCancel && (
         <div className="mt-5 flex justify-end">
-          <CancelAppointmentButton appointmentId={appointment.id} />
+          <CancelAppointmentButton appointmentId={appointment.id} messages={messages} />
         </div>
       )}
     </article>
@@ -109,10 +118,14 @@ function AppointmentSection({
   title,
   emptyMessage,
   appointments,
+  localePrefix,
+  messages,
 }: {
   title: string;
   emptyMessage: string;
   appointments: CustomerAppointmentListItem[];
+  localePrefix?: Locale;
+  messages: CustomerMessages;
 }) {
   return (
     <section className="space-y-4">
@@ -127,6 +140,8 @@ function AppointmentSection({
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
+              localePrefix={localePrefix}
+              messages={messages}
             />
           ))}
         </div>
@@ -135,14 +150,19 @@ function AppointmentSection({
   );
 }
 
-export default async function CustomerAppointmentsPage() {
+export async function CustomerAppointmentsPageContent({
+  localePrefix,
+}: {
+  localePrefix?: Locale;
+}) {
+  const t = getCustomerMessages(localePrefix);
   let result;
 
   try {
     result = await getCustomerAppointments();
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {
-      redirect("/customer/login");
+      redirect(getCustomerHref("/login", localePrefix));
     }
 
     throw error;
@@ -157,7 +177,7 @@ export default async function CustomerAppointmentsPage() {
   const { organizations, selectedOrganization } = context;
 
   if (organizations.length > 0 && !selectedOrganization) {
-    redirect("/customer");
+    redirect(getCustomerHref("", localePrefix));
   }
 
   return (
@@ -166,55 +186,63 @@ export default async function CustomerAppointmentsPage() {
         <header className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link
-              href="/customer"
+              href={getCustomerHref("", localePrefix)}
               className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Müşteri paneline dön
+              {t.backToPanel}
             </Link>
-            <CustomerLogoutButton />
+            <CustomerLogoutButton messages={t} />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />
           </div>
-          <h1 className="text-2xl font-semibold">Randevularım</h1>
+          <h1 className="text-2xl font-semibold">{t.appointmentsTitle}</h1>
         </header>
 
         {organizations.length === 0 ? (
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <h2 className="text-2xl font-semibold">
-              Bu hesap herhangi bir işletmeye bağlı değil.
+              {t.noOrganizationTitle}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Randevularınızı görmek için işletme tarafından müşteri kaydınızın
-              oluşturulması gerekir.
+              {t.noOrganizationDescription}
             </p>
           </section>
         ) : !activeClient ? (
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <h2 className="text-2xl font-semibold">Aktif müşteri kaydı bulunamadı.</h2>
+            <h2 className="text-2xl font-semibold">
+              {t.activeClientNotFoundTitle}
+            </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Randevularınızı görüntülemek için müşteri kaydınızın aktif olması
-              gerekir.
+              {t.activeClientNotFoundDescription}
             </p>
           </section>
         ) : (
           <div className="space-y-8">
             <AppointmentSection
-              title="Yaklaşan Randevular"
-              emptyMessage="Henüz yaklaşan randevunuz bulunmuyor."
+              title={t.upcomingAppointments}
+              emptyMessage={t.noUpcomingAppointments}
               appointments={upcomingAppointments}
+              localePrefix={localePrefix}
+              messages={t}
             />
             <AppointmentSection
-              title="Geçmiş ve İptal Edilen Randevular"
-              emptyMessage="Henüz geçmiş veya iptal edilmiş randevunuz bulunmuyor."
+              title={t.pastAndCancelledAppointments}
+              emptyMessage={t.noPastOrCancelledAppointments}
               appointments={pastAppointments}
+              localePrefix={localePrefix}
+              messages={t}
             />
           </div>
         )}
       </div>
     </main>
   );
+}
+
+export default async function CustomerAppointmentsPage() {
+  return <CustomerAppointmentsPageContent />;
 }
 
 

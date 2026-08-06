@@ -4,20 +4,27 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CustomerLogoutButton } from "./CustomerLogoutButton";
 import { CustomerOrganizationSelector } from "./CustomerOrganizationSelector";
+import type { Locale } from "@/lib/i18n/constants";
+import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
 import {
   CustomerAuthRequiredError,
   getCustomerDashboardContext,
   getCustomerOrganizationDisplayName,
 } from "./queries";
 
-export default async function CustomerHomePage() {
+export async function CustomerHomePageContent({
+  localePrefix,
+}: {
+  localePrefix?: Locale;
+}) {
+  const t = getCustomerMessages(localePrefix);
   let context;
 
   try {
     context = await getCustomerDashboardContext();
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {
-      redirect("/customer/login");
+      redirect(getCustomerHref("/login", localePrefix));
     }
 
     throw error;
@@ -30,22 +37,21 @@ export default async function CustomerHomePage() {
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="space-y-5">
           <div className="flex justify-end">
-            <CustomerLogoutButton />
+            <CustomerLogoutButton messages={t} />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />
           </div>
-          <h1 className="text-xl font-semibold">Müşteri Paneli</h1>
+          <h1 className="text-xl font-semibold">{t.dashboardTitle}</h1>
         </header>
 
         {organizations.length === 0 ? (
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <h2 className="text-2xl font-semibold">
-              Bu hesap herhangi bir işletmeye bağlı değil.
+              {t.noOrganizationTitle}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Devam etmek için işletme tarafından müşteri kaydınızın oluşturulması
-              gerekir.
+              {t.noOrganizationDescription}
             </p>
           </section>
         ) : selectedOrganization ? (
@@ -57,33 +63,36 @@ export default async function CustomerHomePage() {
               {getCustomerOrganizationDisplayName(selectedOrganization)}
             </div>
             <h2 className="mt-2 text-2xl font-semibold">
-              Hoş geldiniz, {selectedOrganization.client_name}
+              {t.welcome(selectedOrganization.client_name)}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Hizmetleri inceleyebilir ve sonraki adımda randevu akışına devam
-              edebilirsiniz.
+              {t.dashboardDescription}
             </p>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Link
-                href="/customer/services"
+                href={getCustomerHref("/services", localePrefix)}
                 className="inline-flex w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 sm:w-auto"
               >
-                Hizmetleri Gör
+                {t.viewServices}
               </Link>
               <Link
-                href="/customer/appointments"
+                href={getCustomerHref("/appointments", localePrefix)}
                 className="inline-flex w-full items-center justify-center rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground sm:w-auto"
               >
-                Randevularım
+                {t.myAppointments}
               </Link>
             </div>
           </section>
         ) : (
-          <CustomerOrganizationSelector organizations={organizations} />
+          <CustomerOrganizationSelector organizations={organizations} messages={t} />
         )}
       </div>
     </main>
   );
+}
+
+export default async function CustomerHomePage() {
+  return <CustomerHomePageContent />;
 }
 
 

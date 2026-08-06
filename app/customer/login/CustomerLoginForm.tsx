@@ -72,7 +72,7 @@ export function CustomerLoginForm({ locale }: { locale?: Locale }) {
         return;
       }
 
-      router.replace("/customer");
+      router.replace(locale ? `/${locale}/customer` : "/customer");
       router.refresh();
     } catch {
       setError(t.networkError);

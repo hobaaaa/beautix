@@ -4,6 +4,7 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import type { CustomerMessages } from "@/lib/i18n/customer";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,6 +13,11 @@ type ConfirmAppointmentButtonProps = {
   staffId: string;
   date: string;
   time: string;
+  successHref?: string;
+  messages?: Pick<
+    CustomerMessages,
+    "createFailed" | "creatingAppointment" | "confirmAppointment"
+  >;
 };
 
 export function ConfirmAppointmentButton({
@@ -19,10 +25,17 @@ export function ConfirmAppointmentButton({
   staffId,
   date,
   time,
+  successHref = "/customer/booking/success",
+  messages,
 }: ConfirmAppointmentButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const labels = messages ?? {
+    createFailed: "Randevu oluşturulamadı.",
+    creatingAppointment: "Randevu oluşturuluyor...",
+    confirmAppointment: "Randevuyu Onayla",
+  };
 
   async function handleConfirm() {
     setLoading(true);
@@ -44,14 +57,14 @@ export function ConfirmAppointmentButton({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Randevu oluşturulamadı."),
+          await readApiErrorMessage(response, labels.createFailed),
         );
       }
 
-      router.replace("/customer/booking/success");
+      router.replace(successHref);
       router.refresh();
     } catch (error) {
-      setError(getClientErrorMessage(error, "Randevu oluşturulamadı."));
+      setError(getClientErrorMessage(error, labels.createFailed));
       setLoading(false);
     }
   }
@@ -69,7 +82,7 @@ export function ConfirmAppointmentButton({
         disabled={loading}
         className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {loading ? "Randevu oluşturuluyor..." : "Randevuyu Onayla"}
+        {loading ? labels.creatingAppointment : labels.confirmAppointment}
       </button>
     </div>
   );

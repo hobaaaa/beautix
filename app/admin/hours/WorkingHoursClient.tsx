@@ -4,12 +4,14 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WorkingHour } from "../../../types";
 
 type WorkingHoursClientProps = {
   hours: WorkingHour[];
+  messages?: AdminMessages["hours"];
 };
 
 type WorkingDayForm = {
@@ -19,16 +21,6 @@ type WorkingDayForm = {
   start_time: string | null;
   end_time: string | null;
 };
-
-const WEEK_DAYS: Array<{ day_of_week: number; day_name: string }> = [
-  { day_of_week: 1, day_name: "Pazartesi" },
-  { day_of_week: 2, day_name: "Salı" },
-  { day_of_week: 3, day_name: "Çarşamba" },
-  { day_of_week: 4, day_name: "Perşembe" },
-  { day_of_week: 5, day_name: "Cuma" },
-  { day_of_week: 6, day_name: "Cumartesi" },
-  { day_of_week: 7, day_name: "Pazar" },
-];
 
 function formatTimeForInput(value: string | null | undefined) {
   if (!value) return null;
@@ -40,10 +32,13 @@ function timeToMinutes(value: string) {
   return hours * 60 + minutes;
 }
 
-function normalizeWorkingHours(hours: WorkingHour[]): WorkingDayForm[] {
+function normalizeWorkingHours(
+  hours: WorkingHour[],
+  messages: AdminMessages["hours"],
+): WorkingDayForm[] {
   const hoursByDay = new Map(hours.map((hour) => [hour.day_of_week, hour]));
 
-  return WEEK_DAYS.map(({ day_of_week, day_name }) => {
+  return messages.weekDays.map(({ day_of_week, day_name }) => {
     const existing = hoursByDay.get(day_of_week);
 
     return {
@@ -56,9 +51,15 @@ function normalizeWorkingHours(hours: WorkingHour[]): WorkingDayForm[] {
   });
 }
 
-export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
+export default function WorkingHoursClient({
+  hours,
+  messages = getAdminMessages().hours,
+}: WorkingHoursClientProps) {
   const router = useRouter();
-  const initialDays = useMemo(() => normalizeWorkingHours(hours), [hours]);
+  const initialDays = useMemo(
+    () => normalizeWorkingHours(hours, messages),
+    [hours, messages],
+  );
   const [days, setDays] = useState<WorkingDayForm[]>(initialDays);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -86,7 +87,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       if (!day.start_time || !day.end_time) {
         setMessage({
           type: "error",
-          text: `${day.day_name}: başlangıç ve bitiş saati zorunludur.`,
+          text: messages.requiredTimes(day.day_name),
         });
         return;
       }
@@ -94,7 +95,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
       if (timeToMinutes(day.start_time) >= timeToMinutes(day.end_time)) {
         setMessage({
           type: "error",
-          text: `${day.day_name}: başlangıç saati bitiş saatinden önce olmalıdır.`,
+          text: messages.invalidRange(day.day_name),
         });
         return;
       }
@@ -122,20 +123,20 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Çalışma saatleri kaydedilemedi."),
+          await readApiErrorMessage(response, messages.saveFailed),
         );
       }
 
       setMessage({
         type: "success",
-        text: "Çalışma saatleri başarıyla güncellendi.",
+        text: messages.saveSuccess,
       });
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
         text:
-          getClientErrorMessage(error, "Çalışma saatleri kaydedilemedi."),
+          getClientErrorMessage(error, messages.saveFailed),
       });
     } finally {
       setLoading(false);
@@ -161,7 +162,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
             <div className="min-w-36">
               <div className="font-medium">{day.day_name}</div>
               <div className="text-sm text-muted-foreground">
-                {day.is_enabled ? "Açık" : "Kapalı"}
+                {day.is_enabled ? messages.open : messages.closed}
               </div>
             </div>
 
@@ -176,13 +177,13 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
                   }))
                 }
               />
-              Aktif
+              {messages.active}
             </label>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  Başlangıç saati
+                  {messages.startTime}
                 </label>
                 <input
                   type="time"
@@ -200,7 +201,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
 
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  Bitiş saati
+                  {messages.endTime}
                 </label>
                 <input
                   type="time"
@@ -226,7 +227,7 @@ export default function WorkingHoursClient({ hours }: WorkingHoursClientProps) {
         disabled={loading}
         className="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50 sm:w-auto"
       >
-        {loading ? "Kaydediliyor..." : "Çalışma Saatlerini Kaydet"}
+        {loading ? messages.saving : messages.save}
       </button>
     </div>
   );

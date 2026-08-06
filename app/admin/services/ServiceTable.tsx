@@ -7,13 +7,16 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Message, Service } from "../../../types";
+import type { AdminMessages } from "@/lib/i18n/admin";
 
 export const ServiceTable = ({
   services,
   setMessage,
+  messages,
 }: {
   services: Service[];
   setMessage: React.Dispatch<React.SetStateAction<Message>>;
+  messages: AdminMessages;
 }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const router = useRouter();
@@ -21,8 +24,8 @@ export const ServiceTable = ({
   if (services.length === 0) {
     return (
       <EmptyState
-        title="Henüz hizmet bulunmuyor."
-        description="İlk hizmetinizi oluşturduğunuzda burada listelenir."
+        title={messages.services.emptyTitle}
+        description={messages.services.emptyDescription}
       />
     );
   }
@@ -36,16 +39,18 @@ export const ServiceTable = ({
       });
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, "Hizmet silinemedi."));
+        throw new Error(
+          await readApiErrorMessage(response, messages.services.deleteFailed),
+        );
       }
 
-      setMessage({ type: "success", text: "Hizmet başarıyla silindi." });
+      setMessage({ type: "success", text: messages.services.deleteSuccess });
       router.refresh();
     } catch (error) {
       console.error("Error deleting service:", error);
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, "Hizmet silinemedi."),
+        text: getClientErrorMessage(error, messages.services.deleteFailed),
       });
     } finally {
       setLoadingId(null);
@@ -65,21 +70,26 @@ export const ServiceTable = ({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Hizmet durumu güncellenemedi."),
+          await readApiErrorMessage(
+            response,
+            messages.services.statusUpdateFailed,
+          ),
         );
       }
 
       setMessage({
         type: "success",
-        text: "Hizmet durumu başarıyla güncellendi.",
+        text: messages.services.statusUpdateSuccess,
       });
       router.refresh();
     } catch (error) {
       console.error("Error updating service status:", error);
       setMessage({
         type: "error",
-        text:
-          getClientErrorMessage(error, "Hizmet durumu güncellenemedi."),
+        text: getClientErrorMessage(
+          error,
+          messages.services.statusUpdateFailed,
+        ),
       });
     } finally {
       setLoadingId(null);
@@ -95,7 +105,7 @@ export const ServiceTable = ({
           <div className="min-w-0">
             <h3 className="break-words text-base font-semibold">{service.name}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Süre: {service.duration_minutes} dakika
+              {messages.services.durationText(service.duration_minutes)}
             </p>
             <span
               className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs ${
@@ -104,7 +114,9 @@ export const ServiceTable = ({
                   : "bg-slate-500/10 text-slate-300"
               }`}
             >
-              {service.is_active ? "Aktif" : "Pasif"}
+              {service.is_active
+                ? messages.services.active
+                : messages.services.passive}
             </span>
           </div>
 
@@ -115,7 +127,9 @@ export const ServiceTable = ({
               disabled={loadingId === service.id}
               className="inline-flex min-h-11 items-center justify-center rounded-md border border-red-500/40 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-50"
             >
-              {loadingId === service.id ? "Siliniyor..." : "Sil"}
+              {loadingId === service.id
+                ? messages.services.deleting
+                : messages.services.delete}
             </button>
             <button
               type="button"
@@ -126,10 +140,10 @@ export const ServiceTable = ({
               className="inline-flex min-h-11 items-center justify-center rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               {loadingId === service.id
-                ? "Güncelleniyor..."
+                ? messages.services.updating
                 : service.is_active
-                  ? "Pasifleştir"
-                  : "Aktifleştir"}
+                  ? messages.services.deactivate
+                  : messages.services.activate}
             </button>
           </div>
         </article>

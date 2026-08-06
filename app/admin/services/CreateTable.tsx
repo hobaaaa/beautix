@@ -7,11 +7,14 @@ import {
 import { useState } from "react";
 import { Message } from "../../../types";
 import { useRouter } from "next/navigation";
+import type { AdminMessages } from "@/lib/i18n/admin";
 
 export const CreateTable = ({
   setMessage,
+  messages,
 }: {
   setMessage: React.Dispatch<React.SetStateAction<Message>>;
+  messages: AdminMessages;
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -25,13 +28,13 @@ export const CreateTable = ({
       const durationString = formData.get("duration_minutes") as string;
 
       if (typeof name !== "string" || !name.trim()) {
-        throw new Error("Hizmet adı zorunludur.");
+        throw new Error(messages.services.nameRequired);
       }
 
       const duration = Number(durationString);
 
       if (!Number.isInteger(duration) || duration <= 0 || duration > 600) {
-        throw new Error("Süre 1 ile 600 dakika arasında olmalıdır.");
+        throw new Error(messages.services.durationInvalid);
       }
 
       const payload = {
@@ -48,15 +51,17 @@ export const CreateTable = ({
       });
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, "Hizmet oluşturulamadı."));
+        throw new Error(
+          await readApiErrorMessage(response, messages.services.createFailed),
+        );
       }
-      setMessage({ type: "success", text: "Hizmet başarıyla oluşturuldu." });
+      setMessage({ type: "success", text: messages.services.createSuccess });
 
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, "Bir hata oluştu."),
+        text: getClientErrorMessage(error, messages.services.genericError),
       });
     } finally {
       setLoading(false);
@@ -67,7 +72,7 @@ export const CreateTable = ({
     <form action={action} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="name" className="">
-          Hizmet Adı:
+          {messages.services.nameLabel}
         </label>
         <input
           type="text"
@@ -78,7 +83,7 @@ export const CreateTable = ({
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="duration_minutes">Süre (dakika):</label>
+        <label htmlFor="duration_minutes">{messages.services.durationLabel}</label>
         <input
           type="number"
           id="duration_minutes"
@@ -92,7 +97,7 @@ export const CreateTable = ({
         disabled={loading}
         className="min-h-11 w-full rounded bg-blue-500 px-4 py-2 text-white sm:w-auto"
       >
-        {loading ? "Oluşturuluyor..." : "Hizmet Oluştur"}
+        {loading ? messages.services.creating : messages.services.createButton}
       </button>
     </form>
   );

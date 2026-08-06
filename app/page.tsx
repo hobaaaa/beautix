@@ -31,7 +31,7 @@ async function resolveSignedInDestination() {
     Array.isArray(customerOrganizations) &&
     customerOrganizations.length > 0
   ) {
-    return "/customer";
+    return `/${await getPreferredLocale()}/customer`;
   }
 
   return null;

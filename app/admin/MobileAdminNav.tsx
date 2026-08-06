@@ -2,6 +2,12 @@
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import {
+  getAdminHref,
+  getAdminMessages,
+  type AdminMessages,
+} from "@/lib/i18n/admin";
+import type { Locale } from "@/lib/i18n/constants";
+import {
   Bell,
   BriefcaseBusiness,
   CalendarDays,
@@ -18,24 +24,66 @@ import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 
-const navigationItems = [
-  { href: "/admin", label: "Gösterge Paneli", icon: LayoutDashboard },
-  { href: "/admin/services", label: "Hizmetler", icon: BriefcaseBusiness },
-  { href: "/admin/staff", label: "Personeller", icon: Users },
-  { href: "/admin/clients", label: "Müşteriler", icon: ContactRound },
-  { href: "/admin/appointments", label: "Randevular", icon: CalendarDays },
-  { href: "/admin/notifications", label: "Bildirimler", icon: Bell },
-  { href: "/admin/hours", label: "Çalışma Saatleri", icon: Clock3 },
-  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
-] as const;
+function getNavigationItems(messages: AdminMessages, localePrefix?: Locale) {
+  return [
+    {
+      href: getAdminHref("", localePrefix),
+      label: messages.nav.dashboard,
+      icon: LayoutDashboard,
+    },
+    {
+      href: getAdminHref("/services", localePrefix),
+      label: messages.nav.services,
+      icon: BriefcaseBusiness,
+    },
+    {
+      href: getAdminHref("/staff", localePrefix),
+      label: messages.nav.staff,
+      icon: Users,
+    },
+    {
+      href: getAdminHref("/clients", localePrefix),
+      label: messages.nav.clients,
+      icon: ContactRound,
+    },
+    {
+      href: getAdminHref("/appointments", localePrefix),
+      label: messages.nav.appointments,
+      icon: CalendarDays,
+    },
+    {
+      href: getAdminHref("/notifications", localePrefix),
+      label: messages.nav.notifications,
+      icon: Bell,
+    },
+    {
+      href: getAdminHref("/hours", localePrefix),
+      label: messages.nav.hours,
+      icon: Clock3,
+    },
+    {
+      href: getAdminHref("/settings", localePrefix),
+      label: messages.nav.settings,
+      icon: Settings,
+    },
+  ] as const;
+}
 
 function isActivePath(pathname: string, href: string) {
   return href === "/admin" ? pathname === href : pathname.startsWith(href);
 }
 
-export function MobileAdminNav() {
+export function MobileAdminNav({
+  localePrefix,
+  messages,
+}: {
+  localePrefix?: Locale;
+  messages?: AdminMessages;
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const labels = messages ?? getAdminMessages();
+  const navigationItems = getNavigationItems(labels, localePrefix);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -59,7 +107,7 @@ export function MobileAdminNav() {
         type="button"
         onClick={() => setIsOpen(true)}
         className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-        aria-label="Yönetim menüsünü aç"
+        aria-label={labels.openMenu}
         aria-expanded={isOpen}
         aria-controls="mobile-admin-navigation"
       >
@@ -74,7 +122,7 @@ export function MobileAdminNav() {
               type="button"
               className="absolute inset-0 bg-black/80"
               onClick={() => setIsOpen(false)}
-              aria-label="Yönetim menüsünü kapat"
+              aria-label={labels.closeMenu}
             />
 
             <aside
@@ -84,14 +132,14 @@ export function MobileAdminNav() {
             >
               <div className="mb-6 flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
-                  <ArtexoBrand compact suffix="Yönetim" />
-                  <div className="text-xs text-zinc-400">Menü</div>
+                  <ArtexoBrand compact suffix={labels.brandSuffix} />
+                  <div className="text-xs text-zinc-400">{labels.menu}</div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
-                  aria-label="Menüyü kapat"
+                  aria-label={labels.close}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -122,7 +170,7 @@ export function MobileAdminNav() {
               </nav>
 
               <div className="mt-auto border-t border-white/10 pt-4 text-xs text-zinc-500">
-                v0.1 (MVP)
+                {labels.version}
               </div>
             </aside>
           </div>,

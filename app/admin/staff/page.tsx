@@ -1,9 +1,17 @@
+import { getAdminMessages } from "@/lib/i18n/admin";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
 import { StaffClient } from "./StaffClient";
 import { getStaffPageData } from "./queries";
 
-export default async function StaffPage() {
+type StaffPageContentProps = {
+  locale?: Locale;
+};
+
+export async function StaffPageContent({
+  locale = defaultLocale,
+}: StaffPageContentProps = {}) {
   const { staff, services } = await measureServerTiming(
     "admin-staff-page",
     "page.total",
@@ -17,5 +25,15 @@ export default async function StaffPage() {
     }),
   );
 
-  return <StaffClient staff={staff} services={services} />;
+  return (
+    <StaffClient
+      staff={staff}
+      services={services}
+      messages={getAdminMessages(locale).staff}
+    />
+  );
+}
+
+export default async function StaffPage() {
+  return <StaffPageContent />;
 }

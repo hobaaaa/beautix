@@ -3,17 +3,19 @@ import { ArrowLeft, CalendarPlus, Clock } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CustomerLogoutButton } from "../CustomerLogoutButton";
+import type { Locale } from "@/lib/i18n/constants";
+import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
 import {
   CustomerAuthRequiredError,
   getCustomerOrganizationDisplayName,
   getCustomerServices,
 } from "../queries";
 
-function formatPrice(price: string) {
+function formatPrice(price: string, locale?: Locale) {
   const numericPrice = Number(price);
 
   if (Number.isFinite(numericPrice)) {
-    return new Intl.NumberFormat("tr-TR", {
+    return new Intl.NumberFormat(locale === "en" ? "en-US" : "tr-TR", {
       style: "currency",
       currency: "TRY",
       maximumFractionDigits: 2,
@@ -23,14 +25,19 @@ function formatPrice(price: string) {
   return price;
 }
 
-export default async function CustomerServicesPage() {
+export async function CustomerServicesPageContent({
+  localePrefix,
+}: {
+  localePrefix?: Locale;
+}) {
+  const t = getCustomerMessages(localePrefix);
   let result;
 
   try {
     result = await getCustomerServices();
   } catch (error) {
     if (error instanceof CustomerAuthRequiredError) {
-      redirect("/customer/login");
+      redirect(getCustomerHref("/login", localePrefix));
     }
 
     throw error;
@@ -40,7 +47,7 @@ export default async function CustomerServicesPage() {
   const { organizations, selectedOrganization } = context;
 
   if (organizations.length > 0 && !selectedOrganization) {
-    redirect("/customer");
+    redirect(getCustomerHref("", localePrefix));
   }
 
   return (
@@ -49,23 +56,25 @@ export default async function CustomerServicesPage() {
         <header className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Link
-                href="/customer"
+                href={getCustomerHref("", localePrefix)}
               className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Müşteri paneline dön
+              {t.backToPanel}
             </Link>
-            <CustomerLogoutButton />
+            <CustomerLogoutButton messages={t} />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold">Hizmetler</h1>
+            <h1 className="text-2xl font-semibold">{t.servicesTitle}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               {selectedOrganization
-                ? `${getCustomerOrganizationDisplayName(selectedOrganization)} için aktif hizmetler.`
-                : "Hizmetleri görüntülemek için bir işletme bağlantısı gerekir."}
+                ? t.servicesForOrganization(
+                    getCustomerOrganizationDisplayName(selectedOrganization),
+                  )
+                : t.servicesNeedOrganization}
             </p>
           </div>
         </header>
@@ -73,18 +82,19 @@ export default async function CustomerServicesPage() {
         {organizations.length === 0 ? (
           <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
             <h2 className="text-2xl font-semibold">
-              Bu hesap herhangi bir işletmeye bağlı değil.
+              {t.noOrganizationTitle}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-              Hizmetleri görüntülemek için işletme tarafından müşteri kaydınızın
-              oluşturulması gerekir.
+              {t.servicesNoOrganizationDescription}
             </p>
           </section>
         ) : services.length === 0 ? (
           <section className="rounded-3xl border border-dashed border-border bg-card/60 p-8 text-center">
-            <h2 className="text-xl font-semibold">Şu anda randevu alınabilir aktif hizmet bulunmuyor.</h2>
+            <h2 className="text-xl font-semibold">
+              {t.noActiveServicesTitle}
+            </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              İşletme hizmet eklediğinde burada listelenir.
+              {t.noActiveServicesDescription}
             </p>
           </section>
         ) : (
@@ -99,7 +109,7 @@ export default async function CustomerServicesPage() {
                     <h2 className="break-words text-xl font-semibold">{service.name}</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
                       {service.description ??
-                        "Bu hizmet için detaylı açıklama henüz eklenmemiş."}
+                        t.noServiceDescription}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-blue-600/15 p-3 text-blue-400">
@@ -110,21 +120,24 @@ export default async function CustomerServicesPage() {
                 <div className="mt-5 flex flex-wrap gap-2 text-sm">
                   <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {service.duration_minutes} dk
+                    {service.duration_minutes} {t.minuteShort}
                   </span>
                   {service.price && (
                     <span className="inline-flex items-center rounded-full border border-border px-3 py-1 text-muted-foreground">
-                      {formatPrice(service.price)}
+                      {formatPrice(service.price, localePrefix)}
                     </span>
                   )}
                 </div>
 
                 <div className="mt-auto pt-6">
                   <Link
-                    href={`/customer/booking?serviceId=${service.id}`}
+                    href={`${getCustomerHref(
+                      "/booking",
+                      localePrefix,
+                    )}?serviceId=${service.id}`}
                     className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
                   >
-                    Randevu Al
+                    {t.bookAppointment}
                   </Link>
                 </div>
               </article>
@@ -134,6 +147,10 @@ export default async function CustomerServicesPage() {
       </div>
     </main>
   );
+}
+
+export default async function CustomerServicesPage() {
+  return <CustomerServicesPageContent />;
 }
 
 

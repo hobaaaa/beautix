@@ -4,6 +4,7 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import type { AdminMessages } from "@/lib/i18n/admin";
 import { localeCookieName, locales, type Locale } from "@/lib/i18n/constants";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -12,13 +13,20 @@ import { useState } from "react";
 export function LogoutButton({
   compact = false,
   menuItem = false,
+  messages,
 }: {
   compact?: boolean;
   menuItem?: boolean;
+  messages?: Pick<AdminMessages, "logout" | "loggingOut" | "logoutFailed">;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const labels = messages ?? {
+    logout: "Çıkış Yap",
+    loggingOut: "Çıkış yapılıyor...",
+    logoutFailed: "Çıkış yapılırken bir hata oluştu.",
+  };
 
   function getLoginHref() {
     const cookieLocale = document.cookie
@@ -43,7 +51,7 @@ export function LogoutButton({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Çıkış yapılırken bir hata oluştu."),
+          await readApiErrorMessage(response, labels.logoutFailed),
         );
       }
 
@@ -51,7 +59,7 @@ export function LogoutButton({
       router.refresh();
     } catch (logoutError) {
       setError(
-        getClientErrorMessage(logoutError, "Çıkış yapılırken bir hata oluştu."),
+        getClientErrorMessage(logoutError, labels.logoutFailed),
       );
       setLoading(false);
     }
@@ -72,7 +80,7 @@ export function LogoutButton({
         }
       >
         {menuItem && <LogOut className="h-4 w-4" />}
-        {loading ? "Çıkış yapılıyor..." : "Çıkış Yap"}
+        {loading ? labels.loggingOut : labels.logout}
       </button>
       {error && <div className="text-xs text-red-600">{error}</div>}
     </div>

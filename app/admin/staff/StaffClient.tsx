@@ -4,6 +4,7 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Message, Service, StaffListItem } from "../../../types";
@@ -20,9 +21,11 @@ function createInitialValues(): StaffFormValues {
 export function StaffClient({
   staff,
   services,
+  messages = getAdminMessages().staff,
 }: {
   staff: StaffListItem[];
   services: Service[];
+  messages?: AdminMessages["staff"];
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<Message>(null);
@@ -51,14 +54,14 @@ export function StaffClient({
     setMessage(null);
 
     if (!values.name.trim()) {
-      setMessage({ type: "error", text: "Personel adı zorunludur." });
+      setMessage({ type: "error", text: messages.nameRequired });
       return;
     }
 
     if (values.appointment_type_ids.length === 0) {
       setMessage({
         type: "error",
-        text: "En az bir hizmet seçmeniz gerekir.",
+        text: messages.serviceRequired,
       });
       return;
     }
@@ -82,21 +85,19 @@ export function StaffClient({
       );
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, "Personel kaydedilemedi."));
+        throw new Error(await readApiErrorMessage(response, messages.saveFailed));
       }
 
       setMessage({
         type: "success",
-        text: editingStaff
-          ? "Personel başarıyla güncellendi."
-          : "Personel başarıyla oluşturuldu.",
+        text: editingStaff ? messages.updateSuccess : messages.createSuccess,
       });
       resetForm();
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, "Personel kaydedilemedi."),
+        text: getClientErrorMessage(error, messages.saveFailed),
       });
     } finally {
       setLoading(false);
@@ -122,15 +123,13 @@ export function StaffClient({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Personel durumu güncellenemedi."),
+          await readApiErrorMessage(response, messages.statusUpdateFailed),
         );
       }
 
       setMessage({
         type: "success",
-        text: staffMember.is_active
-          ? "Personel pasife alındı."
-          : "Personel aktifleştirildi.",
+        text: staffMember.is_active ? messages.deactivated : messages.activated,
       });
 
       if (editingStaffId === staffMember.id) {
@@ -142,7 +141,7 @@ export function StaffClient({
       setMessage({
         type: "error",
         text:
-          getClientErrorMessage(error, "Personel durumu güncellenemedi."),
+          getClientErrorMessage(error, messages.statusUpdateFailed),
       });
     } finally {
       setLoadingId(null);
@@ -159,12 +158,12 @@ export function StaffClient({
       });
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, "Personel silinemedi."));
+        throw new Error(await readApiErrorMessage(response, messages.deleteFailed));
       }
 
       setMessage({
         type: "success",
-        text: "Personel silindi.",
+        text: messages.deleteSuccess,
       });
 
       if (editingStaffId === staffMember.id) {
@@ -175,7 +174,7 @@ export function StaffClient({
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, "Personel silinemedi."),
+        text: getClientErrorMessage(error, messages.deleteFailed),
       });
     } finally {
       setLoadingId(null);
@@ -185,9 +184,9 @@ export function StaffClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Personeller</h1>
+        <h1 className="text-2xl font-semibold">{messages.title}</h1>
         <p className="text-sm text-muted-foreground">
-          Personelleri ve verdikleri hizmetleri yönetin.
+          {messages.description}
         </p>
       </div>
 
@@ -205,6 +204,7 @@ export function StaffClient({
         onEdit={startEdit}
         onToggleActive={handleToggleActive}
         staff={staff}
+        messages={messages}
       />
 
       <StaffForm
@@ -214,9 +214,10 @@ export function StaffClient({
         onSubmit={handleSubmit}
         onCancel={editingStaff ? resetForm : undefined}
         services={services}
-        submitLabel={editingStaff ? "Personeli Güncelle" : "Personel Oluştur"}
-        title={editingStaff ? "Personeli düzenle" : "Yeni personel oluştur"}
+        submitLabel={editingStaff ? messages.updateButton : messages.createButton}
+        title={editingStaff ? messages.editTitle : messages.createTitle}
         values={values}
+        messages={messages}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import type { AdminMessages } from "@/lib/i18n/admin";
 import { Service } from "../../../types";
 
 export type StaffFormValues = {
@@ -17,6 +18,7 @@ export function StaffForm({
   submitLabel,
   title,
   values,
+  messages,
 }: {
   error: string | null;
   loading: boolean;
@@ -27,6 +29,7 @@ export function StaffForm({
   submitLabel: string;
   title: string;
   values: StaffFormValues;
+  messages: AdminMessages["staff"];
 }) {
   function toggleService(serviceId: string) {
     const nextIds = values.appointment_type_ids.includes(serviceId)
@@ -44,7 +47,7 @@ export function StaffForm({
       <div>
         <h2 className="text-lg font-semibold">{title}</h2>
         <p className="text-sm text-muted-foreground">
-          Personelin verebildiği hizmetleri seçin.
+          {messages.formDescription}
         </p>
       </div>
 
@@ -55,7 +58,7 @@ export function StaffForm({
       )}
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Personel adı</label>
+        <label className="text-sm font-medium">{messages.nameLabel}</label>
         <input
           type="text"
           value={values.name}
@@ -67,12 +70,12 @@ export function StaffForm({
           }
           disabled={loading}
           className="min-h-11 w-full rounded-md border px-3 py-2 disabled:opacity-50"
-          placeholder="Örn. Ayşe"
+          placeholder={messages.namePlaceholder}
         />
       </div>
 
       <div className="space-y-2">
-        <div className="text-sm font-medium">Verdiği hizmetler</div>
+        <div className="text-sm font-medium">{messages.servicesLabel}</div>
         <div className="grid gap-2 sm:grid-cols-2">
           {services.map((service) => (
             <label
@@ -88,8 +91,8 @@ export function StaffForm({
               <span>
                 <span className="block font-medium">{service.name}</span>
                 <span className="block text-muted-foreground">
-                  {service.duration_minutes} dk
-                  {!service.is_active ? " - Pasif hizmet" : ""}
+                  {messages.durationText(service.duration_minutes)}
+                  {!service.is_active ? ` - ${messages.inactiveService}` : ""}
                 </span>
               </span>
             </label>
@@ -105,7 +108,7 @@ export function StaffForm({
             disabled={loading}
             className="min-h-11 rounded-md border px-4 py-2 text-sm disabled:opacity-50"
           >
-            Vazgeç
+            {messages.cancel}
           </button>
         )}
         <button
@@ -114,7 +117,7 @@ export function StaffForm({
           disabled={loading}
           className="min-h-11 rounded-md bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
         >
-          {loading ? "Kaydediliyor..." : submitLabel}
+          {loading ? messages.saving : submitLabel}
         </button>
       </div>
     </div>

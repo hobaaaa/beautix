@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { EmptyState } from "@/components/ui/empty-state";
+import type { AdminMessages } from "@/lib/i18n/admin";
 import { StaffListItem } from "../../../types";
 
 function StaffTableSection({
@@ -10,6 +11,7 @@ function StaffTableSection({
   onEdit,
   onToggleActive,
   staff,
+  messages,
 }: {
   title: string;
   loadingId: string | null;
@@ -17,6 +19,7 @@ function StaffTableSection({
   onEdit: (staffMember: StaffListItem) => void;
   onToggleActive: (staffMember: StaffListItem) => void;
   staff: StaffListItem[];
+  messages: AdminMessages["staff"];
 }) {
   if (staff.length === 0) {
     return null;
@@ -34,7 +37,7 @@ function StaffTableSection({
             <div className="min-w-0">
               <div className="break-words font-medium">{staffMember.name}</div>
               <div className="text-sm text-muted-foreground">
-                {staffMember.is_active ? "Aktif personel" : "Pasif personel"}
+                {staffMember.is_active ? messages.activeStaff : messages.inactiveStaff}
               </div>
             </div>
 
@@ -46,7 +49,9 @@ function StaffTableSection({
                   </span>
                 ))
               ) : (
-                <span className="text-sm text-muted-foreground">Hizmet atanmamış</span>
+                <span className="text-sm text-muted-foreground">
+                  {messages.noServiceAssigned}
+                </span>
               )}
             </div>
           </div>
@@ -58,7 +63,7 @@ function StaffTableSection({
               disabled={loadingId === staffMember.id}
               className="min-h-11 rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
-              Düzenle
+              {messages.edit}
             </button>
             <button
               type="button"
@@ -67,10 +72,10 @@ function StaffTableSection({
               className="min-h-11 rounded-md border bg-slate-900 px-3 py-2 text-sm disabled:opacity-50"
             >
               {loadingId === staffMember.id
-                ? "Güncelleniyor..."
+                ? messages.updating
                 : staffMember.is_active
-                  ? "Pasife al"
-                  : "Aktifleştir"}
+                  ? messages.deactivate
+                  : messages.activate}
             </button>
             {!staffMember.is_active && (
               <button
@@ -79,7 +84,7 @@ function StaffTableSection({
                 disabled={loadingId === staffMember.id}
                 className="min-h-11 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
               >
-                {loadingId === staffMember.id ? "Siliniyor..." : "Sil"}
+                {loadingId === staffMember.id ? messages.deleting : messages.delete}
               </button>
             )}
           </div>
@@ -95,18 +100,20 @@ export function StaffTable({
   onEdit,
   onToggleActive,
   staff,
+  messages,
 }: {
   loadingId: string | null;
   onDelete: (staffMember: StaffListItem) => void;
   onEdit: (staffMember: StaffListItem) => void;
   onToggleActive: (staffMember: StaffListItem) => void;
   staff: StaffListItem[];
+  messages: AdminMessages["staff"];
 }) {
   if (staff.length === 0) {
     return (
       <EmptyState
-        title="Henüz personel bulunmuyor."
-        description="Personel eklediğinizde aktif ve pasif personeller burada listelenir."
+        title={messages.emptyTitle}
+        description={messages.emptyDescription}
       />
     );
   }
@@ -117,21 +124,23 @@ export function StaffTable({
   return (
     <div className="space-y-6">
       <StaffTableSection
-        title="Aktif Personeller"
+        title={messages.activeSection}
         loadingId={loadingId}
         onDelete={onDelete}
         onEdit={onEdit}
         onToggleActive={onToggleActive}
         staff={activeStaff}
+        messages={messages}
       />
 
       <StaffTableSection
-        title="Pasif Personeller"
+        title={messages.inactiveSection}
         loadingId={loadingId}
         onDelete={onDelete}
         onEdit={onEdit}
         onToggleActive={onToggleActive}
         staff={inactiveStaff}
+        messages={messages}
       />
     </div>
   );

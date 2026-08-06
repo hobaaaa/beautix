@@ -16,6 +16,10 @@ export async function POST() {
 
     const response = NextResponse.json({ success: true });
     response.cookies.set(CUSTOMER_ORG_COOKIE, "", {
+      path: "/",
+      maxAge: 0,
+    });
+    response.cookies.set(CUSTOMER_ORG_COOKIE, "", {
       path: "/customer",
       maxAge: 0,
     });

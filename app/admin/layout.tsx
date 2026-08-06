@@ -4,17 +4,46 @@
   getCurrentOrgContext,
 } from "@/lib/supabase/org";
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { InstallAppButton } from "@/components/pwa/InstallAppButton";
+import {
+  getAdminHref,
+  getAdminMessages,
+  type AdminMessages,
+} from "@/lib/i18n/admin";
+import type { Locale } from "@/lib/i18n/constants";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MobileAdminNav } from "./MobileAdminNav";
 import { UserMenu } from "./UserMenu";
 
-export default async function AdminLayout({
+function navigationItems(messages: AdminMessages, localePrefix?: Locale) {
+  return [
+    { href: getAdminHref("", localePrefix), label: messages.nav.dashboard },
+    { href: getAdminHref("/services", localePrefix), label: messages.nav.services },
+    { href: getAdminHref("/staff", localePrefix), label: messages.nav.staff },
+    { href: getAdminHref("/clients", localePrefix), label: messages.nav.clients },
+    {
+      href: getAdminHref("/appointments", localePrefix),
+      label: messages.nav.appointments,
+    },
+    {
+      href: getAdminHref("/notifications", localePrefix),
+      label: messages.nav.notifications,
+    },
+    { href: getAdminHref("/hours", localePrefix), label: messages.nav.hours },
+    { href: getAdminHref("/settings", localePrefix), label: messages.nav.settings },
+  ];
+}
+
+export async function AdminLayoutContent({
   children,
+  localePrefix,
 }: {
   children: React.ReactNode;
+  localePrefix?: Locale;
 }) {
+  const t = getAdminMessages(localePrefix);
   let userEmail = "";
   let userId = "";
 
@@ -24,7 +53,7 @@ export default async function AdminLayout({
     userId = user.id;
   } catch (error) {
     if (error instanceof AuthRequiredError) {
-      redirect("/login");
+      redirect(localePrefix ? `/${localePrefix}/login` : "/login");
     }
 
     if (error instanceof OrgMembershipRequiredError) {
@@ -39,74 +68,44 @@ export default async function AdminLayout({
       <header className="sticky top-[env(safe-area-inset-top)] z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <MobileAdminNav />
-            <ArtexoBrand compact suffix="Yönetim" />
+            <MobileAdminNav localePrefix={localePrefix} messages={t} />
+            <ArtexoBrand compact suffix={t.brandSuffix} />
             <div className="hidden text-sm text-muted-foreground md:block">
-              Panel
+              {t.panel}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            {localePrefix ? (
+              <LanguageSwitcher
+                currentLocale={localePrefix}
+                labels={{ tr: "TR", en: "EN" }}
+              />
+            ) : null}
             <div className="hidden text-sm text-muted-foreground sm:block">
               {userEmail}
             </div>
             <div className="md:hidden">
               <InstallAppButton compact />
             </div>
-            <UserMenu userId={userId} />
+            <UserMenu userId={userId} messages={t} />
           </div>
         </div>
       </header>
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-0 md:grid-cols-[240px_1fr]">
         <aside className="hidden border-r md:block">
           <nav className="flex h-[calc(100dvh_-_56px_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] flex-col gap-1 p-4">
-            <Link href="/admin" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">
-              Gösterge Paneli
-            </Link>
-            <Link
-              href="/admin/services"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Hizmetler
-            </Link>
-            <Link
-              href="/admin/staff"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Personeller
-            </Link>
-            <Link
-              href="/admin/clients"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Müşteriler
-            </Link>
-            <Link
-              href="/admin/appointments"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Randevular
-            </Link>
-            <Link
-              href="/admin/notifications"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Bildirimler
-            </Link>
-            <Link
-              href="/admin/hours"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Çalışma Saatleri
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
-            >
-              Ayarlar
-            </Link>
+            {navigationItems(t, localePrefix).map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-lg px-3 py-2 text-sm hover:bg-muted"
+              >
+                {item.label}
+              </Link>
+            ))}
             <div className="mt-auto space-y-3 pt-4">
               <InstallAppButton />
-              <div className="text-xs text-muted-foreground">v0.1 (MVP)</div>
+              <div className="text-xs text-muted-foreground">{t.version}</div>
             </div>
           </nav>
         </aside>
@@ -114,6 +113,14 @@ export default async function AdminLayout({
       </div>
     </div>
   );
+}
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <AdminLayoutContent>{children}</AdminLayoutContent>;
 }
 
 

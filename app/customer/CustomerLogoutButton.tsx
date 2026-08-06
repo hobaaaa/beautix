@@ -5,14 +5,24 @@ import {
   readApiErrorMessage,
 } from "@/lib/api/client-response";
 import { localeCookieName, locales, type Locale } from "@/lib/i18n/constants";
+import type { CustomerMessages } from "@/lib/i18n/customer";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function CustomerLogoutButton() {
+export function CustomerLogoutButton({
+  messages,
+}: {
+  messages?: Pick<CustomerMessages, "logout" | "loggingOut" | "logoutFailed">;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const labels = messages ?? {
+    logout: "Çıkış Yap",
+    loggingOut: "Çıkış yapılıyor...",
+    logoutFailed: "Çıkış yapılırken bir hata oluştu.",
+  };
 
   function getLoginHref() {
     const cookieLocale = document.cookie
@@ -35,14 +45,14 @@ export function CustomerLogoutButton() {
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Çıkış yapılırken bir hata oluştu."),
+          await readApiErrorMessage(response, labels.logoutFailed),
         );
       }
 
       router.replace(getLoginHref());
       router.refresh();
     } catch (error) {
-      setError(getClientErrorMessage(error, "Çıkış yapılırken bir hata oluştu."));
+      setError(getClientErrorMessage(error, labels.logoutFailed));
       setLoading(false);
     }
   }
@@ -56,7 +66,9 @@ export function CustomerLogoutButton() {
         className="inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50 sm:px-4"
       >
         <LogOut className="h-4 w-4" />
-        <span className="truncate">{loading ? "Çıkış yapılıyor..." : "Çıkış Yap"}</span>
+        <span className="truncate">
+          {loading ? labels.loggingOut : labels.logout}
+        </span>
       </button>
       {error && <div className="text-xs text-red-400">{error}</div>}
     </div>

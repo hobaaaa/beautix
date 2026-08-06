@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { AdminMessages } from "@/lib/i18n/admin";
 import { LogoutButton } from "./LogoutButton";
 
 const avatarPalettes = [
@@ -42,7 +43,13 @@ function UserAvatar({ seed }: { seed: string }) {
   );
 }
 
-export function UserMenu({ userId }: { userId: string }) {
+export function UserMenu({
+  userId,
+  messages,
+}: {
+  userId: string;
+  messages?: AdminMessages;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +81,7 @@ export function UserMenu({ userId }: { userId: string }) {
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         className="h-9 w-9 overflow-hidden rounded-full ring-2 ring-white/10 transition hover:ring-white/30 focus-visible:outline-none focus-visible:ring-white/50"
-        aria-label="Kullanıcı menüsünü aç"
+        aria-label={messages?.userMenuOpen ?? "Kullanıcı menüsünü aç"}
         aria-expanded={isOpen}
         aria-haspopup="menu"
       >
@@ -86,7 +93,7 @@ export function UserMenu({ userId }: { userId: string }) {
           role="menu"
           className="absolute right-0 top-12 z-30 w-44 rounded-2xl border border-white/10 bg-[#1f1f1f] p-2 text-zinc-100 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
         >
-          <LogoutButton menuItem />
+          <LogoutButton menuItem messages={messages} />
         </div>
       )}
     </div>

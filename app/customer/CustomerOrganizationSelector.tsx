@@ -4,22 +4,28 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import type { CustomerMessages } from "@/lib/i18n/customer";
 import type { CustomerOrganization } from "./queries";
 import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-function organizationLabel(organization: CustomerOrganization) {
+function organizationLabel(
+  organization: CustomerOrganization,
+  messages: CustomerMessages,
+) {
   return (
     organization.organization_name?.trim() ||
-    `İşletme ${organization.org_id.slice(0, 8)}`
+    messages.organizationFallback(organization.org_id)
   );
 }
 
 export function CustomerOrganizationSelector({
   organizations,
+  messages,
 }: {
   organizations: CustomerOrganization[];
+  messages: CustomerMessages;
 }) {
   const router = useRouter();
   const [loadingOrgId, setLoadingOrgId] = useState<string | null>(null);
@@ -37,13 +43,15 @@ export function CustomerOrganizationSelector({
       });
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, "İşletme seçilemedi."));
+        throw new Error(
+          await readApiErrorMessage(response, messages.organizationSelectFailed),
+        );
       }
 
       router.refresh();
     } catch (selectError) {
       setError(
-        getClientErrorMessage(selectError, "İşletme seçilemedi."),
+        getClientErrorMessage(selectError, messages.organizationSelectFailed),
       );
       setLoadingOrgId(null);
     }
@@ -54,9 +62,11 @@ export function CustomerOrganizationSelector({
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/15 text-blue-400">
         <Building2 className="h-6 w-6" />
       </div>
-      <h1 className="text-2xl font-semibold">İşletme Seçin</h1>
+      <h1 className="text-2xl font-semibold">
+        {messages.chooseOrganizationTitle}
+      </h1>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Bu hesap birden fazla işletmeye bağlı. Devam etmek istediğiniz işletmeyi seçin.
+        {messages.chooseOrganizationDescription}
       </p>
 
       <div className="mt-6 space-y-3">
@@ -70,14 +80,16 @@ export function CustomerOrganizationSelector({
           >
             <span>
               <span className="block font-medium">
-                {organizationLabel(organization)}
+                {organizationLabel(organization, messages)}
               </span>
               <span className="block text-sm text-muted-foreground">
                 {organization.client_name}
               </span>
             </span>
             <span className="text-sm text-blue-400">
-              {loadingOrgId === organization.org_id ? "Seçiliyor..." : "Seç"}
+              {loadingOrgId === organization.org_id
+                ? messages.choosing
+                : messages.choose}
             </span>
           </button>
         ))}
