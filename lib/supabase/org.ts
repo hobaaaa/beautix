@@ -40,7 +40,8 @@ const resolveCurrentOrgContext = cache(async () => {
     .from("org_members")
     .select("org_id")
     .eq("user_id", user.id)
-    .single();
+    .limit(1)
+    .maybeSingle();
   const orgResolveMs = Date.now() - orgStart;
 
   if (memberError || !membership) {

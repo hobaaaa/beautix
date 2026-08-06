@@ -25,7 +25,7 @@ export default async function LocalizedLoginPage({
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/admin");
+    redirect(`/${locale}/admin`);
   }
 
   return (

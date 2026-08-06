@@ -72,7 +72,7 @@ export function LoginForm({ locale }: { locale?: Locale }) {
         return;
       }
 
-      router.replace("/admin");
+      router.replace(locale ? `/${locale}/admin` : "/admin");
       router.refresh();
     } catch {
       setError(t.networkError);
