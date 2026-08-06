@@ -104,10 +104,12 @@ function isSlotUnavailableMessage(
   message: string,
   messages: PublicBookingMessages,
 ) {
+  const normalizedMessage = message.toLowerCase();
+
   return (
     message === messages.invalidSlotDescription ||
-    message.includes("müsait") ||
-    message.toLowerCase().includes("available")
+    normalizedMessage.includes("müsait") ||
+    normalizedMessage.includes("available")
   );
 }
 

@@ -198,6 +198,7 @@ export async function getClientAppointments(
       .select(selectFields)
       .eq("org_id", orgId)
       .eq("client_id", client.id)
+      .neq("status", "cancelled")
       .gte("start_at", nowIso)
       .order("start_at", { ascending: true }),
     supabase
@@ -205,7 +206,7 @@ export async function getClientAppointments(
       .select(selectFields)
       .eq("org_id", orgId)
       .eq("client_id", client.id)
-      .lt("start_at", nowIso)
+      .or(`start_at.lt.${nowIso},status.eq.cancelled`)
       .order("start_at", { ascending: false }),
   ]);
 

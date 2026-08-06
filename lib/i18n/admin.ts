@@ -200,6 +200,14 @@ export type AdminMessages = {
     activate: string;
     activeSection: string;
     inactiveSection: string;
+    backToClients: string;
+    appointmentDescription: string;
+    activeClient: string;
+    inactiveClient: string;
+    upcomingAppointments: string;
+    noUpcomingAppointments: string;
+    pastAndCancelledAppointments: string;
+    noPastOrCancelledAppointments: string;
   };
   appointments: {
     title: string;
@@ -250,6 +258,7 @@ export type AdminMessages = {
     optionalNotes: string;
     saving: string;
     time: string;
+    duration: string;
     status: string;
     active: string;
     inactive: string;
@@ -505,6 +514,15 @@ const tr: AdminMessages = {
     activate: "Aktif Et",
     activeSection: "Aktif Müşteriler",
     inactiveSection: "Pasif Müşteriler",
+    backToClients: "Müşterilere dön",
+    appointmentDescription: "Bu müşteriye ait randevu kayıtları.",
+    activeClient: "Aktif müşteri",
+    inactiveClient: "Pasif müşteri",
+    upcomingAppointments: "Yaklaşan Randevular",
+    noUpcomingAppointments: "Bu müşteri için yaklaşan randevu bulunmuyor.",
+    pastAndCancelledAppointments: "Geçmiş ve İptal Edilen Randevular",
+    noPastOrCancelledAppointments:
+      "Bu müşteri için geçmiş veya iptal edilmiş randevu bulunmuyor.",
   },
   appointments: {
     title: "Randevular",
@@ -555,6 +573,7 @@ const tr: AdminMessages = {
     optionalNotes: "İsteğe bağlı notlar",
     saving: "Kaydediliyor...",
     time: "Saat",
+    duration: "Süre",
     status: "Durum",
     active: "Aktif",
     inactive: "Pasif",
@@ -809,6 +828,15 @@ const en: AdminMessages = {
     activate: "Activate",
     activeSection: "Active Clients",
     inactiveSection: "Inactive Clients",
+    backToClients: "Back to clients",
+    appointmentDescription: "Appointment records for this client.",
+    activeClient: "Active client",
+    inactiveClient: "Inactive client",
+    upcomingAppointments: "Upcoming Appointments",
+    noUpcomingAppointments: "No upcoming appointments found for this client.",
+    pastAndCancelledAppointments: "Past and Cancelled Appointments",
+    noPastOrCancelledAppointments:
+      "No past or cancelled appointments found for this client.",
   },
   appointments: {
     title: "Appointments",
@@ -859,6 +887,7 @@ const en: AdminMessages = {
     optionalNotes: "Optional notes",
     saving: "Saving...",
     time: "Time",
+    duration: "Duration",
     status: "Status",
     active: "Active",
     inactive: "Inactive",

@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicDateSelection } from "./PublicDateSelection";
+import { PublicBookingHashScroller } from "./PublicBookingHashScroller";
 import { getPublicBookingData, getPublicOrganizationBySlug } from "./queries";
 
 export type PublicBookingPageProps = {
@@ -115,6 +116,7 @@ export async function PublicBookingPageContent({
 
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+      <PublicBookingHashScroller />
       <div className="mx-auto max-w-4xl space-y-6">
         <section className="rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex justify-center">
