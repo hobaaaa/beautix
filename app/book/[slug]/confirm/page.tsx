@@ -167,6 +167,9 @@ export async function PublicBookingConfirmPageContent({
 
   const dateLabel = formatDateLabel(selectedDate, locale);
   const durationLabel = formatDuration(selectedService.duration_minutes, t);
+  const guestFormMessages = Object.fromEntries(
+    Object.entries(t).filter(([key]) => key !== "availableSlotsDescription"),
+  ) as Omit<PublicBookingMessages, "availableSlotsDescription">;
   const slotSelectionHref = buildSlotSelectionHref({
     slug: organization.public_slug,
     serviceId: selectedService.id,
@@ -271,7 +274,7 @@ export async function PublicBookingConfirmPageContent({
             path: "/success",
           })}
           locale={localePrefix}
-          messages={t}
+          messages={guestFormMessages}
           summary={{
             organizationName: organization.name,
             serviceName: selectedService.name,

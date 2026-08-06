@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { Download, Share } from "lucide-react";
+import type { Locale } from "@/lib/i18n/constants";
 import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -47,18 +48,49 @@ function getIosInstallGuide(): IosInstallGuide {
   return isSafari ? "ios-safari" : null;
 }
 
-function getInstallHelpText(iosGuide: IosInstallGuide) {
-  if (iosGuide === "ios-chrome") {
-    return [
-      "Artexo'yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
-      "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari'de açarak aynı işlemi yapabilirsiniz.",
-    ];
+function getInstallLabels(locale?: Locale) {
+  if (locale === "en") {
+    return {
+      install: "Install App",
+      installHelp: "Install Help",
+      showInstallHelp: "Show install help",
+      iosSafariHelp: ['Use "Share > Add to Home Screen" from the browser menu.'],
+      iosChromeHelp: [
+        'To use Artexo as an app, tap the Share button and choose "Add to Home Screen".',
+        'If you cannot see "Add to Home Screen", open this page in Safari and repeat the same step.',
+      ],
+    };
   }
 
-  return ['Paylaş menüsünden "Ana Ekrana Ekle" seçeneğini kullanın.'];
+  return {
+    install: "Uygulamayı Yükle",
+    installHelp: "Kurulum Yardımı",
+    showInstallHelp: "Kurulum yardımını göster",
+    iosSafariHelp: ['Paylaş menüsünden "Ana Ekrana Ekle" seçeneğini kullanın.'],
+    iosChromeHelp: [
+      "Artexo'yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
+      "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari'de açarak aynı işlemi yapabilirsiniz.",
+    ],
+  };
 }
 
-export function InstallAppButton({ compact = false }: { compact?: boolean }) {
+function getInstallHelpText(iosGuide: IosInstallGuide, locale?: Locale) {
+  const labels = getInstallLabels(locale);
+
+  if (iosGuide === "ios-chrome") {
+    return labels.iosChromeHelp;
+  }
+
+  return labels.iosSafariHelp;
+}
+
+export function InstallAppButton({
+  compact = false,
+  locale,
+}: {
+  compact?: boolean;
+  locale?: Locale;
+}) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [iosGuide, setIosGuide] = useState<IosInstallGuide>(null);
@@ -120,7 +152,8 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
   }
 
   const isManualInstall = Boolean(iosGuide);
-  const helpText = getInstallHelpText(iosGuide);
+  const labels = getInstallLabels(locale);
+  const helpText = getInstallHelpText(iosGuide, locale);
 
   return (
     <div className={compact ? "relative" : "space-y-2"}>
@@ -132,10 +165,10 @@ export function InstallAppButton({ compact = false }: { compact?: boolean }) {
             ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border border-border p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             : "flex min-h-11 w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm hover:bg-muted"
         }
-        aria-label={isManualInstall ? "Kurulum yardımını göster" : "Uygulamayı yükle"}
+        aria-label={isManualInstall ? labels.showInstallHelp : labels.install}
       >
         {isManualInstall ? <Share className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-        {!compact && (isManualInstall ? "Kurulum Yardımı" : "Uygulamayı Yükle")}
+        {!compact && (isManualInstall ? labels.installHelp : labels.install)}
       </button>
 
       {showHelp && isManualInstall && (

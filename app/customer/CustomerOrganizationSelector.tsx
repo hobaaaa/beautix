@@ -4,7 +4,8 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
-import type { CustomerMessages } from "@/lib/i18n/customer";
+import { getCustomerMessages, type CustomerMessages } from "@/lib/i18n/customer";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import type { CustomerOrganization } from "./queries";
 import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -12,8 +13,10 @@ import { useState } from "react";
 
 function organizationLabel(
   organization: CustomerOrganization,
-  messages: CustomerMessages,
+  locale: Locale,
 ) {
+  const messages = getCustomerMessages(locale);
+
   return (
     organization.organization_name?.trim() ||
     messages.organizationFallback(organization.org_id)
@@ -23,9 +26,18 @@ function organizationLabel(
 export function CustomerOrganizationSelector({
   organizations,
   messages,
+  locale = defaultLocale,
 }: {
   organizations: CustomerOrganization[];
-  messages: CustomerMessages;
+  messages: Pick<
+    CustomerMessages,
+    | "chooseOrganizationTitle"
+    | "chooseOrganizationDescription"
+    | "organizationSelectFailed"
+    | "choosing"
+    | "choose"
+  >;
+  locale?: Locale;
 }) {
   const router = useRouter();
   const [loadingOrgId, setLoadingOrgId] = useState<string | null>(null);
@@ -80,7 +92,7 @@ export function CustomerOrganizationSelector({
           >
             <span>
               <span className="block font-medium">
-                {organizationLabel(organization, messages)}
+                {organizationLabel(organization, locale)}
               </span>
               <span className="block text-sm text-muted-foreground">
                 {organization.client_name}

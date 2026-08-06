@@ -14,10 +14,12 @@ export function LogoutButton({
   compact = false,
   menuItem = false,
   messages,
+  localePrefix,
 }: {
   compact?: boolean;
   menuItem?: boolean;
   messages?: Pick<AdminMessages, "logout" | "loggingOut" | "logoutFailed">;
+  localePrefix?: Locale;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -35,9 +37,15 @@ export function LogoutButton({
       .find((item) => item.startsWith(`${localeCookieName}=`))
       ?.split("=")[1] as Locale | undefined;
 
-    return cookieLocale && locales.includes(cookieLocale)
-      ? `/${cookieLocale}/login`
-      : "/login";
+    if (localePrefix) {
+      return `/${localePrefix}/login`;
+    }
+
+    if (cookieLocale && locales.includes(cookieLocale)) {
+      return `/${cookieLocale}/login`;
+    }
+
+    return "/tr/login";
   }
 
   async function handleLogout() {

@@ -12,8 +12,10 @@ import { useState } from "react";
 
 export function CustomerLogoutButton({
   messages,
+  localePrefix,
 }: {
   messages?: Pick<CustomerMessages, "logout" | "loggingOut" | "logoutFailed">;
+  localePrefix?: Locale;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -31,9 +33,15 @@ export function CustomerLogoutButton({
       .find((item) => item.startsWith(`${localeCookieName}=`))
       ?.split("=")[1] as Locale | undefined;
 
-    return cookieLocale && locales.includes(cookieLocale)
-      ? `/${cookieLocale}/customer/login`
-      : "/customer/login";
+    if (localePrefix) {
+      return `/${localePrefix}/customer/login`;
+    }
+
+    if (cookieLocale && locales.includes(cookieLocale)) {
+      return `/${cookieLocale}/customer/login`;
+    }
+
+    return "/tr/customer/login";
   }
 
   async function handleLogout() {

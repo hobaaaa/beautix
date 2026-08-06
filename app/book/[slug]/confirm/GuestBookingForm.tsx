@@ -36,7 +36,7 @@ type GuestBookingFormProps = {
   slotSelectionHref: string;
   successHref: string;
   locale?: Locale;
-  messages: PublicBookingMessages;
+  messages: Omit<PublicBookingMessages, "availableSlotsDescription">;
 };
 
 const initialValues: GuestBookingFormValues = {
@@ -65,7 +65,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 function localizeGuestBookingErrors(
   errors: GuestBookingFormErrors,
-  messages: PublicBookingMessages,
+  messages: Omit<PublicBookingMessages, "availableSlotsDescription">,
 ): GuestBookingFormErrors {
   const localizedErrors: GuestBookingFormErrors = {};
 
@@ -102,7 +102,7 @@ function localizeGuestBookingErrors(
 
 function isSlotUnavailableMessage(
   message: string,
-  messages: PublicBookingMessages,
+  messages: Omit<PublicBookingMessages, "availableSlotsDescription">,
 ) {
   const normalizedMessage = message.toLowerCase();
 

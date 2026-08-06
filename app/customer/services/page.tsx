@@ -31,6 +31,11 @@ export async function CustomerServicesPageContent({
   localePrefix?: Locale;
 }) {
   const t = getCustomerMessages(localePrefix);
+  const logoutMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+  };
   let result;
 
   try {
@@ -62,7 +67,10 @@ export async function CustomerServicesPageContent({
               <ArrowLeft className="h-4 w-4" />
               {t.backToPanel}
             </Link>
-            <CustomerLogoutButton messages={t} />
+            <CustomerLogoutButton
+              localePrefix={localePrefix}
+              messages={logoutMessages}
+            />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />

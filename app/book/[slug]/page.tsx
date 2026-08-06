@@ -91,6 +91,12 @@ export async function PublicBookingPageContent({
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
   const t = getPublicBookingMessages(locale);
+  const dateSelectionMessages = {
+    dateInputLabel: t.dateInputLabel,
+    dateRequired: t.dateRequired,
+    pastDate: t.pastDate,
+    continue: t.continue,
+  };
   const {
     organization,
     services,
@@ -250,7 +256,7 @@ export async function PublicBookingPageContent({
               initialDate={selectedDate ?? today}
               minDate={today}
               localePrefix={localePrefix}
-              messages={t}
+              messages={dateSelectionMessages}
             />
           </section>
         ) : null}

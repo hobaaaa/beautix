@@ -25,7 +25,7 @@ export default async function LocalizedCustomerLoginPage({
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/customer");
+    redirect(`/${locale}/customer`);
   }
 
   return (

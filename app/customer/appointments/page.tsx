@@ -50,10 +50,12 @@ function AppointmentCard({
   appointment,
   localePrefix,
   messages,
+  cancelMessages,
 }: {
   appointment: CustomerAppointmentListItem;
   localePrefix?: Locale;
   messages: CustomerMessages;
+  cancelMessages: Parameters<typeof CancelAppointmentButton>[0]["messages"];
 }) {
   const canCancel = canCancelAppointment(appointment);
 
@@ -107,7 +109,10 @@ function AppointmentCard({
 
       {canCancel && (
         <div className="mt-5 flex justify-end">
-          <CancelAppointmentButton appointmentId={appointment.id} messages={messages} />
+          <CancelAppointmentButton
+            appointmentId={appointment.id}
+            messages={cancelMessages}
+          />
         </div>
       )}
     </article>
@@ -120,12 +125,14 @@ function AppointmentSection({
   appointments,
   localePrefix,
   messages,
+  cancelMessages,
 }: {
   title: string;
   emptyMessage: string;
   appointments: CustomerAppointmentListItem[];
   localePrefix?: Locale;
   messages: CustomerMessages;
+  cancelMessages: Parameters<typeof CancelAppointmentButton>[0]["messages"];
 }) {
   return (
     <section className="space-y-4">
@@ -142,6 +149,7 @@ function AppointmentSection({
               appointment={appointment}
               localePrefix={localePrefix}
               messages={messages}
+              cancelMessages={cancelMessages}
             />
           ))}
         </div>
@@ -156,6 +164,21 @@ export async function CustomerAppointmentsPageContent({
   localePrefix?: Locale;
 }) {
   const t = getCustomerMessages(localePrefix);
+  const logoutMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+  };
+  const cancelMessages = {
+    cancelAppointment: t.cancelAppointment,
+    cancelDialogTitle: t.cancelDialogTitle,
+    cancelDialogDescription: t.cancelDialogDescription,
+    cancelKeep: t.cancelKeep,
+    cancelConfirm: t.cancelConfirm,
+    cancelling: t.cancelling,
+    cancelSuccess: t.cancelSuccess,
+    cancelFailed: t.cancelFailed,
+  };
   let result;
 
   try {
@@ -192,7 +215,10 @@ export async function CustomerAppointmentsPageContent({
               <ArrowLeft className="h-4 w-4" />
               {t.backToPanel}
             </Link>
-            <CustomerLogoutButton messages={t} />
+            <CustomerLogoutButton
+              localePrefix={localePrefix}
+              messages={logoutMessages}
+            />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />
@@ -226,6 +252,7 @@ export async function CustomerAppointmentsPageContent({
               appointments={upcomingAppointments}
               localePrefix={localePrefix}
               messages={t}
+              cancelMessages={cancelMessages}
             />
             <AppointmentSection
               title={t.pastAndCancelledAppointments}
@@ -233,6 +260,7 @@ export async function CustomerAppointmentsPageContent({
               appointments={pastAppointments}
               localePrefix={localePrefix}
               messages={t}
+              cancelMessages={cancelMessages}
             />
           </div>
         )}

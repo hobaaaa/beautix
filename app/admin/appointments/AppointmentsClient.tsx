@@ -164,8 +164,8 @@ export function AppointmentsClient({
           {labels.add}
         </button>
       </div>
-      <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex">
+      <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex min-w-0 flex-wrap gap-2">
           <button
             type="button"
             onClick={() =>
@@ -175,7 +175,7 @@ export function AppointmentsClient({
                 }).format(new Date()),
               )
             }
-            className={`min-w-0 rounded-md border px-3 py-2 text-sm ${
+            className={`min-h-11 min-w-[5rem] rounded-md border px-3 py-2 text-sm ${
               selectedView === "day" ? "bg-slate-900" : "bg-background"
             }`}
           >
@@ -184,7 +184,7 @@ export function AppointmentsClient({
           <button
             type="button"
             onClick={() => showDaily(tomorrow)}
-            className="min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
+            className="min-h-11 min-w-[5rem] rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
             {labels.tomorrow}
           </button>
@@ -192,14 +192,14 @@ export function AppointmentsClient({
             type="date"
             value={selectedDate}
             onChange={(event) => showDaily(event.target.value)}
-            className="col-span-2 min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm sm:col-auto"
+            className="min-h-11 min-w-[9.5rem] rounded-md border bg-slate-900 px-3 py-2 text-sm"
           />
         </div>
-        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
           <button
             type="button"
             onClick={showAllAppointments}
-            className="w-full min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
+            className="min-h-11 w-full min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm sm:min-w-[12rem] lg:w-auto"
           >
             {labels.allAppointments}
           </button>
@@ -212,7 +212,7 @@ export function AppointmentsClient({
                 page: selectedView === "all" ? "1" : undefined,
               })
             }
-            className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+            className="min-h-11 w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white sm:min-w-[12rem] lg:w-auto"
           >
             <option value="">{labels.allServices}</option>
             {serviceFilters.map((service) => (
@@ -230,7 +230,7 @@ export function AppointmentsClient({
                 page: selectedView === "all" ? "1" : undefined,
               })
             }
-            className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
+            className="min-h-11 w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white sm:min-w-[12rem] lg:w-auto"
           >
             <option value="">{labels.allStaff}</option>
             {staffFilters.map((staffMember) => (

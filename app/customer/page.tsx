@@ -18,6 +18,18 @@ export async function CustomerHomePageContent({
   localePrefix?: Locale;
 }) {
   const t = getCustomerMessages(localePrefix);
+  const logoutMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+  };
+  const organizationSelectorMessages = {
+    chooseOrganizationTitle: t.chooseOrganizationTitle,
+    chooseOrganizationDescription: t.chooseOrganizationDescription,
+    organizationSelectFailed: t.organizationSelectFailed,
+    choosing: t.choosing,
+    choose: t.choose,
+  };
   let context;
 
   try {
@@ -37,7 +49,10 @@ export async function CustomerHomePageContent({
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="space-y-5">
           <div className="flex justify-end">
-            <CustomerLogoutButton messages={t} />
+            <CustomerLogoutButton
+              localePrefix={localePrefix}
+              messages={logoutMessages}
+            />
           </div>
           <div className="flex justify-center">
             <ArtexoBrand />
@@ -84,7 +99,11 @@ export async function CustomerHomePageContent({
             </div>
           </section>
         ) : (
-          <CustomerOrganizationSelector organizations={organizations} messages={t} />
+          <CustomerOrganizationSelector
+            organizations={organizations}
+            locale={localePrefix}
+            messages={organizationSelectorMessages}
+          />
         )}
       </div>
     </main>

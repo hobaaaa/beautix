@@ -73,6 +73,16 @@ export async function CustomerBookingConfirmPageContent({
   }>;
 }) {
   const t = getCustomerMessages(localePrefix);
+  const logoutMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+  };
+  const confirmButtonMessages = {
+    createFailed: t.createFailed,
+    creatingAppointment: t.creatingAppointment,
+    confirmAppointment: t.confirmAppointment,
+  };
   const params = (await searchParams) ?? {};
   const today = getTodayInIstanbul();
 
@@ -134,7 +144,10 @@ export async function CustomerBookingConfirmPageContent({
             <ArtexoBrand compact />
             <h1 className="text-2xl font-semibold">{t.bookingConfirmTitle}</h1>
           </div>
-          <CustomerLogoutButton messages={t} />
+          <CustomerLogoutButton
+            localePrefix={localePrefix}
+            messages={logoutMessages}
+          />
         </header>
 
         {organizations.length === 0 ? (
@@ -227,7 +240,7 @@ export async function CustomerBookingConfirmPageContent({
                     "/booking/success",
                     localePrefix,
                   )}
-                  messages={t}
+                  messages={confirmButtonMessages}
                 />
               </div>
             </div>

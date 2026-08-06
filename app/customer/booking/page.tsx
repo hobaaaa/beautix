@@ -92,6 +92,17 @@ export async function CustomerBookingPageContent({
   }>;
 }) {
   const t = getCustomerMessages(localePrefix);
+  const logoutMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+  };
+  const dateSelectionMessages = {
+    dateRequired: t.dateRequired,
+    pastDate: t.pastDate,
+    appointmentDate: t.appointmentDate,
+    continue: t.continue,
+  };
   const params = (await searchParams) ?? {};
 
   if (!params.serviceId) {
@@ -150,7 +161,10 @@ export async function CustomerBookingPageContent({
             <ArtexoBrand compact />
             <h1 className="text-2xl font-semibold">{t.bookingDateTitle}</h1>
           </div>
-          <CustomerLogoutButton messages={t} />
+          <CustomerLogoutButton
+            localePrefix={localePrefix}
+            messages={logoutMessages}
+          />
         </header>
 
         {organizations.length === 0 ? (
@@ -209,7 +223,7 @@ export async function CustomerBookingPageContent({
                     minDate={today}
                     serviceId={service.id}
                     bookingBaseHref={getCustomerHref("/booking", localePrefix)}
-                    messages={t}
+                    messages={dateSelectionMessages}
                   />
                 </div>
               ) : null}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { AdminMessages } from "@/lib/i18n/admin";
+import type { Locale } from "@/lib/i18n/constants";
 import { LogoutButton } from "./LogoutButton";
 
 const avatarPalettes = [
@@ -46,8 +47,10 @@ function UserAvatar({ seed }: { seed: string }) {
 export function UserMenu({
   userId,
   messages,
+  localePrefix,
 }: {
   userId: string;
+  localePrefix?: Locale;
   messages?: Pick<
     AdminMessages,
     "logout" | "loggingOut" | "logoutFailed" | "userMenuOpen"
@@ -96,7 +99,11 @@ export function UserMenu({
           role="menu"
           className="absolute right-0 top-12 z-30 w-44 rounded-2xl border border-white/10 bg-[#1f1f1f] p-2 text-zinc-100 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
         >
-          <LogoutButton menuItem messages={messages} />
+          <LogoutButton
+            menuItem
+            localePrefix={localePrefix}
+            messages={messages}
+          />
         </div>
       )}
     </div>

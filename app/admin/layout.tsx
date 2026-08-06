@@ -106,6 +106,9 @@ export async function AdminLayoutContent({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+            <div className="md:hidden">
+              <InstallAppButton compact locale={localePrefix} />
+            </div>
             {localePrefix ? (
               <LanguageSwitcher
                 currentLocale={localePrefix}
@@ -115,10 +118,11 @@ export async function AdminLayoutContent({
             <div className="hidden text-sm text-muted-foreground sm:block">
               {userEmail}
             </div>
-            <div className="md:hidden">
-              <InstallAppButton compact />
-            </div>
-            <UserMenu userId={userId} messages={userMenuMessages} />
+            <UserMenu
+              userId={userId}
+              localePrefix={localePrefix}
+              messages={userMenuMessages}
+            />
           </div>
         </div>
       </header>
@@ -135,7 +139,7 @@ export async function AdminLayoutContent({
               </Link>
             ))}
             <div className="mt-auto space-y-3 pt-4">
-              <InstallAppButton />
+              <InstallAppButton locale={localePrefix} />
               <div className="text-xs text-muted-foreground">{t.version}</div>
             </div>
           </nav>
