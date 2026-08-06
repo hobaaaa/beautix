@@ -8,6 +8,8 @@ import {
 } from "@/lib/public-booking/guest-booking-schema";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import { readApiErrorMessage } from "@/lib/api/client-response";
+import type { Locale } from "@/lib/i18n/constants";
+import type { PublicBookingMessages } from "@/lib/i18n/public-booking";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useState } from "react";
@@ -32,6 +34,9 @@ type GuestBookingFormProps = {
     time: string;
   };
   slotSelectionHref: string;
+  successHref: string;
+  locale?: Locale;
+  messages: PublicBookingMessages;
 };
 
 const initialValues: GuestBookingFormValues = {
@@ -58,10 +63,61 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+function localizeGuestBookingErrors(
+  errors: GuestBookingFormErrors,
+  messages: PublicBookingMessages,
+): GuestBookingFormErrors {
+  const localizedErrors: GuestBookingFormErrors = {};
+
+  if (errors.firstName) {
+    localizedErrors.firstName = messages.firstNameRequired;
+  }
+
+  if (errors.lastName) {
+    localizedErrors.lastName = messages.lastNameRequired;
+  }
+
+  if (errors.phone) {
+    localizedErrors.phone = errors.phone.includes("zorunludur")
+      ? messages.phoneRequired
+      : messages.phoneInvalid;
+  }
+
+  if (errors.email) {
+    localizedErrors.email = errors.email.includes("zorunludur")
+      ? messages.emailRequired
+      : messages.emailInvalid;
+  }
+
+  if (errors.notes) {
+    localizedErrors.notes = messages.notesTooLong;
+  }
+
+  if (errors.consent) {
+    localizedErrors.consent = messages.consentRequired;
+  }
+
+  return localizedErrors;
+}
+
+function isSlotUnavailableMessage(
+  message: string,
+  messages: PublicBookingMessages,
+) {
+  return (
+    message === messages.invalidSlotDescription ||
+    message.includes("müsait") ||
+    message.toLowerCase().includes("available")
+  );
+}
+
 export function GuestBookingForm({
   summary,
   bookingSelection,
   slotSelectionHref,
+  successHref,
+  locale,
+  messages,
 }: GuestBookingFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<GuestBookingFormValues>(initialValues);
@@ -101,7 +157,7 @@ export function GuestBookingForm({
 
     const result = validateGuestBookingValues(values);
     setValues(result.values);
-    setErrors(result.errors);
+    setErrors(localizeGuestBookingErrors(result.errors, messages));
 
     if (!result.isValid) {
       setValidatedValues(null);
@@ -124,7 +180,7 @@ export function GuestBookingForm({
     if (!validatedValues || isSubmitting) return;
 
     if (!turnstileToken && process.env.NODE_ENV === "production") {
-      setSubmitError("Güvenlik doğrulamasının tamamlanmasını bekleyin.");
+      setSubmitError(messages.securityRequired);
       return;
     }
 
@@ -141,6 +197,7 @@ export function GuestBookingForm({
         body: JSON.stringify({
           ...bookingSelection,
           ...validatedValues,
+          locale,
           website,
           startedAt,
           turnstileToken,
@@ -149,7 +206,7 @@ export function GuestBookingForm({
 
       if (!response.ok) {
         setSubmitError(
-          await readApiErrorMessage(response, "Randevu oluşturulamadı."),
+          await readApiErrorMessage(response, messages.createFailed),
         );
         setTurnstileResetKey((current) => current + 1);
         return;
@@ -165,14 +222,12 @@ export function GuestBookingForm({
       }
 
       router.push(
-        `/book/${encodeURIComponent(bookingSelection.slug)}/success${
+        `${successHref}${
           params.toString() ? `?${params.toString()}` : ""
         }`,
       );
     } catch {
-      setSubmitError(
-        "Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
-      );
+      setSubmitError(messages.networkError);
       setTurnstileResetKey((current) => current + 1);
     } finally {
       setIsSubmitting(false);
@@ -183,30 +238,30 @@ export function GuestBookingForm({
     return (
       <div className="space-y-5">
         <div className="rounded-3xl border bg-card p-5">
-          <h2 className="text-xl font-semibold">Bilgilerinizi Kontrol Edin</h2>
+          <h2 className="text-xl font-semibold">{messages.checkInfoTitle}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Randevu oluşturma adımına geçmeden önce bilgilerinizi kontrol edin.
+            {messages.checkInfoDescription}
           </p>
 
           <dl className="mt-5 grid gap-3 sm:grid-cols-2">
             <SummaryRow
-              label="Ad Soyad"
+              label={messages.fullName}
               value={`${validatedValues.firstName} ${validatedValues.lastName}`}
             />
-            <SummaryRow label="Telefon" value={validatedValues.phone} />
-            <SummaryRow label="E-posta" value={validatedValues.email} />
-            <SummaryRow label="İşletme" value={summary.organizationName} />
-            <SummaryRow label="Hizmet" value={summary.serviceName} />
-            <SummaryRow label="Personel" value={summary.staffName} />
-            <SummaryRow label="Tarih" value={summary.dateLabel} />
+            <SummaryRow label={messages.phone} value={validatedValues.phone} />
+            <SummaryRow label={messages.email} value={validatedValues.email} />
+            <SummaryRow label={messages.business} value={summary.organizationName} />
+            <SummaryRow label={messages.service} value={summary.serviceName} />
+            <SummaryRow label={messages.staff} value={summary.staffName} />
+            <SummaryRow label={messages.date} value={summary.dateLabel} />
             <SummaryRow
-              label="Saat"
+              label={messages.time}
               value={`${summary.startTime} - ${summary.endTime}`}
             />
-            <SummaryRow label="Süre" value={summary.durationLabel} />
+            <SummaryRow label={messages.duration} value={summary.durationLabel} />
             {validatedValues.notes ? (
               <div className="rounded-2xl border bg-background p-3 sm:col-span-2">
-                <dt className="text-xs text-muted-foreground">Not</dt>
+                <dt className="text-xs text-muted-foreground">{messages.notes}</dt>
                 <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold">
                   {validatedValues.notes}
                 </dd>
@@ -224,12 +279,12 @@ export function GuestBookingForm({
         {submitError ? (
           <div className="space-y-3 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
             <p>{submitError}</p>
-            {submitError.includes("müsait") ? (
+            {isSlotUnavailableMessage(submitError, messages) ? (
               <Link
                 href={slotSelectionHref}
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-red-300/40 px-4 py-2 text-sm font-semibold"
               >
-                Saati Değiştir
+                {messages.changeTime}
               </Link>
             ) : null}
           </div>
@@ -249,7 +304,7 @@ export function GuestBookingForm({
             disabled={isSubmitting}
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl border px-4 py-2 text-sm font-semibold"
           >
-            Bilgileri Düzenle
+            {messages.editInfo}
           </button>
           <button
             type="button"
@@ -260,7 +315,7 @@ export function GuestBookingForm({
             }
             className="inline-flex min-h-11 flex-1 items-center justify-center rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Oluşturuluyor..." : "Randevuyu Oluştur"}
+            {isSubmitting ? messages.creatingAppointment : messages.createAppointment}
           </button>
         </div>
       </div>
@@ -270,9 +325,9 @@ export function GuestBookingForm({
   return (
     <form onSubmit={handleCheck} className="space-y-4 rounded-3xl border bg-card p-5">
       <div>
-        <h2 className="text-xl font-semibold">Bilgilerinizi Girin</h2>
+        <h2 className="text-xl font-semibold">{messages.enterInfoTitle}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Randevu oluşturmak için iletişim bilgilerinizi doldurun.
+          {messages.enterInfoDescription}
         </p>
       </div>
 
@@ -294,7 +349,7 @@ export function GuestBookingForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="firstName" className="text-sm font-semibold">
-            Ad
+            {messages.firstName}
           </label>
           <input
             id="firstName"
@@ -308,7 +363,7 @@ export function GuestBookingForm({
 
         <div className="space-y-2">
           <label htmlFor="lastName" className="text-sm font-semibold">
-            Soyad
+            {messages.lastName}
           </label>
           <input
             id="lastName"
@@ -322,7 +377,7 @@ export function GuestBookingForm({
 
         <div className="space-y-2">
           <label htmlFor="phone" className="text-sm font-semibold">
-            Telefon
+            {messages.phone}
           </label>
           <input
             id="phone"
@@ -338,7 +393,7 @@ export function GuestBookingForm({
 
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-semibold">
-            E-posta
+            {messages.email}
           </label>
           <input
             id="email"
@@ -354,7 +409,7 @@ export function GuestBookingForm({
 
       <div className="space-y-2">
         <label htmlFor="notes" className="text-sm font-semibold">
-          Not
+          {messages.notes}
         </label>
         <textarea
           id="notes"
@@ -362,7 +417,7 @@ export function GuestBookingForm({
           maxLength={GUEST_NOTES_MAX_LENGTH}
           onChange={(event) => updateValue("notes", event.target.value)}
           className="min-h-28 w-full resize-y rounded-2xl border bg-background px-4 py-3 text-base outline-none focus:border-blue-500"
-          placeholder="Eklemek istediğiniz bir not varsa yazabilirsiniz."
+          placeholder={messages.notesPlaceholder}
         />
         <div className="flex justify-between gap-3 text-xs text-muted-foreground">
           <FieldError message={errors.notes} />
@@ -381,7 +436,7 @@ export function GuestBookingForm({
             className="mt-1 h-4 w-4 shrink-0"
           />
           <span>
-            Randevu oluşturmak için bilgilerimin işletmeyle paylaşılmasını kabul ediyorum.
+            {messages.consent}
           </span>
         </label>
         <FieldError message={errors.consent} />
@@ -391,7 +446,7 @@ export function GuestBookingForm({
         type="submit"
         className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white"
       >
-        Bilgileri Kontrol Et
+        {messages.checkInfoButton}
       </button>
     </form>
   );

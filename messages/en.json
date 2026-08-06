@@ -1,0 +1,11 @@
+{
+  "home": {
+    "title": "Choose login type",
+    "description": "Continue with the business dashboard or your customer account.",
+    "businessLogin": "Business Login",
+    "customerLogin": "Customer Login",
+    "languageLabel": "Language",
+    "turkish": "Türkçe",
+    "english": "English"
+  }
+}

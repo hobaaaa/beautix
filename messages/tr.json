@@ -1,0 +1,11 @@
+{
+  "home": {
+    "title": "Giriş türünü seçin",
+    "description": "İşletme paneli veya müşteri hesabı ile devam edin.",
+    "businessLogin": "İşletme Girişi",
+    "customerLogin": "Müşteri Girişi",
+    "languageLabel": "Dil",
+    "turkish": "Türkçe",
+    "english": "English"
+  }
+}

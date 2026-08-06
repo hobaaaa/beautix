@@ -7,7 +7,11 @@ import {
   renderAppointmentReminderEmail,
   renderBookingConfirmationEmail,
   renderBusinessBookingNotificationEmail,
-} from "@/lib/notifications/booking-confirmation-email";
+  getAppointmentReminderEmailSubject,
+  getBookingConfirmationEmailSubject,
+  getBusinessBookingNotificationEmailSubject,
+} from "@/lib/notifications/localized-appointment-email";
+import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/constants";
 import { NextRequest, NextResponse } from "next/server";
 
 type SupabaseAdminClient = ReturnType<typeof createSupabaseAdminClient>;
@@ -19,6 +23,7 @@ type ClaimedNotificationJob = {
   client_id: string;
   type: string;
   attempt_count: number;
+  locale?: string | null;
 };
 
 type AppointmentRow = {
@@ -59,6 +64,7 @@ type NotificationData = {
   service: ServiceRow;
   staff: StaffRow;
   organizationName: string;
+  locale: Locale;
 };
 
 type ProcessResult =
@@ -108,6 +114,12 @@ function safeErrorMessage(error: unknown) {
     error instanceof Error ? error.message : String(error ?? "Bilinmeyen hata");
 
   return message.slice(0, 500);
+}
+
+function normalizeNotificationLocale(value: string | null | undefined): Locale {
+  const candidate = value ?? undefined;
+
+  return isLocale(candidate) ? candidate : defaultLocale;
 }
 
 function isNonRetryableError(value: string) {
@@ -343,9 +355,9 @@ async function getNotificationData(
 
   const { data: organizationProfile } = await supabase
     .from("organization_profiles")
-    .select("name")
+    .select("name, default_locale")
     .eq("org_id", appointment.org_id)
-    .maybeSingle<{ name: string }>();
+    .maybeSingle<{ name: string; default_locale?: string | null }>();
 
   return {
     appointment,
@@ -354,6 +366,9 @@ async function getNotificationData(
     staff,
     organizationName:
       organizationProfile?.name?.trim() || organizationLabel(appointment.org_id),
+    locale: normalizeNotificationLocale(
+      job.locale ?? organizationProfile?.default_locale,
+    ),
   };
 }
 
@@ -379,7 +394,7 @@ async function processBookingConfirmationJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff, organizationName } =
+  const { appointment, client, service, staff, organizationName, locale } =
     await getNotificationData(supabase, job);
   const recipient = maskEmail(client.email);
 
@@ -393,7 +408,7 @@ async function processBookingConfirmationJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: client.email,
-    subject: "Randevunuz Onaylandı - Artexo",
+    subject: getBookingConfirmationEmailSubject(locale),
     html: renderBookingConfirmationEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -402,6 +417,7 @@ async function processBookingConfirmationJob(
       startAt: appointment.start_at,
       endAt: appointment.end_at,
       durationMinutes: service.duration_minutes,
+      locale,
     }),
     idempotencyKey: `notification-job-${job.id}`,
   });
@@ -417,7 +433,7 @@ async function processAppointmentReminderJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff, organizationName } =
+  const { appointment, client, service, staff, organizationName, locale } =
     await getNotificationData(supabase, job);
   const recipient = maskEmail(client.email);
 
@@ -447,7 +463,7 @@ async function processAppointmentReminderJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: client.email,
-    subject: "Randevu Hatırlatması - Artexo",
+    subject: getAppointmentReminderEmailSubject(locale),
     html: renderAppointmentReminderEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -456,6 +472,7 @@ async function processAppointmentReminderJob(
       startAt: appointment.start_at,
       endAt: appointment.end_at,
       durationMinutes: service.duration_minutes,
+      locale,
     }),
     idempotencyKey: `notification-job-${job.id}`,
   });
@@ -471,7 +488,7 @@ async function processBusinessBookingNotificationJob(
   supabase: SupabaseAdminClient,
   job: ClaimedNotificationJob,
 ): Promise<ProcessResult> {
-  const { appointment, client, service, staff, organizationName } =
+  const { appointment, client, service, staff, organizationName, locale } =
     await getNotificationData(supabase, job);
   const recipientEmail = await getBusinessRecipientEmail(
     supabase,
@@ -489,7 +506,7 @@ async function processBusinessBookingNotificationJob(
 
   const providerMessageId = await sendEmailWithResend({
     to: recipientEmail,
-    subject: "Yeni Randevu Oluşturuldu - Artexo",
+    subject: getBusinessBookingNotificationEmailSubject(locale),
     html: renderBusinessBookingNotificationEmail({
       organizationName,
       clientName: clientDisplayName(client),
@@ -501,6 +518,7 @@ async function processBusinessBookingNotificationJob(
       endAt: appointment.end_at,
       durationMinutes: service.duration_minutes,
       notes: appointment.notes,
+      locale,
     }),
     idempotencyKey: `notification-job-${job.id}`,
   });

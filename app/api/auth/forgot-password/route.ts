@@ -1,6 +1,7 @@
 import { apiError } from "@/lib/api/error-response";
+import { getAuthMessages } from "@/lib/i18n/auth";
+import { isLocale } from "@/lib/i18n/constants";
 import {
-  TURNSTILE_ERROR_MESSAGE,
   verifyTurnstileToken,
 } from "@/lib/security/turnstile";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -9,11 +10,9 @@ import { NextRequest, NextResponse } from "next/server";
 type ForgotPasswordBody = {
   email?: string;
   next?: string;
+  locale?: string;
   turnstileToken?: string;
 };
-
-const RESET_REQUEST_MESSAGE =
-  "Eğer bu e-posta sistemde kayıtlıysa birkaç dakika içinde şifre sıfırlama bağlantısı gelir. Gelmezse spam klasörünü kontrol edin veya işletmeden hesap daveti isteyin.";
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -36,6 +35,9 @@ export async function POST(request: NextRequest) {
     return apiError("Geçersiz istek gövdesi.", 400, "BAD_REQUEST");
   }
 
+  const locale = isLocale(body.locale) ? body.locale : undefined;
+  const t = getAuthMessages(locale);
+
   const turnstileOk = await verifyTurnstileToken({
     request,
     token: body.turnstileToken,
@@ -43,17 +45,18 @@ export async function POST(request: NextRequest) {
   });
 
   if (!turnstileOk) {
-    return apiError(TURNSTILE_ERROR_MESSAGE, 400, "VALIDATION_ERROR");
+    return apiError(t.turnstileFailed, 400, "VALIDATION_ERROR");
   }
 
   const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
 
   if (!email || !isValidEmail(email)) {
-    return apiError("Geçerli bir e-posta adresi girin.", 400, "BAD_REQUEST");
+    return apiError(t.emailInvalid, 400, "BAD_REQUEST");
   }
 
   const nextPath = normalizeLoginReturnPath(body.next);
-  const redirectTo = `${getSiteOrigin(request)}/reset-password?next=${encodeURIComponent(nextPath)}`;
+  const localePrefix = locale ? `/${locale}` : "";
+  const redirectTo = `${getSiteOrigin(request)}${localePrefix}/reset-password?next=${encodeURIComponent(nextPath)}`;
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,
@@ -66,7 +69,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(
     {
       success: true,
-      message: RESET_REQUEST_MESSAGE,
+      message: t.resetRequestSuccess,
     },
     { status: 200 },
   );

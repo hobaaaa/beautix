@@ -1,23 +1,28 @@
 ﻿"use client";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { Locale } from "@/lib/i18n/constants";
+import { getAuthMessages } from "@/lib/i18n/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-function mapPasswordUpdateError(error: unknown) {
+function mapPasswordUpdateError(
+  error: unknown,
+  messages = getAuthMessages(),
+) {
   const message =
     error instanceof Error ? error.message.toLowerCase() : String(error ?? "").toLowerCase();
 
   if (message.includes("weak_password") || message.includes("weak password")) {
-    return "Şifre güvenlik kurallarını karşılamıyor. Daha güçlü bir şifre belirleyin.";
+    return messages.passwordWeak;
   }
 
   if (
     message.includes("same_password") ||
     message.includes("different from the old password")
   ) {
-    return "Yeni şifre eski şifrenizden farklı olmalıdır.";
+    return messages.passwordSame;
   }
 
   if (
@@ -25,10 +30,10 @@ function mapPasswordUpdateError(error: unknown) {
     message.includes("jwt") ||
     message.includes("not authenticated")
   ) {
-    return "Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.";
+    return messages.resetLinkInvalid;
   }
 
-  return "Şifre güncellenirken bir hata oluştu.";
+  return messages.passwordUpdateFailed;
 }
 
 function cleanResetUrl(params: URLSearchParams) {
@@ -44,7 +49,16 @@ function normalizeLoginReturnPath(value: string | null) {
   return value === "/customer/login" ? value : "/login";
 }
 
+function localizeReturnPath(returnPath: string, locale?: Locale) {
+  return locale ? `/${locale}${returnPath}` : returnPath;
+}
+
 export default function ResetPasswordPage() {
+  return <ResetPasswordContent />;
+}
+
+export function ResetPasswordContent({ locale }: { locale?: Locale }) {
+  const t = getAuthMessages(locale);
   const router = useRouter();
   const [supabase] = useState(() => createSupabaseBrowserClient());
   const [password, setPassword] = useState("");
@@ -61,7 +75,7 @@ export default function ResetPasswordPage() {
     setReturnPath(normalizeLoginReturnPath(params.get("next")));
 
     if (params.get("error")) {
-      setError("Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.");
+      setError(t.resetLinkInvalid);
       setSessionReady(false);
       return () => {
         active = false;
@@ -111,7 +125,7 @@ export default function ResetPasswordPage() {
       } catch (sessionError) {
         console.error("Password reset session failed:", sessionError);
         if (!active) return;
-        setError("Şifre belirleme bağlantısı geçersiz veya süresi dolmuş olabilir.");
+        setError(t.resetLinkInvalid);
         setSessionReady(false);
       }
     }
@@ -121,31 +135,31 @@ export default function ResetPasswordPage() {
     return () => {
       active = false;
     };
-  }, [supabase]);
+  }, [supabase, t.resetLinkInvalid]);
 
   async function handleSubmit() {
     if (sessionReady !== true) {
-      setError("Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir.");
+      setError(t.resetLinkInvalid);
       return;
     }
 
     if (!password) {
-      setError("Yeni şifrenizi girin.");
+      setError(t.newPasswordRequired);
       return;
     }
 
     if (password.length < 8) {
-      setError("Şifre en az 8 karakter olmalıdır.");
+      setError(t.newPasswordMinLength);
       return;
     }
 
     if (!passwordConfirm) {
-      setError("Yeni şifrenizi tekrar girin.");
+      setError(t.passwordConfirmRequired);
       return;
     }
 
     if (password !== passwordConfirm) {
-      setError("Şifreler eşleşmiyor.");
+      setError(t.passwordsDoNotMatch);
       return;
     }
 
@@ -163,17 +177,17 @@ export default function ResetPasswordPage() {
       }
 
       await supabase.auth.signOut();
-      setSuccess("Şifreniz başarıyla güncellendi. Giriş ekranına yönlendiriliyorsunuz.");
+      setSuccess(t.passwordUpdateSuccess);
 
       setTimeout(() => {
         const params = new URLSearchParams(window.location.search);
         const nextPath = normalizeLoginReturnPath(params.get("next"));
-        router.replace(nextPath);
+        router.replace(localizeReturnPath(nextPath, locale));
         router.refresh();
       }, 1500);
     } catch (updateError) {
       console.error("Password update failed:", updateError);
-      setError(mapPasswordUpdateError(updateError));
+      setError(mapPasswordUpdateError(updateError, t));
       setLoading(false);
     }
   }
@@ -182,40 +196,42 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-dvh items-center justify-center bg-background px-6 py-12 pb-[max(2rem,env(safe-area-inset-bottom))]">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-card-foreground shadow-sm">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Yeni Şifre Oluştur</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t.resetPasswordTitle}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Hesabınız için yeni şifre belirleyin.
+            {t.resetPasswordDescription}
           </p>
         </div>
 
         <div className="mt-6 space-y-4">
           {sessionReady === false && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş olabilir.
+              {t.resetLinkInvalid}
             </div>
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Yeni Şifre</label>
+            <label className="text-sm font-medium">{t.newPassword}</label>
             <input
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               disabled={loading || sessionReady !== true}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
-              placeholder="En az 8 karakter"
+              placeholder={t.newPasswordPlaceholder}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Yeni Şifre Tekrar</label>
+            <label className="text-sm font-medium">{t.newPasswordConfirm}</label>
             <input
               type="password"
               value={passwordConfirm}
               onChange={(event) => setPasswordConfirm(event.target.value)}
               disabled={loading || sessionReady !== true}
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-foreground disabled:opacity-50"
-              placeholder="Şifrenizi tekrar girin"
+              placeholder={t.newPasswordConfirmPlaceholder}
             />
           </div>
 
@@ -238,15 +254,18 @@ export default function ResetPasswordPage() {
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {sessionReady === null
-              ? "Bağlantı doğrulanıyor..."
+              ? t.verifyLink
               : loading
-                ? "Şifre güncelleniyor..."
-                : "Şifreyi Güncelle"}
+                ? t.updatingPassword
+                : t.updatePassword}
           </button>
 
           <div className="text-center text-sm">
-            <Link href={returnPath} className="text-blue-600 hover:underline">
-              Giriş ekranına dön
+            <Link
+              href={localizeReturnPath(returnPath, locale)}
+              className="text-blue-600 hover:underline"
+            >
+              {t.backToLogin}
             </Link>
           </div>
         </div>

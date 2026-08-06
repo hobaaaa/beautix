@@ -1,6 +1,5 @@
-﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import Link from "next/link";
+import { getPreferredLocale } from "@/lib/i18n/config";
 import { redirect } from "next/navigation";
 
 async function resolveSignedInDestination() {
@@ -45,36 +44,7 @@ export default async function Home() {
     redirect(destination);
   }
 
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6">
-      <main className="w-full max-w-md rounded-3xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8">
-        <div className="space-y-3">
-          <ArtexoBrand />
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Giriş türünü seçin
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
-            İşletme paneli veya müşteri hesabı ile devam edin.
-          </p>
-        </div>
-
-        <div className="mt-8 grid gap-3">
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center rounded-2xl bg-primary px-5 py-4 text-sm font-medium text-primary-foreground"
-          >
-            İşletme Girişi
-          </Link>
-          <Link
-            href="/customer/login"
-            className="inline-flex items-center justify-center rounded-2xl border px-5 py-4 text-sm font-medium"
-          >
-            Müşteri Girişi
-          </Link>
-        </div>
-      </main>
-    </div>
-  );
+  redirect(`/${await getPreferredLocale()}`);
 }
 
 

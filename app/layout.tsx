@@ -1,5 +1,12 @@
 ﻿import type { Metadata } from "next";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import {
+  defaultLocale,
+  isLocale,
+  localeCookieName,
+  type Locale,
+} from "@/lib/i18n/config";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,13 +39,34 @@ export const viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+async function getRequestLocale(): Promise<Locale> {
+  const headerStore = await headers();
+  const headerLocale = headerStore.get("x-artexo-locale");
+  const normalizedHeaderLocale = headerLocale ?? undefined;
+
+  if (isLocale(normalizedHeaderLocale)) {
+    return normalizedHeaderLocale;
+  }
+
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(localeCookieName)?.value;
+
+  if (isLocale(cookieLocale)) {
+    return cookieLocale;
+  }
+
+  return defaultLocale;
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+
   return (
-    <html lang="tr" className="dark">
+    <html lang={locale} className="dark">
       <body className="min-h-dvh antialiased">
         {children}
         <ServiceWorkerRegister />

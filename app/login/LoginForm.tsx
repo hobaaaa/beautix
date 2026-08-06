@@ -3,6 +3,8 @@
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { TurnstileWidget } from "@/components/security/TurnstileWidget";
 import { readApiErrorMessage } from "@/lib/api/client-response";
+import type { Locale } from "@/lib/i18n/constants";
+import { getAuthMessages, getLocalizedAuthHref } from "@/lib/i18n/auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -11,7 +13,8 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-export function LoginForm() {
+export function LoginForm({ locale }: { locale?: Locale }) {
+  const t = getAuthMessages(locale);
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,22 +30,22 @@ export function LoginForm() {
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail) {
-      setError("E-posta adresinizi girin.");
+      setError(t.emailRequired);
       return;
     }
 
     if (!isValidEmail(trimmedEmail)) {
-      setError("Geçerli bir e-posta adresi girin.");
+      setError(t.emailInvalid);
       return;
     }
 
     if (!password) {
-      setError("Şifrenizi girin.");
+      setError(t.passwordRequired);
       return;
     }
 
     if (!turnstileToken && process.env.NODE_ENV === "production") {
-      setError("Güvenlik doğrulamasının tamamlanmasını bekleyin.");
+      setError(t.turnstileRequired);
       return;
     }
 
@@ -58,12 +61,13 @@ export function LoginForm() {
         body: JSON.stringify({
           email: trimmedEmail,
           password,
+          locale,
           turnstileToken,
         }),
       });
 
       if (!response.ok) {
-        setError(await readApiErrorMessage(response, "Giriş yapılırken bir hata oluştu."));
+        setError(await readApiErrorMessage(response, t.loginFailed));
         setTurnstileResetKey((current) => current + 1);
         return;
       }
@@ -71,7 +75,7 @@ export function LoginForm() {
       router.replace("/admin");
       router.refresh();
     } catch {
-      setError("Sunucuya ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
+      setError(t.networkError);
       setTurnstileResetKey((current) => current + 1);
     } finally {
       setLoading(false);
@@ -86,15 +90,17 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">İşletme Girişi</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t.adminLoginTitle}
+          </h1>
           <p className="text-sm leading-6 text-muted-foreground">
-            Yönetim paneline erişmek için hesabınızla giriş yapın.
+            {t.adminLoginDescription}
           </p>
         </div>
 
         <div className="mt-6 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">E-posta</label>
+            <label className="text-sm font-medium">{t.email}</label>
             <input
               type="email"
               value={email}
@@ -102,12 +108,12 @@ export function LoginForm() {
               autoComplete="email"
               disabled={loading}
               className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition focus:border-blue-500 disabled:opacity-50"
-              placeholder="ornek@artexo.com"
+              placeholder={t.emailPlaceholder}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Şifre</label>
+            <label className="text-sm font-medium">{t.password}</label>
             <input
               type="password"
               value={password}
@@ -115,7 +121,7 @@ export function LoginForm() {
               autoComplete="current-password"
               disabled={loading}
               className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition focus:border-blue-500 disabled:opacity-50"
-              placeholder="Şifreniz"
+              placeholder={t.passwordPlaceholder}
             />
           </div>
 
@@ -124,6 +130,8 @@ export function LoginForm() {
             token={turnstileToken}
             onTokenChange={handleTurnstileToken}
             resetKey={turnstileResetKey}
+            loadFailedMessage={t.turnstileLoadFailed}
+            pendingMessage={t.turnstilePending}
           />
 
           {error && (
@@ -140,18 +148,24 @@ export function LoginForm() {
             }
             className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {loading ? t.loggingIn : t.loginButton}
           </button>
 
           <div className="text-center text-sm">
-            <Link href="/forgot-password" className="text-blue-400 hover:text-blue-300">
-              Şifremi unuttum
+            <Link
+              href={getLocalizedAuthHref("/forgot-password", locale)}
+              className="text-blue-400 hover:text-blue-300"
+            >
+              {t.forgotPassword}
             </Link>
           </div>
 
           <div className="border-t border-white/10 pt-4 text-center text-sm">
-            <Link href="/" className="text-muted-foreground transition hover:text-foreground">
-              Geri
+            <Link
+              href={locale ? `/${locale}` : "/"}
+              className="text-muted-foreground transition hover:text-foreground"
+            >
+              {t.back}
             </Link>
           </div>
         </div>

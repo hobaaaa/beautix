@@ -1,4 +1,10 @@
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
+import {
+  buildPublicBookingHref,
+  getPublicBookingMessages,
+  type PublicBookingMessages,
+} from "@/lib/i18n/public-booking";
 import { CalendarDays, CalendarPlus, Clock3, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -6,7 +12,7 @@ import { notFound } from "next/navigation";
 import { PublicDateSelection } from "./PublicDateSelection";
 import { getPublicBookingData, getPublicOrganizationBySlug } from "./queries";
 
-type PublicBookingPageProps = {
+export type PublicBookingPageProps = {
   params: Promise<{
     slug: string;
   }>;
@@ -15,10 +21,12 @@ type PublicBookingPageProps = {
     date?: string;
     staffId?: string;
   }>;
+  locale?: Locale;
+  localePrefix?: Locale;
 };
 
-function formatDuration(minutes: number) {
-  return `${minutes} dakika`;
+function formatDuration(minutes: number, messages: PublicBookingMessages) {
+  return `${minutes} ${messages.minute}`;
 }
 
 function buildBookingHref(
@@ -29,6 +37,7 @@ function buildBookingHref(
     staffId?: string;
     sectionId?: string;
   },
+  localePrefix?: Locale,
 ) {
   const query = new URLSearchParams();
 
@@ -36,10 +45,12 @@ function buildBookingHref(
   if (params.date) query.set("date", params.date);
   if (params.staffId) query.set("staffId", params.staffId);
 
-  const queryString = query.toString();
-  const hash = params.sectionId ? `#${params.sectionId}` : "";
-
-  return `/book/${encodeURIComponent(slug)}${queryString ? `?${queryString}` : ""}${hash}`;
+  return buildPublicBookingHref({
+    slug,
+    localePrefix,
+    params: query,
+    hash: params.sectionId,
+  });
 }
 
 export async function generateMetadata({
@@ -63,8 +74,22 @@ export default async function PublicBookingPage({
   params,
   searchParams,
 }: PublicBookingPageProps) {
+  return PublicBookingPageContent({
+    params,
+    searchParams,
+    locale: defaultLocale,
+  });
+}
+
+export async function PublicBookingPageContent({
+  params,
+  searchParams,
+  locale = defaultLocale,
+  localePrefix,
+}: PublicBookingPageProps) {
   const { slug } = await params;
   const query = searchParams ? await searchParams : {};
+  const t = getPublicBookingMessages(locale);
   const {
     organization,
     services,
@@ -98,30 +123,30 @@ export default async function PublicBookingPage({
 
           <div className="space-y-3 text-center">
             <p className="text-sm text-muted-foreground">{organization.name}</p>
-            <h1 className="text-3xl font-semibold">Online Randevu</h1>
+            <h1 className="text-3xl font-semibold">{t.pageTitle}</h1>
             <p className="mx-auto max-w-md text-sm text-muted-foreground">
-              Hizmet, tarih, personel ve uygun saat seçimini tamamlayın.
+              {t.pageDescription}
             </p>
           </div>
         </section>
 
         {invalidSelectedService ? (
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-            Seçtiğiniz hizmet artık randevuya açık değil. Lütfen başka bir hizmet seçin.
+            {t.serviceUnavailable}
           </div>
         ) : null}
 
         <section className="space-y-4">
           <div>
-            <h2 className="text-2xl font-semibold">Hizmet Seçin</h2>
+            <h2 className="text-2xl font-semibold">{t.selectServiceTitle}</h2>
             <p className="text-sm text-muted-foreground">
-              Randevu almak istediğiniz hizmeti seçin.
+              {t.selectServiceDescription}
             </p>
           </div>
 
           {services.length === 0 ? (
             <div className="rounded-3xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground">
-              Bu işletme şu anda online randevuya açık bir hizmet sunmuyor.
+              {t.noServices}
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -159,7 +184,7 @@ export default async function PublicBookingPage({
                     <div className="mt-5 flex flex-wrap gap-2 text-sm text-muted-foreground">
                       <span className="inline-flex min-h-9 items-center gap-2 rounded-full border px-3">
                         <Clock3 className="h-4 w-4" />
-                        {formatDuration(service.duration_minutes)}
+                        {formatDuration(service.duration_minutes, t)}
                       </span>
                       {service.price ? (
                         <span className="inline-flex min-h-9 items-center rounded-full border px-3">
@@ -172,14 +197,14 @@ export default async function PublicBookingPage({
                       href={buildBookingHref(organization.public_slug, {
                         serviceId: service.id,
                         sectionId: "date-selection",
-                      })}
+                      }, localePrefix)}
                       className={`mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl px-4 py-2 text-sm font-medium ${
                         isSelected
                           ? "border border-blue-500/50 text-blue-100"
                           : "bg-blue-600 text-white"
                       }`}
                     >
-                      {isSelected ? "Bu Hizmet Seçildi" : "Bu Hizmeti Seç"}
+                      {isSelected ? t.selectedServiceButton : t.selectServiceButton}
                     </Link>
                   </article>
                 );
@@ -195,22 +220,25 @@ export default async function PublicBookingPage({
           >
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold">Tarih Seçin</h2>
+                <h2 className="text-2xl font-semibold">{t.selectDateTitle}</h2>
                 <p className="text-sm text-muted-foreground">
-                  {selectedService.name} - {formatDuration(selectedService.duration_minutes)}
+                  {selectedService.name} - {formatDuration(selectedService.duration_minutes, t)}
                 </p>
               </div>
               <Link
-                href={`/book/${encodeURIComponent(organization.public_slug)}`}
+                href={buildPublicBookingHref({
+                  slug: organization.public_slug,
+                  localePrefix,
+                })}
                 className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
               >
-                Hizmeti Değiştir
+                {t.changeService}
               </Link>
             </div>
 
             {invalidDate ? (
               <div className="mb-4 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-                Geçmiş veya geçersiz bir tarih seçilemez.
+                {t.invalidDate}
               </div>
             ) : null}
 
@@ -219,6 +247,8 @@ export default async function PublicBookingPage({
               serviceId={selectedService.id}
               initialDate={selectedDate ?? today}
               minDate={today}
+              localePrefix={localePrefix}
+              messages={t}
             />
           </section>
         ) : null}
@@ -230,9 +260,9 @@ export default async function PublicBookingPage({
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h2 className="text-2xl font-semibold">Personel ve Saat</h2>
+                <h2 className="text-2xl font-semibold">{t.staffAndTimeTitle}</h2>
                 <p className="text-sm text-muted-foreground">
-                  Seçilen tarih: {selectedDate}
+                  {t.selectedDate}: {selectedDate}
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -240,30 +270,33 @@ export default async function PublicBookingPage({
                   href={buildBookingHref(organization.public_slug, {
                     serviceId: selectedService.id,
                     sectionId: "date-selection",
+                  }, localePrefix)}
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
+                >
+                  {t.changeDate}
+                </Link>
+                <Link
+                  href={buildPublicBookingHref({
+                    slug: organization.public_slug,
+                    localePrefix,
                   })}
                   className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
                 >
-                  Tarihi Değiştir
-                </Link>
-                <Link
-                  href={`/book/${encodeURIComponent(organization.public_slug)}`}
-                  className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
-                >
-                  Hizmeti Değiştir
+                  {t.changeService}
                 </Link>
               </div>
             </div>
 
             {staffMembers.length === 0 ? (
               <div className="rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">
-                Bu hizmet için uygun personel bulunamadı.
+                {t.noStaff}
               </div>
             ) : staffMembers.length > 1 ? (
               <div className="space-y-3">
-                <h3 className="font-semibold">Personel Seçin</h3>
+                <h3 className="font-semibold">{t.selectStaffTitle}</h3>
                 {invalidSelectedStaff ? (
                   <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                    Seçtiğiniz personel bu hizmet için uygun değil. Lütfen başka bir personel seçin.
+                    {t.invalidStaff}
                   </div>
                 ) : null}
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -278,7 +311,7 @@ export default async function PublicBookingPage({
                           date: selectedDate,
                           staffId: staff.id,
                           sectionId: "slot-selection",
-                        })}
+                        }, localePrefix)}
                         className={`flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
                           isSelected ? "border-blue-500/70 bg-blue-500/10 text-blue-100" : ""
                         }`}
@@ -296,9 +329,9 @@ export default async function PublicBookingPage({
               <div id="slot-selection" className="scroll-mt-6 space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold">Uygun Saatler</h3>
+                    <h3 className="text-lg font-semibold">{t.availableSlotsTitle}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {selectedStaff.name} için uygun saatler.
+                      {t.availableSlotsDescription(selectedStaff.name)}
                     </p>
                   </div>
                   {staffMembers.length > 1 ? (
@@ -307,10 +340,10 @@ export default async function PublicBookingPage({
                         serviceId: selectedService.id,
                         date: selectedDate,
                         sectionId: "staff-selection",
-                      })}
+                      }, localePrefix)}
                       className="inline-flex min-h-11 items-center justify-center rounded-2xl border px-4 py-2 text-sm"
                     >
-                      Personeli Değiştir
+                      {t.changeStaff}
                     </Link>
                   ) : null}
                 </div>
@@ -318,21 +351,24 @@ export default async function PublicBookingPage({
                 {slots.length === 0 ? (
                   <div className="rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">
                     <CalendarDays className="mx-auto mb-3 h-6 w-6" />
-                    Bu tarih için uygun saat bulunamadı.
+                    {t.noSlots}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5">
                     {slots.map((slot) => (
                       <Link
                         key={slot.start_at}
-                        href={`/book/${encodeURIComponent(
-                          organization.public_slug,
-                        )}/confirm?${new URLSearchParams({
-                          serviceId: selectedService.id,
-                          date: selectedDate,
-                          staffId: selectedStaff.id,
-                          time: slot.start_time,
-                        }).toString()}`}
+                        href={buildPublicBookingHref({
+                          slug: organization.public_slug,
+                          localePrefix,
+                          path: "/confirm",
+                          params: new URLSearchParams({
+                            serviceId: selectedService.id,
+                            date: selectedDate,
+                            staffId: selectedStaff.id,
+                            time: slot.start_time,
+                          }),
+                        })}
                         className="inline-flex min-h-11 items-center justify-center rounded-2xl border bg-background px-4 py-2 text-sm font-semibold transition hover:border-blue-500 hover:text-blue-100"
                       >
                         {slot.start_time}

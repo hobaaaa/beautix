@@ -1,5 +1,10 @@
 "use client";
 
+import type { Locale } from "@/lib/i18n/constants";
+import {
+  buildPublicBookingHref,
+  type PublicBookingMessages,
+} from "@/lib/i18n/public-booking";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useState } from "react";
@@ -9,6 +14,11 @@ type PublicDateSelectionProps = {
   serviceId: string;
   initialDate: string;
   minDate: string;
+  localePrefix?: Locale;
+  messages: Pick<
+    PublicBookingMessages,
+    "dateInputLabel" | "dateRequired" | "pastDate" | "continue"
+  >;
 };
 
 export function PublicDateSelection({
@@ -16,6 +26,8 @@ export function PublicDateSelection({
   serviceId,
   initialDate,
   minDate,
+  localePrefix,
+  messages,
 }: PublicDateSelectionProps) {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -26,12 +38,12 @@ export function PublicDateSelection({
     setError(null);
 
     if (!selectedDate) {
-      setError("Devam etmek için tarih seçmelisiniz.");
+      setError(messages.dateRequired);
       return;
     }
 
     if (selectedDate < minDate) {
-      setError("Geçmiş bir tarih seçilemez.");
+      setError(messages.pastDate);
       return;
     }
 
@@ -41,7 +53,12 @@ export function PublicDateSelection({
     });
 
     router.push(
-      `/book/${encodeURIComponent(slug)}?${params.toString()}#staff-selection`,
+      buildPublicBookingHref({
+        slug,
+        localePrefix,
+        params,
+        hash: "staff-selection",
+      }),
     );
   }
 
@@ -49,7 +66,7 @@ export function PublicDateSelection({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="public-booking-date" className="text-sm font-semibold">
-          Randevu tarihi
+          {messages.dateInputLabel}
         </label>
         <input
           id="public-booking-date"
@@ -72,7 +89,7 @@ export function PublicDateSelection({
         disabled={!selectedDate || selectedDate < minDate}
         className="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Devam Et
+        {messages.continue}
       </button>
     </form>
   );

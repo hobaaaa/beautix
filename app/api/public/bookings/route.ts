@@ -4,6 +4,8 @@ import {
 } from "@/app/book/[slug]/queries";
 import { apiError } from "@/lib/api/error-response";
 import { isOverlapConstraintError } from "@/lib/appointments/booking-validation";
+import { isLocale } from "@/lib/i18n/constants";
+import { getPublicBookingMessages } from "@/lib/i18n/public-booking";
 import {
   type GuestBookingFormValues,
   validateGuestBookingValues,
@@ -13,12 +15,8 @@ import {
   createPublicBookingIpHash,
   getPublicBookingRateLimitSecret,
   isValidPublicBookingStartedAt,
-  PUBLIC_BOOKING_RATE_LIMIT_MESSAGE,
 } from "@/lib/public-booking/rate-limit";
-import {
-  TURNSTILE_ERROR_MESSAGE,
-  verifyTurnstileToken,
-} from "@/lib/security/turnstile";
+import { verifyTurnstileToken } from "@/lib/security/turnstile";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -31,14 +29,30 @@ type PublicBookingBody = Partial<GuestBookingFormValues> & {
   time?: string;
   website?: string;
   startedAt?: string;
+  locale?: string;
   turnstileToken?: string;
 };
 
-const PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE =
-  "Randevu sistemi geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin veya işletmeyle iletişime geçin.";
+function getFirstValidationError(
+  errors: Record<string, string | undefined>,
+  messages: ReturnType<typeof getPublicBookingMessages>,
+) {
+  if (errors.firstName) return messages.firstNameRequired;
+  if (errors.lastName) return messages.lastNameRequired;
+  if (errors.phone) {
+    return errors.phone.includes("zorunludur")
+      ? messages.phoneRequired
+      : messages.phoneInvalid;
+  }
+  if (errors.email) {
+    return errors.email.includes("zorunludur")
+      ? messages.emailRequired
+      : messages.emailInvalid;
+  }
+  if (errors.notes) return messages.notesTooLong;
+  if (errors.consent) return messages.consentRequired;
 
-function getFirstValidationError(errors: Record<string, string | undefined>) {
-  return Object.values(errors).find((message) => typeof message === "string");
+  return undefined;
 }
 
 function isContactConflict(error: { message?: string }) {
@@ -59,11 +73,11 @@ function isNotFound(error: { message?: string }) {
   return error.message?.includes("public_booking_not_found") === true;
 }
 
-function rateLimitErrorResponse() {
+function rateLimitErrorResponse(message: string) {
   return NextResponse.json(
     {
       success: false,
-      error: PUBLIC_BOOKING_RATE_LIMIT_MESSAGE,
+      error: message,
     },
     {
       status: 429,
@@ -139,20 +153,50 @@ async function recordPublicBookingSuccessAttempt({
   }
 }
 
+async function updatePublicBookingNotificationLocale({
+  appointmentId,
+  locale,
+}: {
+  appointmentId: string;
+  locale: string | undefined;
+}) {
+  if (!locale) {
+    return;
+  }
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { error } = await supabase
+      .from("notification_jobs")
+      .update({ locale })
+      .eq("appointment_id", appointmentId);
+
+    if (error) {
+      console.error("Public booking notification locale update failed:", {
+        code: error.code,
+      });
+    }
+  } catch {
+    console.error("Public booking notification locale update failed.");
+  }
+}
+
 export async function POST(request: NextRequest) {
   let body: PublicBookingBody;
   const contentLength = Number(request.headers.get("content-length") ?? "0");
 
   if (Number.isFinite(contentLength) && contentLength > 20_000) {
-    return apiError("İstek gövdesi çok büyük.", 413);
+    return apiError(getPublicBookingMessages().requestTooLarge, 413);
   }
 
   try {
     body = (await request.json()) as PublicBookingBody;
   } catch {
-    return apiError("Geçersiz istek gövdesi.", 400, "BAD_REQUEST");
+    return apiError(getPublicBookingMessages().badRequest, 400, "BAD_REQUEST");
   }
 
+  const locale = isLocale(body.locale) ? body.locale : undefined;
+  const t = getPublicBookingMessages(locale);
   const slug = typeof body.slug === "string" ? body.slug : "";
   const serviceId = typeof body.serviceId === "string" ? body.serviceId : "";
   const staffId = typeof body.staffId === "string" ? body.staffId : "";
@@ -170,19 +214,18 @@ export async function POST(request: NextRequest) {
 
   if (!guestValidation.isValid) {
     return apiError(
-      getFirstValidationError(guestValidation.errors) ??
-        "Bilgilerinizi kontrol edin.",
+      getFirstValidationError(guestValidation.errors, t) ?? t.checkYourInfo,
       400,
       "BAD_REQUEST",
     );
   }
 
   if (typeof body.website === "string" && body.website.trim() !== "") {
-    return apiError("Bilgilerinizi kontrol edin.", 422, "VALIDATION_ERROR");
+    return apiError(t.checkYourInfo, 422, "VALIDATION_ERROR");
   }
 
   if (!isValidPublicBookingStartedAt(body.startedAt)) {
-    return apiError("Bilgilerinizi kontrol edin.", 422, "VALIDATION_ERROR");
+    return apiError(t.checkYourInfo, 422, "VALIDATION_ERROR");
   }
 
   const turnstileOk = await verifyTurnstileToken({
@@ -192,24 +235,20 @@ export async function POST(request: NextRequest) {
   });
 
   if (!turnstileOk) {
-    return apiError(TURNSTILE_ERROR_MESSAGE, 400, "VALIDATION_ERROR");
+    return apiError(t.securityFailed, 400, "VALIDATION_ERROR");
   }
 
   const organization = await getPublicOrganizationBySlug(slug);
 
   if (!organization) {
-    return apiError("Randevu bağlantısı bulunamadı.", 404, "NOT_FOUND");
+    return apiError(t.linkNotFound, 404, "NOT_FOUND");
   }
 
   const rateLimitSecret = getPublicBookingRateLimitSecret();
 
   if (!rateLimitSecret) {
     console.error("Public booking rate limit secret is missing.");
-    return apiError(
-      PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE,
-      503,
-      "SERVER_ERROR",
-    );
+    return apiError(t.temporaryUnavailable, 503, "SERVER_ERROR");
   }
 
   const ipHash = createPublicBookingIpHash(request, rateLimitSecret);
@@ -228,15 +267,11 @@ export async function POST(request: NextRequest) {
       contactHashes,
     });
   } catch {
-    return apiError(
-      PUBLIC_BOOKING_TEMPORARY_UNAVAILABLE_MESSAGE,
-      503,
-      "SERVER_ERROR",
-    );
+    return apiError(t.temporaryUnavailable, 503, "SERVER_ERROR");
   }
 
   if (!rateLimitAllowed) {
-    return rateLimitErrorResponse();
+    return rateLimitErrorResponse(t.rateLimit);
   }
 
   const bookingConfirmation = await getPublicBookingConfirmation({
@@ -248,7 +283,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!bookingConfirmation.organization) {
-    return apiError("Randevu bağlantısı bulunamadı.", 404, "NOT_FOUND");
+    return apiError(t.linkNotFound, 404, "NOT_FOUND");
   }
 
   if (
@@ -256,15 +291,11 @@ export async function POST(request: NextRequest) {
     !bookingConfirmation.selectedDate ||
     !bookingConfirmation.selectedStaff
   ) {
-    return apiError("Randevu seçiminizi kontrol edin.", 404, "NOT_FOUND");
+    return apiError(t.selectionInvalid, 404, "NOT_FOUND");
   }
 
   if (!bookingConfirmation.selectedSlot) {
-    return apiError(
-      "Seçtiğiniz saat artık müsait değil. Lütfen başka bir saat seçin.",
-      409,
-      "CONFLICT",
-    );
+    return apiError(t.invalidSlotDescription, 409, "CONFLICT");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -283,27 +314,19 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (isSlotUnavailable(error)) {
-      return apiError(
-        "Seçtiğiniz saat artık müsait değil. Lütfen başka bir saat seçin.",
-        409,
-        "CONFLICT",
-      );
+      return apiError(t.invalidSlotDescription, 409, "CONFLICT");
     }
 
     if (isContactConflict(error)) {
-      return apiError(
-        "Bilgileriniz doğrulanamadı. Lütfen işletmeyle iletişime geçin.",
-        409,
-        "CONFLICT",
-      );
+      return apiError(t.contactConflict, 409, "CONFLICT");
     }
 
     if (isNotFound(error)) {
-      return apiError("Randevu seçiminizi kontrol edin.", 404, "NOT_FOUND");
+      return apiError(t.selectionInvalid, 404, "NOT_FOUND");
     }
 
     console.error("Public booking create failed:", error.code);
-    return apiError("Randevu oluşturulamadı.", 500, "SERVER_ERROR");
+    return apiError(t.createFailed, 500, "SERVER_ERROR");
   }
 
   const bookingId =
@@ -313,13 +336,18 @@ export async function POST(request: NextRequest) {
 
   if (!bookingId) {
     console.error("Public booking create returned empty result.");
-    return apiError("Randevu oluşturulamadı.", 500, "SERVER_ERROR");
+    return apiError(t.createFailed, 500, "SERVER_ERROR");
   }
 
   await recordPublicBookingSuccessAttempt({
     orgId: organization.id,
     ipHash,
     contactHashes,
+  });
+
+  await updatePublicBookingNotificationLocale({
+    appointmentId: bookingId,
+    locale,
   });
 
   return NextResponse.json(

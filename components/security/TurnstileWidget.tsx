@@ -7,6 +7,8 @@ type TurnstileWidgetProps = {
   token: string;
   onTokenChange: (token: string) => void;
   resetKey?: number;
+  loadFailedMessage?: string;
+  pendingMessage?: string;
 };
 
 type TurnstileApi = {
@@ -57,6 +59,8 @@ export function TurnstileWidget({
   token,
   onTokenChange,
   resetKey = 0,
+  loadFailedMessage = "Güvenlik doğrulaması yüklenemedi.",
+  pendingMessage = "Devam etmek için güvenlik doğrulamasının tamamlanmasını bekleyin.",
 }: TurnstileWidgetProps) {
   const generatedId = useId();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -120,7 +124,7 @@ export function TurnstileWidget({
   if (!SITE_KEY || scriptFailed) {
     return (
       <div className="rounded-xl border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-300">
-        Güvenlik doğrulaması yüklenemedi.
+        {loadFailedMessage}
       </div>
     );
   }
@@ -130,7 +134,7 @@ export function TurnstileWidget({
       <div ref={containerRef} className="min-h-[65px]" />
       {!token ? (
         <p className="text-xs text-muted-foreground">
-          Devam etmek için güvenlik doğrulamasının tamamlanmasını bekleyin.
+          {pendingMessage}
         </p>
       ) : null}
     </div>

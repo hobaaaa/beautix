@@ -4,6 +4,7 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import { localeCookieName, locales, type Locale } from "@/lib/i18n/constants";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,6 +13,18 @@ export function CustomerLogoutButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function getLoginHref() {
+    const cookieLocale = document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .find((item) => item.startsWith(`${localeCookieName}=`))
+      ?.split("=")[1] as Locale | undefined;
+
+    return cookieLocale && locales.includes(cookieLocale)
+      ? `/${cookieLocale}/customer/login`
+      : "/customer/login";
+  }
 
   async function handleLogout() {
     setLoading(true);
@@ -26,7 +39,7 @@ export function CustomerLogoutButton() {
         );
       }
 
-      router.replace("/customer/login");
+      router.replace(getLoginHref());
       router.refresh();
     } catch (error) {
       setError(getClientErrorMessage(error, "Çıkış yapılırken bir hata oluştu."));
