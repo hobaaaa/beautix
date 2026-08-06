@@ -110,10 +110,12 @@ export async function AdminLayoutContent({
               <InstallAppButton compact locale={localePrefix} />
             </div>
             {localePrefix ? (
-              <LanguageSwitcher
-                currentLocale={localePrefix}
-                labels={{ tr: "TR", en: "EN" }}
-              />
+              <div className="hidden sm:block">
+                <LanguageSwitcher
+                  currentLocale={localePrefix}
+                  labels={{ tr: "TR", en: "EN" }}
+                />
+              </div>
             ) : null}
             <div className="hidden text-sm text-muted-foreground sm:block">
               {userEmail}

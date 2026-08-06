@@ -2,8 +2,8 @@
 import { CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CustomerLogoutButton } from "./CustomerLogoutButton";
 import { CustomerOrganizationSelector } from "./CustomerOrganizationSelector";
+import { CustomerPanelHeader } from "./CustomerPanelHeader";
 import type { Locale } from "@/lib/i18n/constants";
 import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
 import {
@@ -18,11 +18,6 @@ export async function CustomerHomePageContent({
   localePrefix?: Locale;
 }) {
   const t = getCustomerMessages(localePrefix);
-  const logoutMessages = {
-    logout: t.logout,
-    loggingOut: t.loggingOut,
-    logoutFailed: t.logoutFailed,
-  };
   const organizationSelectorMessages = {
     chooseOrganizationTitle: t.chooseOrganizationTitle,
     chooseOrganizationDescription: t.chooseOrganizationDescription,
@@ -48,12 +43,7 @@ export async function CustomerHomePageContent({
     <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="space-y-5">
-          <div className="flex justify-end">
-            <CustomerLogoutButton
-              localePrefix={localePrefix}
-              messages={logoutMessages}
-            />
-          </div>
+          <CustomerPanelHeader localePrefix={localePrefix} />
           <div className="flex justify-center">
             <ArtexoBrand />
           </div>

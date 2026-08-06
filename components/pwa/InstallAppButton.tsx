@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
-type IosInstallGuide = "ios-safari" | "ios-chrome" | null;
+type InstallGuide = "ios-safari" | "ios-chrome" | "mobile-manual" | null;
 
 function isStandalone() {
   const navigatorWithStandalone = navigator as Navigator & {
@@ -32,9 +32,13 @@ function isIosDevice() {
   );
 }
 
-function getIosInstallGuide(): IosInstallGuide {
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(window.navigator.userAgent);
+}
+
+function getInstallGuide(): InstallGuide {
   if (!isIosDevice()) {
-    return null;
+    return isMobileDevice() ? "mobile-manual" : null;
   }
 
   const userAgent = window.navigator.userAgent;
@@ -59,6 +63,9 @@ function getInstallLabels(locale?: Locale) {
         'To use Artexo as an app, tap the Share button and choose "Add to Home Screen".',
         'If you cannot see "Add to Home Screen", open this page in Safari and repeat the same step.',
       ],
+      mobileManualHelp: [
+        'Open the browser menu and choose the install or "Add to Home Screen" option.',
+      ],
     };
   }
 
@@ -71,14 +78,21 @@ function getInstallLabels(locale?: Locale) {
       "Artexo'yu uygulama olarak kullanmak için Paylaş düğmesine dokunun ve Ana Ekrana Ekle seçeneğini seçin.",
       "Ana Ekrana Ekle seçeneğini göremiyorsanız bu sayfayı Safari'de açarak aynı işlemi yapabilirsiniz.",
     ],
+    mobileManualHelp: [
+      'Tarayıcı menüsünü açıp "Yükle" veya "Ana Ekrana Ekle" seçeneğini kullanın.',
+    ],
   };
 }
 
-function getInstallHelpText(iosGuide: IosInstallGuide, locale?: Locale) {
+function getInstallHelpText(installGuide: InstallGuide, locale?: Locale) {
   const labels = getInstallLabels(locale);
 
-  if (iosGuide === "ios-chrome") {
+  if (installGuide === "ios-chrome") {
     return labels.iosChromeHelp;
+  }
+
+  if (installGuide === "mobile-manual") {
+    return labels.mobileManualHelp;
   }
 
   return labels.iosSafariHelp;
@@ -93,7 +107,7 @@ export function InstallAppButton({
 }) {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showHelp, setShowHelp] = useState(false);
-  const [iosGuide, setIosGuide] = useState<IosInstallGuide>(null);
+  const [installGuide, setInstallGuide] = useState<InstallGuide>(null);
   const [installed, setInstalled] = useState(true);
 
   useEffect(() => {
@@ -104,7 +118,7 @@ export function InstallAppButton({
 
       const standalone = isStandalone();
       setInstalled(standalone);
-      setIosGuide(standalone ? null : getIosInstallGuide());
+      setInstallGuide(standalone ? null : getInstallGuide());
     });
 
     const handleInstallPrompt = (event: Event) => {
@@ -121,7 +135,7 @@ export function InstallAppButton({
     const handleInstalled = () => {
       setInstallPrompt(null);
       setShowHelp(false);
-      setIosGuide(null);
+      setInstallGuide(null);
       setInstalled(true);
     };
 
@@ -135,7 +149,7 @@ export function InstallAppButton({
     };
   }, []);
 
-  if (installed || (!installPrompt && !iosGuide)) {
+  if (installed || (!installPrompt && !installGuide)) {
     return null;
   }
 
@@ -151,9 +165,9 @@ export function InstallAppButton({
     setShowHelp((current) => !current);
   }
 
-  const isManualInstall = Boolean(iosGuide);
+  const isManualInstall = Boolean(installGuide);
   const labels = getInstallLabels(locale);
-  const helpText = getInstallHelpText(iosGuide, locale);
+  const helpText = getInstallHelpText(installGuide, locale);
 
   return (
     <div className={compact ? "relative" : "space-y-2"}>

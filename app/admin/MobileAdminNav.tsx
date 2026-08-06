@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import {
   getAdminHref,
   getAdminMessages,
@@ -177,8 +178,14 @@ export function MobileAdminNav({
                 })}
               </nav>
 
-              <div className="mt-auto border-t border-white/10 pt-4 text-xs text-zinc-500">
-                {labels.version}
+              <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
+                {localePrefix ? (
+                  <LanguageSwitcher
+                    currentLocale={localePrefix}
+                    labels={{ tr: "TR", en: "EN" }}
+                  />
+                ) : null}
+                <div className="text-xs text-zinc-500">{labels.version}</div>
               </div>
             </aside>
           </div>,

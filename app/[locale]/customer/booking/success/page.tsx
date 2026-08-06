@@ -1,6 +1,7 @@
 import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
 import { isLocale } from "@/lib/i18n/constants";
 import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
+import { CustomerPanelHeader } from "@/app/customer/CustomerPanelHeader";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -20,7 +21,8 @@ export default async function LocalizedCustomerBookingSuccessPage({
 
   return (
     <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
-      <div className="mx-auto flex min-h-[70vh] max-w-2xl items-center">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <CustomerPanelHeader localePrefix={locale} />
         <section className="w-full rounded-3xl border border-border bg-card p-6 text-center shadow-sm sm:p-8">
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-300">
             <CheckCircle2 className="h-7 w-7" />

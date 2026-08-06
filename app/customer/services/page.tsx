@@ -1,8 +1,8 @@
 ﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
-import { ArrowLeft, CalendarPlus, Clock } from "lucide-react";
+import { CalendarPlus, Clock } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CustomerLogoutButton } from "../CustomerLogoutButton";
+import { CustomerPanelHeader } from "../CustomerPanelHeader";
 import type { Locale } from "@/lib/i18n/constants";
 import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
 import {
@@ -31,11 +31,6 @@ export async function CustomerServicesPageContent({
   localePrefix?: Locale;
 }) {
   const t = getCustomerMessages(localePrefix);
-  const logoutMessages = {
-    logout: t.logout,
-    loggingOut: t.loggingOut,
-    logoutFailed: t.logoutFailed,
-  };
   let result;
 
   try {
@@ -59,19 +54,11 @@ export async function CustomerServicesPageContent({
     <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-4xl space-y-6">
         <header className="space-y-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <Link
-                href={getCustomerHref("", localePrefix)}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t.backToPanel}
-            </Link>
-            <CustomerLogoutButton
-              localePrefix={localePrefix}
-              messages={logoutMessages}
-            />
-          </div>
+          <CustomerPanelHeader
+            backHref={getCustomerHref("", localePrefix)}
+            backLabel={t.backToPanel}
+            localePrefix={localePrefix}
+          />
           <div className="flex justify-center">
             <ArtexoBrand />
           </div>

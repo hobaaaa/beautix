@@ -1,8 +1,8 @@
 ﻿import { ArtexoBrand } from "@/components/brand/ArtexoBrand";
-import { ArrowLeft, Clock, UserRound } from "lucide-react";
+import { Clock, UserRound } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CustomerLogoutButton } from "../CustomerLogoutButton";
+import { CustomerPanelHeader } from "../CustomerPanelHeader";
 import type { Locale } from "@/lib/i18n/constants";
 import { getCustomerHref, getCustomerMessages } from "@/lib/i18n/customer";
 import {
@@ -92,11 +92,6 @@ export async function CustomerBookingPageContent({
   }>;
 }) {
   const t = getCustomerMessages(localePrefix);
-  const logoutMessages = {
-    logout: t.logout,
-    loggingOut: t.loggingOut,
-    logoutFailed: t.logoutFailed,
-  };
   const dateSelectionMessages = {
     dateRequired: t.dateRequired,
     pastDate: t.pastDate,
@@ -149,22 +144,16 @@ export async function CustomerBookingPageContent({
   return (
     <main className="min-h-dvh bg-background px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="space-y-5">
+          <CustomerPanelHeader
+            backHref={getCustomerHref("/services", localePrefix)}
+            backLabel={t.backToServices}
+            localePrefix={localePrefix}
+          />
           <div className="min-w-0">
-            <Link
-              href={getCustomerHref("/services", localePrefix)}
-              className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t.backToServices}
-            </Link>
             <ArtexoBrand compact />
             <h1 className="text-2xl font-semibold">{t.bookingDateTitle}</h1>
           </div>
-          <CustomerLogoutButton
-            localePrefix={localePrefix}
-            messages={logoutMessages}
-          />
         </header>
 
         {organizations.length === 0 ? (
