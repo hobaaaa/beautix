@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+﻿import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -34,6 +34,7 @@ const config = {
   orgId: process.env.DEMO_ORG_ID || randomUUID(),
   orgName: process.env.DEMO_ORG_NAME || "Artexo Demo",
   publicSlug: process.env.DEMO_PUBLIC_SLUG || "artexo-demo",
+  locale: process.env.DEMO_LOCALE === "en" ? "en" : "tr",
   adminEmail: process.env.DEMO_ADMIN_EMAIL,
   adminPassword: process.env.DEMO_ADMIN_PASSWORD,
   customerEmail: process.env.DEMO_CUSTOMER_EMAIL,
@@ -86,6 +87,10 @@ function assertConfig() {
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(config.publicSlug)) {
     fail("DEMO_PUBLIC_SLUG sadece kucuk harf, rakam ve tire icermelidir.");
+  }
+
+  if (!["tr", "en"].includes(config.locale)) {
+    fail("DEMO_LOCALE tr veya en olmalidir.");
   }
 }
 
@@ -255,6 +260,7 @@ async function ensureOrganizationProfile(supabase) {
       org_id: config.orgId,
       name: config.orgName,
       public_slug: config.publicSlug,
+      default_locale: config.locale,
     },
     {
       onConflict: "org_id",
@@ -290,12 +296,12 @@ async function ensureDemoCustomerClient(supabase, customerUserId) {
   const payload = {
     org_id: config.orgId,
     user_id: customerUserId,
-    name: "[DEMO] Demo Müşteri",
+    name: config.locale === "en" ? "[DEMO] Demo Customer" : "[DEMO] Demo Musteri",
     first_name: "[DEMO] Demo",
-    last_name: "Müşteri",
+    last_name: config.locale === "en" ? "Customer" : "Musteri",
     phone: "+90 555 000 00 00",
     email: normalizedEmail,
-    address: "Demo adres",
+    address: config.locale === "en" ? "Demo address" : "Demo adres",
     notes: `${DEMO_MARKER} - Demo customer account`,
     birth_date: null,
     is_active: true,
@@ -336,6 +342,7 @@ async function main() {
   console.log(`[demo-accounts] mode=${isDryRun ? "dry-run" : "write"}`);
   console.log(`[demo-accounts] org_id=${config.orgId}`);
   console.log(`[demo-accounts] public_slug=${config.publicSlug}`);
+  console.log(`[demo-accounts] locale=${config.locale}`);
 
   const adminUserId = await ensureAuthUser(supabase, {
     email: config.adminEmail,

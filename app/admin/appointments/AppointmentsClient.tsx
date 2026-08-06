@@ -4,6 +4,8 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -36,6 +38,8 @@ export function AppointmentsClient({
   selectedDate,
   selectedAppointmentTypeId,
   selectedStaffId,
+  locale = defaultLocale,
+  messages = getAdminMessages(locale).appointments,
 }: {
   appointments: AppointmentListItem[];
   clients: Client[];
@@ -49,6 +53,8 @@ export function AppointmentsClient({
   selectedDate: string;
   selectedAppointmentTypeId: string;
   selectedStaffId: string;
+  locale?: Locale;
+  messages?: AdminMessages["appointments"];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -121,16 +127,16 @@ export function AppointmentsClient({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Randevu iptal edilemedi."),
+          await readApiErrorMessage(response, messages.cancelFailed),
         );
       }
 
-      setMessage({ type: "success", text: "Randevu iptal edildi." });
+      setMessage({ type: "success", text: messages.cancelSuccess });
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, "Randevu iptal edilemedi."),
+        text: getClientErrorMessage(error, messages.cancelFailed),
       });
     } finally {
       setCancellingId(null);
@@ -141,11 +147,11 @@ export function AppointmentsClient({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Randevular</h1>
+          <h1 className="text-2xl font-semibold">{messages.title}</h1>
           <p className="text-sm text-muted-foreground">
             {selectedView === "all"
-              ? "Son 3 aydaki randevuları görüntüleyin."
-              : "Seçilen tarihe ait günlük randevu listesi."}
+              ? messages.allDescription
+              : messages.dayDescription}
           </p>
         </div>
 
@@ -154,7 +160,7 @@ export function AppointmentsClient({
           onClick={openCreateDialog}
           className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white sm:ml-auto"
         >
-          Randevu Ekle
+          {messages.add}
         </button>
       </div>
       <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
@@ -172,14 +178,14 @@ export function AppointmentsClient({
               selectedView === "day" ? "bg-slate-900" : "bg-background"
             }`}
           >
-            Bugün
+            {messages.today}
           </button>
           <button
             type="button"
             onClick={() => showDaily(tomorrow)}
             className="min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
-            Yarın
+            {messages.tomorrow}
           </button>
           <input
             type="date"
@@ -194,7 +200,7 @@ export function AppointmentsClient({
             onClick={showAllAppointments}
             className="w-full min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
-            Tüm Randevular
+            {messages.allAppointments}
           </button>
 
           <select
@@ -207,7 +213,7 @@ export function AppointmentsClient({
             }
             className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            <option value="">Tüm hizmetler</option>
+            <option value="">{messages.allServices}</option>
             {serviceFilters.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.name}
@@ -225,7 +231,7 @@ export function AppointmentsClient({
             }
             className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            <option value="">Tüm personeller</option>
+            <option value="">{messages.allStaff}</option>
             {staffFilters.map((staffMember) => (
               <option key={staffMember.id} value={staffMember.id}>
                 {staffMember.name}
@@ -258,12 +264,13 @@ export function AppointmentsClient({
           setMessage({
             type: "success",
             text:
-              mode === "edit" ? "Randevu güncellendi." : "Randevu oluşturuldu.",
+              mode === "edit" ? messages.updateSuccess : messages.createSuccess,
           });
           router.refresh();
         }}
         services={services}
         staffMembers={staffMembers}
+        messages={messages}
       />
 
       <AppointmentsTable
@@ -275,9 +282,11 @@ export function AppointmentsClient({
         showDate={selectedView === "all"}
         emptyMessage={
           selectedView === "all"
-            ? "Son 3 ay için henüz randevu bulunmuyor."
-            : "Bu gün için henüz randevu bulunmuyor."
+            ? messages.emptyAll
+            : messages.emptyDay
         }
+        locale={locale}
+        messages={messages}
       />
 
       {selectedView === "all" && hasMore && (
@@ -287,7 +296,7 @@ export function AppointmentsClient({
             onClick={loadMore}
             className="rounded-md border px-4 py-2 text-sm"
           >
-            Daha fazla yükle
+            {messages.loadMore}
           </button>
         </div>
       )}

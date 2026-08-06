@@ -19,6 +19,7 @@ Gercek degerleri dokumana yazmayin.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
 - `DEMO_ORG_ID`
+- `DEMO_LOCALE=tr|en` (opsiyonel, varsayılan `tr`)
 - `ALLOW_DEMO_SEED=true`
 
 `DEMO_ORG_ID`, demo verinin eklenecegi organization UUID degeridir. Bu organization icin `org_members` kaydi mevcut olmalidir.
@@ -40,6 +41,7 @@ PowerShell icin:
 ```powershell
 $env:ALLOW_DEMO_SEED="true"
 $env:DEMO_ORG_ID="<organization-uuid>"
+$env:DEMO_LOCALE="tr"
 npm.cmd run seed:demo -- --dry-run
 ```
 
@@ -48,6 +50,7 @@ npm.cmd run seed:demo -- --dry-run
 ```powershell
 $env:ALLOW_DEMO_SEED="true"
 $env:DEMO_ORG_ID="<organization-uuid>"
+$env:DEMO_LOCALE="tr"
 npm.cmd run seed:demo
 ```
 
@@ -61,6 +64,8 @@ Yaklasik veri seti:
 - 6 gun working hours
 - Staff-service mapping
 - Yaklasik 40 appointment
+
+`DEMO_LOCALE="en"` kullanılırsa demo hizmet, personel ve müşteri isimleri İngilizce oluşturulur.
 
 Appointment durumlari:
 

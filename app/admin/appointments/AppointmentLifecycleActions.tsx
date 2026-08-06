@@ -4,6 +4,7 @@ import {
   getClientErrorMessage,
   readApiErrorMessage,
 } from "@/lib/api/client-response";
+import type { AdminMessages } from "@/lib/i18n/admin";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -11,30 +12,32 @@ type LifecycleStatus = "completed" | "no_show";
 
 type AppointmentLifecycleActionsProps = {
   appointmentId: string;
+  messages: AdminMessages["appointments"]["lifecycle"];
 };
 
 const ACTIONS: Record<
   LifecycleStatus,
   {
-    label: string;
-    confirmText: string;
-    successText: string;
+    labelKey: "completed" | "noShow";
+    confirmKey: "completedConfirm" | "noShowConfirm";
+    successKey: "completedSuccess" | "noShowSuccess";
   }
 > = {
   completed: {
-    label: "Tamamlandı",
-    confirmText: "Bu randevuyu tamamlandı olarak işaretlemek istediğinize emin misiniz?",
-    successText: "Randevu tamamlandı olarak işaretlendi.",
+    labelKey: "completed",
+    confirmKey: "completedConfirm",
+    successKey: "completedSuccess",
   },
   no_show: {
-    label: "Gelmedi",
-    confirmText: "Bu müşteriyi gelmedi olarak işaretlemek istediğinize emin misiniz?",
-    successText: "Randevu gelmedi olarak işaretlendi.",
+    labelKey: "noShow",
+    confirmKey: "noShowConfirm",
+    successKey: "noShowSuccess",
   },
 };
 
 export function AppointmentLifecycleActions({
   appointmentId,
+  messages,
 }: AppointmentLifecycleActionsProps) {
   const router = useRouter();
   const [selectedStatus, setSelectedStatus] = useState<LifecycleStatus | null>(null);
@@ -60,16 +63,16 @@ export function AppointmentLifecycleActions({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, "Randevu durumu güncellenemedi."),
+          await readApiErrorMessage(response, messages.failed),
         );
       }
 
-      setMessage(ACTIONS[selectedStatus].successText);
+      setMessage(messages[ACTIONS[selectedStatus].successKey]);
       setSelectedStatus(null);
       router.refresh();
     } catch (error) {
       setError(
-        getClientErrorMessage(error, "Randevu durumu güncellenemedi."),
+        getClientErrorMessage(error, messages.failed),
       );
     } finally {
       setLoading(false);
@@ -91,7 +94,7 @@ export function AppointmentLifecycleActions({
             disabled={loading}
             className="rounded-md border px-3 py-2 text-sm disabled:opacity-50"
           >
-            {ACTIONS[status].label}
+            {messages[ACTIONS[status].labelKey]}
           </button>
         ))}
       </div>
@@ -102,9 +105,9 @@ export function AppointmentLifecycleActions({
       {selectedStatus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="max-h-[calc(100dvh_-_2rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] w-full max-w-sm overflow-y-auto rounded-3xl border border-border bg-card p-5 shadow-2xl">
-            <h3 className="text-lg font-semibold">Randevu durumu</h3>
+            <h3 className="text-lg font-semibold">{messages.title}</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {ACTIONS[selectedStatus].confirmText}
+              {messages[ACTIONS[selectedStatus].confirmKey]}
             </p>
 
             {error && (
@@ -120,7 +123,7 @@ export function AppointmentLifecycleActions({
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-2xl border border-border px-4 py-3 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Vazgeç
+                {messages.dismiss}
               </button>
               <button
                 type="button"
@@ -128,7 +131,7 @@ export function AppointmentLifecycleActions({
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? "Güncelleniyor..." : ACTIONS[selectedStatus].label}
+                {loading ? messages.updating : messages[ACTIONS[selectedStatus].labelKey]}
               </button>
             </div>
           </div>

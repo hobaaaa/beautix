@@ -5,6 +5,7 @@ import { join } from "node:path";
 const DEMO_MARKER = "ARTEXO_DEMO_DATA_V1";
 const DEMO_PREFIX = "[DEMO]";
 const ISTANBUL_OFFSET = "+03:00";
+const demoLocale = process.env.DEMO_LOCALE === "en" ? "en" : "tr";
 
 const isDryRun = process.argv.includes("--dry-run");
 
@@ -59,6 +60,10 @@ function assertConfig() {
 
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requiredEnv.DEMO_ORG_ID)) {
     fail("DEMO_ORG_ID gecerli bir UUID olmalidir.");
+  }
+
+  if (!["tr", "en"].includes(demoLocale)) {
+    fail("DEMO_LOCALE tr veya en olmalidir.");
   }
 }
 
@@ -151,16 +156,28 @@ async function ensureWorkingHours(supabase, orgId) {
   return rows;
 }
 
-const serviceDefinitions = [
-  ["Cilt Bakimi", 60, true],
-  ["Lazer Epilasyon", 60, true],
-  ["Fizyoterapi Seansi", 45, true],
-  ["Diyetisyen Gorumesi", 30, true],
-  ["Masaj Terapisi", 60, true],
-  ["Dis Beyazlatma On Degerlendirme", 30, true],
-  ["Psikolog Gorusmesi", 50, true],
-  ["Pasif Demo Hizmet", 30, false],
-];
+const serviceDefinitions =
+  demoLocale === "en"
+    ? [
+        ["Skin Care", 60, true],
+        ["Laser Hair Removal", 60, true],
+        ["Physiotherapy Session", 45, true],
+        ["Dietitian Consultation", 30, true],
+        ["Massage Therapy", 60, true],
+        ["Dental Whitening Assessment", 30, true],
+        ["Psychologist Session", 50, true],
+        ["Inactive Demo Service", 30, false],
+      ]
+    : [
+        ["Cilt Bakimi", 60, true],
+        ["Lazer Epilasyon", 60, true],
+        ["Fizyoterapi Seansi", 45, true],
+        ["Diyetisyen Gorusmesi", 30, true],
+        ["Masaj Terapisi", 60, true],
+        ["Dis Beyazlatma On Degerlendirme", 30, true],
+        ["Psikolog Gorusmesi", 50, true],
+        ["Pasif Demo Hizmet", 30, false],
+      ];
 
 async function ensureServices(supabase, orgId) {
   const result = new Map();
@@ -211,14 +228,24 @@ async function ensureServices(supabase, orgId) {
   return result;
 }
 
-const staffDefinitions = [
-  ["Ayse Kaya", true, ["Cilt Bakimi", "Lazer Epilasyon", "Masaj Terapisi"]],
-  ["Mehmet Demir", true, ["Fizyoterapi Seansi", "Masaj Terapisi"]],
-  ["Elif Yilmaz", true, ["Diyetisyen Gorumesi", "Psikolog Gorusmesi"]],
-  ["Can Aydin", true, ["Dis Beyazlatma On Degerlendirme", "Cilt Bakimi"]],
-  ["Zeynep Arslan", true, ["Lazer Epilasyon", "Cilt Bakimi"]],
-  ["Pasif Personel", false, ["Pasif Demo Hizmet"]],
-];
+const staffDefinitions =
+  demoLocale === "en"
+    ? [
+        ["Emma Stone", true, ["Skin Care", "Laser Hair Removal", "Massage Therapy"]],
+        ["Noah Carter", true, ["Physiotherapy Session", "Massage Therapy"]],
+        ["Olivia Brooks", true, ["Dietitian Consultation", "Psychologist Session"]],
+        ["Liam Parker", true, ["Dental Whitening Assessment", "Skin Care"]],
+        ["Sophia Reed", true, ["Laser Hair Removal", "Skin Care"]],
+        ["Inactive Staff", false, ["Inactive Demo Service"]],
+      ]
+    : [
+        ["Ayse Kaya", true, ["Cilt Bakimi", "Lazer Epilasyon", "Masaj Terapisi"]],
+        ["Mehmet Demir", true, ["Fizyoterapi Seansi", "Masaj Terapisi"]],
+        ["Elif Yilmaz", true, ["Diyetisyen Gorusmesi", "Psikolog Gorusmesi"]],
+        ["Can Aydin", true, ["Dis Beyazlatma On Degerlendirme", "Cilt Bakimi"]],
+        ["Zeynep Arslan", true, ["Lazer Epilasyon", "Cilt Bakimi"]],
+        ["Pasif Personel", false, ["Pasif Demo Hizmet"]],
+      ];
 
 async function ensureStaffAndMappings(supabase, orgId, servicesByLabel) {
   const staffByLabel = new Map();
@@ -292,51 +319,99 @@ async function ensureStaffAndMappings(supabase, orgId, servicesByLabel) {
   return staffByLabel;
 }
 
-const clientFirstNames = [
-  "Deniz",
-  "Merve",
-  "Selin",
-  "Burak",
-  "Ece",
-  "Ali",
-  "Derya",
-  "Emre",
-  "Irem",
-  "Kerem",
-  "Nil",
-  "Ozan",
-  "Pelin",
-  "Seda",
-  "Tolga",
-  "Yagmur",
-  "Bora",
-  "Ceren",
-  "Gizem",
-  "Murat",
-];
+const clientFirstNames =
+  demoLocale === "en"
+    ? [
+        "Ava",
+        "Mia",
+        "Ella",
+        "Jack",
+        "Lily",
+        "Leo",
+        "Grace",
+        "Henry",
+        "Ivy",
+        "Oliver",
+        "Nora",
+        "Lucas",
+        "Ruby",
+        "Chloe",
+        "Ethan",
+        "Zoe",
+        "Oscar",
+        "Clara",
+        "Hazel",
+        "Mason",
+      ]
+    : [
+        "Deniz",
+        "Merve",
+        "Selin",
+        "Burak",
+        "Ece",
+        "Ali",
+        "Derya",
+        "Emre",
+        "Irem",
+        "Kerem",
+        "Nil",
+        "Ozan",
+        "Pelin",
+        "Seda",
+        "Tolga",
+        "Yagmur",
+        "Bora",
+        "Ceren",
+        "Gizem",
+        "Murat",
+      ];
 
-const clientLastNames = [
-  "Yildiz",
-  "Acar",
-  "Koc",
-  "Sahin",
-  "Polat",
-  "Eren",
-  "Kurt",
-  "Tas",
-  "Ozer",
-  "Aslan",
-  "Celik",
-  "Kaplan",
-  "Gunes",
-  "Bulut",
-  "Aksoy",
-  "Turan",
-  "Arikan",
-  "Dogan",
-  "Erdem",
-  "Kilic",
-];
+const clientLastNames =
+  demoLocale === "en"
+    ? [
+        "Smith",
+        "Johnson",
+        "Brown",
+        "Taylor",
+        "Wilson",
+        "Davis",
+        "Miller",
+        "Moore",
+        "Anderson",
+        "Thomas",
+        "Jackson",
+        "White",
+        "Harris",
+        "Martin",
+        "Thompson",
+        "Garcia",
+        "Clark",
+        "Lewis",
+        "Young",
+        "Walker",
+      ]
+    : [
+        "Yildiz",
+        "Acar",
+        "Koc",
+        "Sahin",
+        "Polat",
+        "Eren",
+        "Kurt",
+        "Tas",
+        "Ozer",
+        "Aslan",
+        "Celik",
+        "Kaplan",
+        "Gunes",
+        "Bulut",
+        "Aksoy",
+        "Turan",
+        "Arikan",
+        "Dogan",
+        "Erdem",
+        "Kilic",
+      ];
 
 async function ensureClients(supabase, orgId) {
   const clients = [];
@@ -565,6 +640,7 @@ async function main() {
   const orgId = requiredEnv.DEMO_ORG_ID;
 
   console.log(`[demo-seed] mode=${isDryRun ? "dry-run" : "write"}`);
+  console.log(`[demo-seed] locale=${demoLocale}`);
   await validateOrganization(supabase, orgId);
   await ensureWorkingHours(supabase, orgId);
   const servicesByLabel = await ensureServices(supabase, orgId);

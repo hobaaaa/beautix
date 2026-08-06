@@ -6,6 +6,7 @@ import {
 } from "@/lib/api/client-response";
 import { useEffect, useMemo, useState } from "react";
 import type { AvailableSlot } from "@/lib/slots/availability-engine";
+import type { AdminMessages } from "@/lib/i18n/admin";
 import {
   AppointmentListItem,
   Client,
@@ -69,6 +70,7 @@ export function AppointmentCreateDialog({
   onSuccess,
   services,
   staffMembers,
+  messages,
 }: {
   appointment: AppointmentListItem | null;
   clients: Client[];
@@ -78,6 +80,7 @@ export function AppointmentCreateDialog({
   onSuccess: (mode: "create" | "edit") => void;
   services: Service[];
   staffMembers: StaffListItem[];
+  messages: AdminMessages["appointments"];
 }) {
   const mode = appointment ? "edit" : "create";
   const [values, setValues] = useState<AppointmentFormValues>(
@@ -161,7 +164,7 @@ export function AppointmentCreateDialog({
         );
         if (!response.ok) {
           throw new Error(
-            await readApiErrorMessage(response, "Müsait saatler yüklenemedi."),
+            await readApiErrorMessage(response, messages.loadSlotsFailed),
           );
         }
 
@@ -190,7 +193,7 @@ export function AppointmentCreateDialog({
         setAvailableSlots([]);
         setValues((current) => ({ ...current, selected_slot_start: "" }));
         setSlotError(
-          getClientErrorMessage(slotLoadError, "Müsait saatler yüklenemedi."),
+          getClientErrorMessage(slotLoadError, messages.loadSlotsFailed),
         );
       } finally {
         if (!isCancelled) {
@@ -207,6 +210,7 @@ export function AppointmentCreateDialog({
   }, [
     appointment?.id,
     isOpen,
+    messages.loadSlotsFailed,
     values.appointment_type_id,
     values.date,
     values.staff_id,
@@ -237,27 +241,27 @@ export function AppointmentCreateDialog({
 
   async function handleSubmit() {
     if (!values.client_id) {
-      setError("Müşteri seçimi zorunludur.");
+      setError(messages.clientRequired);
       return;
     }
 
     if (!values.appointment_type_id) {
-      setError("Hizmet seçimi zorunludur.");
+      setError(messages.serviceRequired);
       return;
     }
 
     if (!values.staff_id) {
-      setError("Personel seçimi zorunludur.");
+      setError(messages.staffRequired);
       return;
     }
 
     if (!values.date) {
-      setError("Tarih zorunludur.");
+      setError(messages.dateRequired);
       return;
     }
 
     if (!values.selected_slot_start) {
-      setError("Müsait bir saat seçmeniz zorunludur.");
+      setError(messages.slotRequired);
       return;
     }
 
@@ -289,8 +293,8 @@ export function AppointmentCreateDialog({
           await readApiErrorMessage(
             response,
             mode === "edit"
-              ? "Randevu güncellenemedi."
-              : "Randevu oluşturulamadı.",
+              ? messages.updateFailed
+              : messages.createFailed,
           ),
         );
       }
@@ -300,7 +304,7 @@ export function AppointmentCreateDialog({
       setError(
         getClientErrorMessage(
           submitError,
-          mode === "edit" ? "Randevu güncellenemedi." : "Randevu oluşturulamadı.",
+          mode === "edit" ? messages.updateFailed : messages.createFailed,
         ),
       );
     } finally {
@@ -318,12 +322,12 @@ export function AppointmentCreateDialog({
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold">
-              {mode === "edit" ? "Randevuyu Düzenle" : "Randevu Ekle"}
+              {mode === "edit" ? messages.editTitle : messages.createTitle}
             </h2>
             <p className="text-sm text-muted-foreground">
               {mode === "edit"
-                ? "Seçili randevu bilgilerini güncelleyin."
-                : "Seçili tarih için manuel olarak randevu oluşturun."}
+                ? messages.editDescription
+                : messages.createDescription}
             </p>
           </div>
           <button
@@ -332,7 +336,7 @@ export function AppointmentCreateDialog({
             disabled={loading}
             className="min-h-11 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground disabled:opacity-50"
           >
-            Kapat
+            {messages.close}
           </button>
         </div>
 
@@ -348,9 +352,10 @@ export function AppointmentCreateDialog({
           slotError={slotError}
           staffMembers={staffMembers}
           submitLabel={
-            mode === "edit" ? "Randevuyu Güncelle" : "Randevu Oluştur"
+            mode === "edit" ? messages.updateSubmit : messages.createSubmit
           }
           values={values}
+          messages={messages}
         />
       </div>
     </div>

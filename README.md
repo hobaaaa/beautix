@@ -1,121 +1,139 @@
-# Artexo
+﻿# Artexo
 
-Artexo, randevu ile çalışan işletmeler için geliştirilen çok kiracılı bir yönetim ve müşteri randevu platformudur. Admin paneli işletme operasyonlarını yönetir; müşteri paneli hizmet seçimi, müsait saat görüntüleme, randevu oluşturma ve randevu takibi akışlarını sağlar.
-
-Hedef kullanım alanları: kuaför, berber, güzellik salonu, diş hekimi, poliklinik, psikolog, fizyoterapist, diyetisyen, veteriner ve randevu ile çalışan diğer işletmeler.
+Artexo, randevu ile çalışan işletmeler için geliştirilmiş çok kiracılı bir appointment management uygulamasıdır. Kuaför, berber, güzellik salonu, diş hekimi, poliklinik, psikolog, fizyoterapist, diyetisyen, veteriner ve benzeri işletmeler için admin paneli, müşteri portalı ve public booking akışı sağlar.
 
 ## Proje Hakkında
 
-Artexo'nun temel modeli organization bazlıdır. Her müşteri, hizmet, personel, çalışma saati ve randevu bir organization altında izole edilir. Randevu mimarisi staff bazlıdır; her appointment mutlaka bir personele bağlıdır.
+Uygulama tek kod tabanı üzerinden birden fazla işletmeyi `organization` bazında izole eder. Admin tarafı işletme operasyonlarını yönetir; customer tarafı mevcut müşterilerin kendi randevularını görüntülemesi ve yönetmesi içindir; public booking ise giriş gerektirmeden yeni randevu alınmasını sağlar.
+
+UI iki dil destekleyecek şekilde ilerletilmektedir:
+
+- Varsayılan dil: `tr`
+- Desteklenen diller: `tr`, `en`
+- Locale route örnekleri: `/tr`, `/en`, `/en/book/<slug>`
 
 ## Temel Özellikler
 
 - Multi-tenant organization izolasyonu
 - Admin auth ve ayrı customer auth
-- Customer public signup kapalı; customer hesabı admin-created client provisioning ile aktive edilir
-- Client management
-- Staff management ve staff-service mapping
-- Service management
-- Working hours yönetimi
-- Slot engine ve availability engine
-- Customer booking akışı
-- Public booking URL, aktif hizmet, tarih, personel, slot seçimi, guest bilgi formu ve appointment create altyapısı: `/book/[slug]`
-- Appointment cancellation
+- Customer public signup kapalı
+- Admin-created client provisioning
+- Client, staff, service ve working hours yönetimi
+- Slot engine ve availability hesaplama
+- Customer booking ve appointment cancellation
 - Appointment lifecycle: `confirmed`, `cancelled`, `completed`, `no_show`
-- PWA kurulum deneyimi
-- Email notification sistemi
-- 24 saat öncesi appointment reminder
-- Business booking notification
-- Retry ve notification logs
+- Public booking: hizmet, tarih, personel, slot, guest form, appointment create
+- Public booking rate-limit, honeypot, minimum form süresi ve Turnstile doğrulaması
+- PWA manifest, install yönlendirmesi ve mobil polish
+- Resend email notification sistemi
+- Booking confirmation, appointment reminder ve business booking notification
+- Retry stratejisi ve notification logs
+- Demo account ve demo data scriptleri
 
 ## Tech Stack
 
 - Next.js 16 App Router
-- React 19
 - TypeScript
-- TailwindCSS 4
-- Shadcn UI yaklaşımıyla yerel UI bileşenleri
-- Supabase Auth, PostgreSQL ve RLS
+- TailwindCSS
+- Shadcn UI
+- Supabase Auth ve PostgreSQL
+- PostgreSQL RLS
 - Resend
 - Supabase Cron
-- PWA manifest ve service worker
+- PWA
 
 ## Mimari Kurallar
 
 - READ işlemleri: `queries.ts` + Server Component
 - WRITE işlemleri: API Routes
-- Server Actions kullanılmaz
-- Kod, route, type ve database isimleri İngilizce kalır
-- Kullanıcıya görünen UI metinleri Türkçedir
-- RLS aktiftir
-- Service role yalnızca server-side kodda kullanılabilir
-- Admin Auth ve Customer Auth ayrı akışlardır
+- Server Actions kullanılmıyor
+- Kod isimleri İngilizce
+- Kullanıcıya görünen UI metinleri Türkçe/İngilizce locale yapısından gelir
+- RLS aktif kalmalı
+- Service role yalnızca server-side kullanılabilir
+- Service role, secret env veya credential browser bundle’a gitmemeli
+- Admin auth ve customer auth ayrımı korunmalı
+- Customer kendi hesabını public signup ile oluşturamaz
 - Multi-tenant izolasyonu temel güvenlik kuralıdır
 
 ## Proje Yapısı
 
 ```txt
-app/admin                 Admin panel sayfaları
-app/customer              Customer panel sayfaları
-app/api                   Admin, customer ve cron API route'ları
-components                Ortak UI, brand ve PWA bileşenleri
-lib                       Supabase, slots, notifications ve yardımcı katmanlar
-supabase/migrations       Manuel uygulanan DB migration dosyaları
-scripts                   Manuel çalıştırılan yardımcı scriptler
+app/admin                  Admin panel route ve componentleri
+app/customer               Customer portal route ve componentleri
+app/book                   Public booking route'ları
+app/[locale]               Locale-aware route girişleri
+app/api                    API route write/cron endpointleri
+components                 Ortak UI ve PWA componentleri
+lib                        Supabase, i18n, notification, slot ve helper kodları
+supabase/migrations        Production'a manuel uygulanacak SQL migrationlar
+scripts                    Demo account/data ve test yardımcı scriptleri
+docs                       Deploy, güvenlik, performans ve entegrasyon dokümanları
 ```
 
 ## Kurulum
 
 ```bash
 git clone <repo-url>
-cd <repo-klasoru>
+cd beautix-app
 npm install
 ```
 
-Environment dosyasını oluştur:
+`.env.local` dosyasını oluştur:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Supabase migrationlarını uygula, ardından geliştirme sunucusunu başlat:
+Migrationları Supabase tarafında uygula. Sonra development server:
 
 ```bash
 npm run dev
 ```
 
-Lokal adres:
+Windows PowerShell için:
 
-```txt
-http://localhost:3000
+```powershell
+npm.cmd run dev
 ```
 
 ## Environment Variables
 
-`.env.example` yalnızca placeholder değerler içerir. Gerçek secret veya credential commit edilmemelidir.
+Public env değerleri browser tarafına gidebilir:
 
-```env
+```txt
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+```
+
+Secret env değerleri sadece server ortamında kullanılmalıdır:
+
+```txt
 SUPABASE_SECRET_KEY=
 RESEND_API_KEY=
 CRON_SECRET=
 BOOKING_RATE_LIMIT_SECRET=
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-Ayrım:
+Demo script env değerleri:
 
-- `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` public client kullanımı içindir.
-- `SUPABASE_SECRET_KEY`, `RESEND_API_KEY` ve `CRON_SECRET` server-side kalmalıdır.
-- `BOOKING_RATE_LIMIT_SECRET` public booking HMAC hashleri için server-side kalmalıdır.
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` tarayıcıda kullanılan public Turnstile site key değeridir.
-- `TURNSTILE_SECRET_KEY` yalnızca server-side Siteverify doğrulaması için kullanılır.
-- `NEXT_PUBLIC_SITE_URL`, invite/reset linkleri için public site URL değeridir.
-- `VERCEL_URL` ve `NODE_ENV` platform tarafından sağlanabilir.
-- `.env.local` commit edilmez.
+```txt
+ALLOW_DEMO_ACCOUNT_PROVISION=
+ALLOW_DEMO_SEED=
+DEMO_ORG_ID=
+DEMO_ORG_NAME=
+DEMO_PUBLIC_SLUG=
+DEMO_LOCALE=tr
+DEMO_ADMIN_EMAIL=
+DEMO_ADMIN_PASSWORD=
+DEMO_CUSTOMER_EMAIL=
+DEMO_CUSTOMER_PASSWORD=
+```
+
+Gerçek secret, production URL, API key veya müşteri bilgisi dokümana yazılmamalıdır.
 
 ## Supabase Kurulumu ve Migrationlar
 
@@ -125,14 +143,14 @@ Migration dosyaları:
 supabase/migrations
 ```
 
-Bu projede production migrationları Supabase SQL Editor üzerinden dependency sırasına göre manuel uygulanmaktadır. Sıra ve dependency detayları için:
+Production migrationları Supabase SQL Editor üzerinden dependency sırasına göre manuel uygulanır. Detaylı sıra ve production checklist için:
 
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 
 Notlar:
 
 - RLS production tablolarında aktif olmalıdır.
-- Notification sistemi için Supabase Cron tarafında `pg_cron` ve HTTP request entegrasyonu gerekir.
+- Notification sistemi için Supabase Cron ve HTTP request entegrasyonu gerekir.
 - Production reset veya destructive seed önerilmez.
 
 ## Development
@@ -170,14 +188,14 @@ Akış:
 
 ```txt
 appointment create
-→ notification_jobs
-→ Supabase Cron
-→ POST /api/cron/notifications
-→ Resend
-→ notification_logs
+-> notification_jobs
+-> Supabase Cron
+-> POST /api/cron/notifications
+-> Resend
+-> notification_logs
 ```
 
-Cron:
+Cron schedule:
 
 ```txt
 */5 * * * *
@@ -192,32 +210,33 @@ Desteklenen notification type değerleri:
 Kurallar:
 
 - Reminder randevudan 24 saat önce planlanır.
-- Maksimum toplam deneme sayısı 2'dir.
+- Maksimum toplam deneme sayısı 2’dir.
 - `CRON_SECRET`, Vercel env ve Supabase Cron Authorization header değerinde aynı olmalıdır.
-- `RESEND_API_KEY` Supabase'e değil, yalnızca Vercel/server env'e eklenir.
+- `RESEND_API_KEY` Supabase’e değil, yalnızca Vercel/server env’e eklenir.
+- Email dili job locale değerinden veya organization default locale değerinden belirlenir.
 
-## Public Booking URL Altyapısı
+## Public Booking
 
-İşletmeler için global unique public slug, aktif hizmet seçimi, tarih seçimi, personel seçimi, uygun slot seçimi, guest bilgi formu ve public appointment create altyapısı hazırlanmıştır. Public URL formatı:
+Public URL formatı:
 
 ```txt
 /book/[slug]
+/en/book/[slug]
 ```
 
-Bu route şu anda işletme adını, online randevuya açık aktif hizmetleri, tarih/personel seçimini, uygun slotları, confirm ekranında guest bilgi formunu ve public appointment create akışını destekler. Başarılı booking sonrasında confirmation, business notification ve şart uygunsa reminder job oluşturulur.
+Public booking login gerektirmez. Aktif hizmetleri, tarih/personel seçimini, uygun slotları, guest bilgi formunu ve appointment create akışını destekler. Başarılı booking sonrasında confirmation, business notification ve şart uygunsa reminder job oluşturulur.
 
-Public booking MVP spam koruması:
+Spam koruması:
 
 - IP ve contact değerleri açık saklanmaz; server-side HMAC hash ile tutulur.
-- Aynı IP için 10 dakikada 5 deneme, aynı IP + organization için 1 dakikada 2 deneme limiti vardır.
+- Aynı IP için 10 dakikada 5 deneme limiti vardır.
+- Aynı IP + organization için 1 dakikada 2 deneme limiti vardır.
 - Aynı normalize e-posta veya telefon için 30 dakikada en fazla 3 başarılı public booking oluşturulabilir.
 - Guest formda honeypot ve minimum 2 saniyelik form süresi kontrolü vardır.
 - Public booking submit aşamasında Cloudflare Turnstile server-side doğrulaması kullanılır.
 - İşletme girişi, müşteri girişi ve şifremi unuttum akışları Turnstile ile korunur.
 
-Public booking login gerektirmez ve yeni müşteri kazanımı için kullanılır. Customer portal ise mevcut müşterilerin giriş yaparak randevularını takip etmesi içindir.
-
-Web sitesi entegrasyonu ve manuel test dokümanları:
+Web sitesi entegrasyonu ve manuel test:
 
 - [docs/WEBSITE_INTEGRATION_GUIDE.md](./docs/WEBSITE_INTEGRATION_GUIDE.md)
 - [docs/PUBLIC_BOOKING_E2E_CHECKLIST.md](./docs/PUBLIC_BOOKING_E2E_CHECKLIST.md)
@@ -234,7 +253,14 @@ Dry-run örneği:
 ```powershell
 $env:ALLOW_DEMO_SEED="true"
 $env:DEMO_ORG_ID="<organization-uuid>"
-npm run seed:demo -- --dry-run
+$env:DEMO_LOCALE="tr"
+npm.cmd run seed:demo -- --dry-run
+```
+
+İngilizce demo verisi için:
+
+```powershell
+$env:DEMO_LOCALE="en"
 ```
 
 Gerçek production organization üzerinde çalıştırılmamalıdır. Script auth user oluşturmaz, invite/reset email göndermez ve notification job üretmez.
@@ -243,14 +269,15 @@ Gerçek production organization üzerinde çalıştırılmamalıdır. Script aut
 
 Kısa özet:
 
-- RLS aktif kalır
-- Her tenant verisi `org_id` üzerinden izole edilir
-- API route'larda resource ownership server-side doğrulanır
-- Customer işlemleri dar kapsamlı RPC'lerle sınırlandırılır
-- Service role browser bundle'a gitmez
-- Secret env değerleri loglanmaz veya dokümana yazılmaz
+- RLS aktif kalır.
+- Her tenant verisi `org_id` üzerinden izole edilir.
+- API route’larda resource ownership server-side doğrulanır.
+- Customer işlemleri dar kapsamlı RPC’lerle sınırlandırılır.
+- Public booking rate-limit ve Turnstile ile korunur.
+- Service role browser bundle’a gitmez.
+- Secret env değerleri loglanmaz veya dokümana yazılmaz.
 
-Security review çıktısı önceki sprintte hazırlanmıştır. Doküman arşivlenmişse ilgili kayıt proje arşivinden geri alınmalıdır.
+Security review çıktısı ayrı arşivlenmişse proje arşivinden kontrol edilmelidir.
 
 ## Production Deploy
 
@@ -258,12 +285,14 @@ Production deploy öncesi kontrol başlıkları:
 
 - Vercel env değerleri
 - Supabase migrations
-- Supabase Auth Site URL / Redirect URLs
-- Supabase Cron job
-- Resend DNS: SPF, DKIM, DMARC
-- Domain, manifest, service worker ve PWA testleri
+- Supabase Auth URL config
+- Supabase Cron
+- Resend DNS ve sender doğrulaması
+- Public booking smoke test
+- PWA manifest ve install testi
+- Domain ve mobile test
 
-Ayrıntılı checklist:
+Ayrıntı için:
 
 - [docs/PRODUCTION_DEPLOY_CHECKLIST.md](./docs/PRODUCTION_DEPLOY_CHECKLIST.md)
 
@@ -277,16 +306,15 @@ Ayrıntılı checklist:
 
 ## Bilinen Sınırlar / V2 Roadmap
 
-Henüz kapsamda olmayan başlıklar:
+Henüz aktif özellik gibi sunulmaması gereken V2 başlıkları:
 
+- Email doğrulama iyileştirmeleri
+- İşletmeye özel tema/renk/logo özelleştirme
 - Web Push / PWA notifications
-- Email verification kontrollerinin netleştirilmesi
-- Tenant branding: işletmeye özel logo, ana renk ve public booking tema ayarları
-- Google Calendar ve Outlook Calendar entegrasyonu
+- Google/Outlook Calendar integration
 - Online payment / deposit
-- Gelişmiş analytics ve reporting
-- Multi-location organization yapısı
-- Gelişmiş automation kuralları
+- Analytics/reporting
+- Multi-location
+- Automation
 - AI assistant
-
-Bu başlıklar mevcut özellik gibi değerlendirilmemelidir.
+- Widget, iframe embed ve custom domain booking

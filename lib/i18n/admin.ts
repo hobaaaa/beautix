@@ -201,6 +201,82 @@ export type AdminMessages = {
     activeSection: string;
     inactiveSection: string;
   };
+  appointments: {
+    title: string;
+    dayDescription: string;
+    allDescription: string;
+    add: string;
+    today: string;
+    tomorrow: string;
+    allAppointments: string;
+    allServices: string;
+    allStaff: string;
+    emptyDay: string;
+    emptyAll: string;
+    loadMore: string;
+    createSuccess: string;
+    updateSuccess: string;
+    cancelFailed: string;
+    cancelSuccess: string;
+    editTitle: string;
+    createTitle: string;
+    editDescription: string;
+    createDescription: string;
+    close: string;
+    updateSubmit: string;
+    createSubmit: string;
+    clientRequired: string;
+    serviceRequired: string;
+    staffRequired: string;
+    dateRequired: string;
+    slotRequired: string;
+    loadSlotsFailed: string;
+    updateFailed: string;
+    createFailed: string;
+    client: string;
+    selectClient: string;
+    service: string;
+    selectService: string;
+    staff: string;
+    selectStaff: string;
+    autoSelectedStaff: (name: string) => string;
+    noEligibleStaff: string;
+    date: string;
+    availableSlots: string;
+    selectRequiredForSlots: string;
+    loadingSlots: string;
+    noSlots: string;
+    notes: string;
+    optionalNotes: string;
+    saving: string;
+    time: string;
+    status: string;
+    active: string;
+    inactive: string;
+    durationText: (minutes: number) => string;
+    edit: string;
+    cancelling: string;
+    cancel: string;
+    noNotes: string;
+    statusLabels: {
+      confirmed: string;
+      completed: string;
+      cancelled: string;
+      no_show: string;
+    };
+    lifecycle: {
+      title: string;
+      completed: string;
+      noShow: string;
+      completedConfirm: string;
+      noShowConfirm: string;
+      completedSuccess: string;
+      noShowSuccess: string;
+      failed: string;
+      dismiss: string;
+      updating: string;
+    };
+  };
 };
 
 const tr: AdminMessages = {
@@ -430,6 +506,83 @@ const tr: AdminMessages = {
     activeSection: "Aktif Müşteriler",
     inactiveSection: "Pasif Müşteriler",
   },
+  appointments: {
+    title: "Randevular",
+    dayDescription: "Seçilen tarihe ait günlük randevu listesi.",
+    allDescription: "Son 3 aydaki randevuları görüntüleyin.",
+    add: "Randevu Ekle",
+    today: "Bugün",
+    tomorrow: "Yarın",
+    allAppointments: "Tüm Randevular",
+    allServices: "Tüm hizmetler",
+    allStaff: "Tüm personeller",
+    emptyDay: "Seçilen tarih için randevu bulunmuyor.",
+    emptyAll: "Son 3 ay için randevu bulunmuyor.",
+    loadMore: "Daha fazla göster",
+    createSuccess: "Randevu oluşturuldu.",
+    updateSuccess: "Randevu güncellendi.",
+    cancelFailed: "Randevu iptal edilemedi.",
+    cancelSuccess: "Randevu iptal edildi.",
+    editTitle: "Randevuyu Düzenle",
+    createTitle: "Randevu Ekle",
+    editDescription: "Seçili randevu bilgilerini güncelleyin.",
+    createDescription: "Seçili tarih için manuel olarak randevu oluşturun.",
+    close: "Kapat",
+    updateSubmit: "Randevuyu Güncelle",
+    createSubmit: "Randevu Oluştur",
+    clientRequired: "Müşteri seçimi zorunludur.",
+    serviceRequired: "Hizmet seçimi zorunludur.",
+    staffRequired: "Personel seçimi zorunludur.",
+    dateRequired: "Tarih zorunludur.",
+    slotRequired: "Müsait bir saat seçmeniz zorunludur.",
+    loadSlotsFailed: "Müsait saatler yüklenemedi.",
+    updateFailed: "Randevu güncellenemedi.",
+    createFailed: "Randevu oluşturulamadı.",
+    client: "Müşteri",
+    selectClient: "Müşteri seçin",
+    service: "Hizmet",
+    selectService: "Hizmet seçin",
+    staff: "Personel",
+    selectStaff: "Personel seçin",
+    autoSelectedStaff: (name) => `${name} otomatik seçildi.`,
+    noEligibleStaff: "Bu hizmet için uygun personel bulunamadı.",
+    date: "Tarih",
+    availableSlots: "Müsait Saatler",
+    selectRequiredForSlots: "Saatleri görmek için tarih, hizmet ve personel seçin.",
+    loadingSlots: "Müsait saatler yükleniyor...",
+    noSlots: "Seçilen tarih için uygun saat bulunamadı.",
+    notes: "Notlar",
+    optionalNotes: "İsteğe bağlı notlar",
+    saving: "Kaydediliyor...",
+    time: "Saat",
+    status: "Durum",
+    active: "Aktif",
+    inactive: "Pasif",
+    durationText: (minutes) => `${minutes} dk`,
+    edit: "Düzenle",
+    cancelling: "İptal ediliyor...",
+    cancel: "İptal et",
+    noNotes: "-",
+    statusLabels: {
+      confirmed: "Onaylandı",
+      completed: "Tamamlandı",
+      cancelled: "İptal Edildi",
+      no_show: "Gelmedi",
+    },
+    lifecycle: {
+      title: "Randevu durumu",
+      completed: "Tamamlandı",
+      noShow: "Gelmedi",
+      completedConfirm:
+        "Bu randevuyu tamamlandı olarak işaretlemek istediğinize emin misiniz?",
+      noShowConfirm: "Bu müşteriyi gelmedi olarak işaretlemek istediğinize emin misiniz?",
+      completedSuccess: "Randevu tamamlandı olarak işaretlendi.",
+      noShowSuccess: "Randevu gelmedi olarak işaretlendi.",
+      failed: "Randevu durumu güncellenemedi.",
+      dismiss: "Vazgeç",
+      updating: "Güncelleniyor...",
+    },
+  },
 };
 
 const en: AdminMessages = {
@@ -656,6 +809,82 @@ const en: AdminMessages = {
     activate: "Activate",
     activeSection: "Active Clients",
     inactiveSection: "Inactive Clients",
+  },
+  appointments: {
+    title: "Appointments",
+    dayDescription: "Daily appointment list for the selected date.",
+    allDescription: "View appointments from the last 3 months.",
+    add: "Add Appointment",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    allAppointments: "All Appointments",
+    allServices: "All services",
+    allStaff: "All staff",
+    emptyDay: "No appointments found for the selected date.",
+    emptyAll: "No appointments found for the last 3 months.",
+    loadMore: "Show more",
+    createSuccess: "Appointment was created.",
+    updateSuccess: "Appointment was updated.",
+    cancelFailed: "Appointment could not be cancelled.",
+    cancelSuccess: "Appointment was cancelled.",
+    editTitle: "Edit Appointment",
+    createTitle: "Add Appointment",
+    editDescription: "Update the selected appointment details.",
+    createDescription: "Create an appointment manually for the selected date.",
+    close: "Close",
+    updateSubmit: "Update Appointment",
+    createSubmit: "Create Appointment",
+    clientRequired: "Client selection is required.",
+    serviceRequired: "Service selection is required.",
+    staffRequired: "Staff selection is required.",
+    dateRequired: "Date is required.",
+    slotRequired: "You must select an available time.",
+    loadSlotsFailed: "Available times could not be loaded.",
+    updateFailed: "Appointment could not be updated.",
+    createFailed: "Appointment could not be created.",
+    client: "Client",
+    selectClient: "Select client",
+    service: "Service",
+    selectService: "Select service",
+    staff: "Staff",
+    selectStaff: "Select staff",
+    autoSelectedStaff: (name) => `${name} was selected automatically.`,
+    noEligibleStaff: "No eligible staff found for this service.",
+    date: "Date",
+    availableSlots: "Available Times",
+    selectRequiredForSlots: "Select date, service and staff to see available times.",
+    loadingSlots: "Loading available times...",
+    noSlots: "No available time found for the selected date.",
+    notes: "Notes",
+    optionalNotes: "Optional notes",
+    saving: "Saving...",
+    time: "Time",
+    status: "Status",
+    active: "Active",
+    inactive: "Inactive",
+    durationText: (minutes) => `${minutes} min`,
+    edit: "Edit",
+    cancelling: "Cancelling...",
+    cancel: "Cancel",
+    noNotes: "-",
+    statusLabels: {
+      confirmed: "Confirmed",
+      completed: "Completed",
+      cancelled: "Cancelled",
+      no_show: "No-show",
+    },
+    lifecycle: {
+      title: "Appointment status",
+      completed: "Completed",
+      noShow: "No-show",
+      completedConfirm: "Are you sure you want to mark this appointment as completed?",
+      noShowConfirm: "Are you sure you want to mark this client as no-show?",
+      completedSuccess: "Appointment was marked as completed.",
+      noShowSuccess: "Appointment was marked as no-show.",
+      failed: "Appointment status could not be updated.",
+      dismiss: "Cancel",
+      updating: "Updating...",
+    },
   },
 };
 
