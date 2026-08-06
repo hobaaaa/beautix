@@ -48,7 +48,10 @@ export function UserMenu({
   messages,
 }: {
   userId: string;
-  messages?: AdminMessages;
+  messages?: Pick<
+    AdminMessages,
+    "logout" | "loggingOut" | "logoutFailed" | "userMenuOpen"
+  >;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

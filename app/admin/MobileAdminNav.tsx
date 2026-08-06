@@ -24,7 +24,10 @@ import { usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 
-function getNavigationItems(messages: AdminMessages, localePrefix?: Locale) {
+function getNavigationItems(
+  messages: Pick<AdminMessages, "nav">,
+  localePrefix?: Locale,
+) {
   return [
     {
       href: getAdminHref("", localePrefix),
@@ -69,6 +72,11 @@ function getNavigationItems(messages: AdminMessages, localePrefix?: Locale) {
   ] as const;
 }
 
+type MobileAdminNavMessages = Pick<
+  AdminMessages,
+  "brandSuffix" | "menu" | "openMenu" | "closeMenu" | "close" | "version" | "nav"
+>;
+
 function isActivePath(pathname: string, href: string) {
   return href === "/admin" ? pathname === href : pathname.startsWith(href);
 }
@@ -78,7 +86,7 @@ export function MobileAdminNav({
   messages,
 }: {
   localePrefix?: Locale;
-  messages?: AdminMessages;
+  messages?: MobileAdminNavMessages;
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);

@@ -5,15 +5,18 @@ import { ServiceTable } from "./ServiceTable";
 import { CreateTable } from "./CreateTable";
 import { Service } from "../../../types";
 import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 
 export function ServiceClient({
   services,
   messages,
+  locale = defaultLocale,
 }: {
   services: Service[];
   messages?: AdminMessages;
+  locale?: Locale;
 }) {
-  const t = messages ?? getAdminMessages();
+  const t = messages ?? getAdminMessages(locale);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;

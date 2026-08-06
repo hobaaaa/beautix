@@ -5,6 +5,7 @@ import {
   readApiErrorMessage,
 } from "@/lib/api/client-response";
 import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WorkingHour } from "../../../types";
@@ -12,6 +13,7 @@ import { WorkingHour } from "../../../types";
 type WorkingHoursClientProps = {
   hours: WorkingHour[];
   messages?: AdminMessages["hours"];
+  locale?: Locale;
 };
 
 type WorkingDayForm = {
@@ -53,12 +55,14 @@ function normalizeWorkingHours(
 
 export default function WorkingHoursClient({
   hours,
-  messages = getAdminMessages().hours,
+  messages,
+  locale = defaultLocale,
 }: WorkingHoursClientProps) {
+  const labels = messages ?? getAdminMessages(locale).hours;
   const router = useRouter();
   const initialDays = useMemo(
-    () => normalizeWorkingHours(hours, messages),
-    [hours, messages],
+    () => normalizeWorkingHours(hours, labels),
+    [hours, labels],
   );
   const [days, setDays] = useState<WorkingDayForm[]>(initialDays);
   const [loading, setLoading] = useState(false);
@@ -87,7 +91,7 @@ export default function WorkingHoursClient({
       if (!day.start_time || !day.end_time) {
         setMessage({
           type: "error",
-          text: messages.requiredTimes(day.day_name),
+          text: labels.requiredTimes(day.day_name),
         });
         return;
       }
@@ -95,7 +99,7 @@ export default function WorkingHoursClient({
       if (timeToMinutes(day.start_time) >= timeToMinutes(day.end_time)) {
         setMessage({
           type: "error",
-          text: messages.invalidRange(day.day_name),
+          text: labels.invalidRange(day.day_name),
         });
         return;
       }
@@ -123,20 +127,20 @@ export default function WorkingHoursClient({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, messages.saveFailed),
+          await readApiErrorMessage(response, labels.saveFailed),
         );
       }
 
       setMessage({
         type: "success",
-        text: messages.saveSuccess,
+        text: labels.saveSuccess,
       });
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
         text:
-          getClientErrorMessage(error, messages.saveFailed),
+          getClientErrorMessage(error, labels.saveFailed),
       });
     } finally {
       setLoading(false);
@@ -162,7 +166,7 @@ export default function WorkingHoursClient({
             <div className="min-w-36">
               <div className="font-medium">{day.day_name}</div>
               <div className="text-sm text-muted-foreground">
-                {day.is_enabled ? messages.open : messages.closed}
+                {day.is_enabled ? labels.open : labels.closed}
               </div>
             </div>
 
@@ -177,13 +181,13 @@ export default function WorkingHoursClient({
                   }))
                 }
               />
-              {messages.active}
+              {labels.active}
             </label>
 
             <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  {messages.startTime}
+                  {labels.startTime}
                 </label>
                 <input
                   type="time"
@@ -201,7 +205,7 @@ export default function WorkingHoursClient({
 
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">
-                  {messages.endTime}
+                  {labels.endTime}
                 </label>
                 <input
                   type="time"
@@ -227,7 +231,7 @@ export default function WorkingHoursClient({
         disabled={loading}
         className="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50 sm:w-auto"
       >
-        {loading ? messages.saving : messages.save}
+        {loading ? labels.saving : labels.save}
       </button>
     </div>
   );

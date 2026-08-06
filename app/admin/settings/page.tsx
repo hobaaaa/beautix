@@ -11,6 +11,15 @@ export async function AdminSettingsPageContent({
   locale = defaultLocale,
 }: AdminSettingsPageContentProps = {}) {
   const messages = getAdminMessages(locale);
+  const publicSlugMessages = {
+    slugLabel: messages.settings.slugLabel,
+    slugHelp: messages.settings.slugHelp,
+    preview: messages.settings.preview,
+    save: messages.settings.save,
+    saving: messages.settings.saving,
+    updateSuccess: messages.settings.updateSuccess,
+    updateFailed: messages.settings.updateFailed,
+  };
   const settings = await getOrganizationSettings(locale);
 
   return (
@@ -38,7 +47,7 @@ export async function AdminSettingsPageContent({
 
         <PublicSlugSettingsForm
           initialSlug={settings.public_slug}
-          messages={messages.settings}
+          messages={publicSlugMessages}
         />
       </section>
     </div>

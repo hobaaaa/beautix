@@ -17,7 +17,10 @@ import { redirect } from "next/navigation";
 import { MobileAdminNav } from "./MobileAdminNav";
 import { UserMenu } from "./UserMenu";
 
-function navigationItems(messages: AdminMessages, localePrefix?: Locale) {
+function navigationItems(
+  messages: Pick<AdminMessages, "nav">,
+  localePrefix?: Locale,
+) {
   return [
     { href: getAdminHref("", localePrefix), label: messages.nav.dashboard },
     { href: getAdminHref("/services", localePrefix), label: messages.nav.services },
@@ -36,6 +39,16 @@ function navigationItems(messages: AdminMessages, localePrefix?: Locale) {
   ];
 }
 
+type AdminUserMenuMessages = Pick<
+  AdminMessages,
+  "logout" | "loggingOut" | "logoutFailed" | "userMenuOpen"
+>;
+
+type AdminMobileNavMessages = Pick<
+  AdminMessages,
+  "brandSuffix" | "menu" | "openMenu" | "closeMenu" | "close" | "version" | "nav"
+>;
+
 export async function AdminLayoutContent({
   children,
   localePrefix,
@@ -44,6 +57,21 @@ export async function AdminLayoutContent({
   localePrefix?: Locale;
 }) {
   const t = getAdminMessages(localePrefix);
+  const mobileNavMessages: AdminMobileNavMessages = {
+    brandSuffix: t.brandSuffix,
+    menu: t.menu,
+    openMenu: t.openMenu,
+    closeMenu: t.closeMenu,
+    close: t.close,
+    version: t.version,
+    nav: t.nav,
+  };
+  const userMenuMessages: AdminUserMenuMessages = {
+    logout: t.logout,
+    loggingOut: t.loggingOut,
+    logoutFailed: t.logoutFailed,
+    userMenuOpen: t.userMenuOpen,
+  };
   let userEmail = "";
   let userId = "";
 
@@ -68,7 +96,10 @@ export async function AdminLayoutContent({
       <header className="sticky top-[env(safe-area-inset-top)] z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <MobileAdminNav localePrefix={localePrefix} messages={t} />
+            <MobileAdminNav
+              localePrefix={localePrefix}
+              messages={mobileNavMessages}
+            />
             <ArtexoBrand compact suffix={t.brandSuffix} />
             <div className="hidden text-sm text-muted-foreground md:block">
               {t.panel}
@@ -87,7 +118,7 @@ export async function AdminLayoutContent({
             <div className="md:hidden">
               <InstallAppButton compact />
             </div>
-            <UserMenu userId={userId} messages={t} />
+            <UserMenu userId={userId} messages={userMenuMessages} />
           </div>
         </div>
       </header>

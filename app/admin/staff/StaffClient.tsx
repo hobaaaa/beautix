@@ -5,6 +5,7 @@ import {
   readApiErrorMessage,
 } from "@/lib/api/client-response";
 import { getAdminMessages, type AdminMessages } from "@/lib/i18n/admin";
+import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Message, Service, StaffListItem } from "../../../types";
@@ -21,12 +22,15 @@ function createInitialValues(): StaffFormValues {
 export function StaffClient({
   staff,
   services,
-  messages = getAdminMessages().staff,
+  messages,
+  locale = defaultLocale,
 }: {
   staff: StaffListItem[];
   services: Service[];
   messages?: AdminMessages["staff"];
+  locale?: Locale;
 }) {
+  const labels = messages ?? getAdminMessages(locale).staff;
   const router = useRouter();
   const [message, setMessage] = useState<Message>(null);
   const [loading, setLoading] = useState(false);
@@ -54,14 +58,14 @@ export function StaffClient({
     setMessage(null);
 
     if (!values.name.trim()) {
-      setMessage({ type: "error", text: messages.nameRequired });
+      setMessage({ type: "error", text: labels.nameRequired });
       return;
     }
 
     if (values.appointment_type_ids.length === 0) {
       setMessage({
         type: "error",
-        text: messages.serviceRequired,
+        text: labels.serviceRequired,
       });
       return;
     }
@@ -85,19 +89,19 @@ export function StaffClient({
       );
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, messages.saveFailed));
+        throw new Error(await readApiErrorMessage(response, labels.saveFailed));
       }
 
       setMessage({
         type: "success",
-        text: editingStaff ? messages.updateSuccess : messages.createSuccess,
+        text: editingStaff ? labels.updateSuccess : labels.createSuccess,
       });
       resetForm();
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, messages.saveFailed),
+        text: getClientErrorMessage(error, labels.saveFailed),
       });
     } finally {
       setLoading(false);
@@ -123,13 +127,13 @@ export function StaffClient({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, messages.statusUpdateFailed),
+          await readApiErrorMessage(response, labels.statusUpdateFailed),
         );
       }
 
       setMessage({
         type: "success",
-        text: staffMember.is_active ? messages.deactivated : messages.activated,
+        text: staffMember.is_active ? labels.deactivated : labels.activated,
       });
 
       if (editingStaffId === staffMember.id) {
@@ -141,7 +145,7 @@ export function StaffClient({
       setMessage({
         type: "error",
         text:
-          getClientErrorMessage(error, messages.statusUpdateFailed),
+          getClientErrorMessage(error, labels.statusUpdateFailed),
       });
     } finally {
       setLoadingId(null);
@@ -158,12 +162,12 @@ export function StaffClient({
       });
 
       if (!response.ok) {
-        throw new Error(await readApiErrorMessage(response, messages.deleteFailed));
+        throw new Error(await readApiErrorMessage(response, labels.deleteFailed));
       }
 
       setMessage({
         type: "success",
-        text: messages.deleteSuccess,
+        text: labels.deleteSuccess,
       });
 
       if (editingStaffId === staffMember.id) {
@@ -174,7 +178,7 @@ export function StaffClient({
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, messages.deleteFailed),
+        text: getClientErrorMessage(error, labels.deleteFailed),
       });
     } finally {
       setLoadingId(null);
@@ -184,9 +188,9 @@ export function StaffClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">{messages.title}</h1>
+        <h1 className="text-2xl font-semibold">{labels.title}</h1>
         <p className="text-sm text-muted-foreground">
-          {messages.description}
+          {labels.description}
         </p>
       </div>
 
@@ -204,7 +208,7 @@ export function StaffClient({
         onEdit={startEdit}
         onToggleActive={handleToggleActive}
         staff={staff}
-        messages={messages}
+        messages={labels}
       />
 
       <StaffForm
@@ -214,10 +218,10 @@ export function StaffClient({
         onSubmit={handleSubmit}
         onCancel={editingStaff ? resetForm : undefined}
         services={services}
-        submitLabel={editingStaff ? messages.updateButton : messages.createButton}
-        title={editingStaff ? messages.editTitle : messages.createTitle}
+        submitLabel={editingStaff ? labels.updateButton : labels.createButton}
+        title={editingStaff ? labels.editTitle : labels.createTitle}
         values={values}
-        messages={messages}
+        messages={labels}
       />
     </div>
   );

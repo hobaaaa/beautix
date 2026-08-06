@@ -1,4 +1,3 @@
-import { getAdminMessages } from "@/lib/i18n/admin";
 import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -22,7 +21,7 @@ export async function HoursPageContent({
     (result) => ({ count: result.data?.length ?? 0 }),
   );
 
-  return <WorkingHoursClient hours={data} messages={getAdminMessages(locale).hours} />;
+  return <WorkingHoursClient hours={data} locale={locale} />;
 }
 
 export default async function HoursPage() {

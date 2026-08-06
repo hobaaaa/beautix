@@ -1,6 +1,5 @@
 import { getServices } from "@/app/admin/services/queries";
 import { ServiceClient } from "@/app/admin/services/ServiceClient";
-import { getAdminMessages } from "@/lib/i18n/admin";
 import { isLocale } from "@/lib/i18n/constants";
 import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -27,5 +26,5 @@ export default async function LocalizedServicesPage({
     (result) => ({ count: result.data?.length ?? 0 }),
   );
 
-  return <ServiceClient services={services} messages={getAdminMessages(locale)} />;
+  return <ServiceClient services={services} locale={locale} />;
 }

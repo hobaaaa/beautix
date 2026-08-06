@@ -3,7 +3,6 @@ import type { AppointmentListView } from "@/app/admin/appointments/queries";
 import { AppointmentsClient } from "@/app/admin/appointments/AppointmentsClient";
 import { getClientsForAppointmentForm } from "@/app/admin/appointments/queries";
 import { getStaffPageData } from "@/app/admin/staff/queries";
-import { getAdminMessages } from "@/lib/i18n/admin";
 import { isLocale } from "@/lib/i18n/constants";
 import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -147,7 +146,6 @@ export default async function LocalizedAppointmentsPage({
       selectedAppointmentTypeId={selectedAppointmentTypeId}
       selectedStaffId={selectedStaffId}
       locale={locale}
-      messages={getAdminMessages(locale).appointments}
     />
   );
 }

@@ -39,7 +39,7 @@ export function AppointmentsClient({
   selectedAppointmentTypeId,
   selectedStaffId,
   locale = defaultLocale,
-  messages = getAdminMessages(locale).appointments,
+  messages,
 }: {
   appointments: AppointmentListItem[];
   clients: Client[];
@@ -56,6 +56,7 @@ export function AppointmentsClient({
   locale?: Locale;
   messages?: AdminMessages["appointments"];
 }) {
+  const labels = messages ?? getAdminMessages(locale).appointments;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -127,16 +128,16 @@ export function AppointmentsClient({
 
       if (!response.ok) {
         throw new Error(
-          await readApiErrorMessage(response, messages.cancelFailed),
+          await readApiErrorMessage(response, labels.cancelFailed),
         );
       }
 
-      setMessage({ type: "success", text: messages.cancelSuccess });
+      setMessage({ type: "success", text: labels.cancelSuccess });
       router.refresh();
     } catch (error) {
       setMessage({
         type: "error",
-        text: getClientErrorMessage(error, messages.cancelFailed),
+        text: getClientErrorMessage(error, labels.cancelFailed),
       });
     } finally {
       setCancellingId(null);
@@ -147,11 +148,11 @@ export function AppointmentsClient({
     <div className="space-y-6">
       <div className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">{messages.title}</h1>
+          <h1 className="text-2xl font-semibold">{labels.title}</h1>
           <p className="text-sm text-muted-foreground">
             {selectedView === "all"
-              ? messages.allDescription
-              : messages.dayDescription}
+              ? labels.allDescription
+              : labels.dayDescription}
           </p>
         </div>
 
@@ -160,7 +161,7 @@ export function AppointmentsClient({
           onClick={openCreateDialog}
           className="rounded-md bg-blue-600 px-3 py-2 text-sm text-white sm:ml-auto"
         >
-          {messages.add}
+          {labels.add}
         </button>
       </div>
       <div className="flex min-w-0 flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-end md:justify-between">
@@ -178,14 +179,14 @@ export function AppointmentsClient({
               selectedView === "day" ? "bg-slate-900" : "bg-background"
             }`}
           >
-            {messages.today}
+            {labels.today}
           </button>
           <button
             type="button"
             onClick={() => showDaily(tomorrow)}
             className="min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
-            {messages.tomorrow}
+            {labels.tomorrow}
           </button>
           <input
             type="date"
@@ -200,7 +201,7 @@ export function AppointmentsClient({
             onClick={showAllAppointments}
             className="w-full min-w-0 rounded-md border bg-slate-900 px-3 py-2 text-sm"
           >
-            {messages.allAppointments}
+            {labels.allAppointments}
           </button>
 
           <select
@@ -213,7 +214,7 @@ export function AppointmentsClient({
             }
             className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            <option value="">{messages.allServices}</option>
+            <option value="">{labels.allServices}</option>
             {serviceFilters.map((service) => (
               <option key={service.id} value={service.id}>
                 {service.name}
@@ -231,7 +232,7 @@ export function AppointmentsClient({
             }
             className="w-full min-w-0 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white"
           >
-            <option value="">{messages.allStaff}</option>
+            <option value="">{labels.allStaff}</option>
             {staffFilters.map((staffMember) => (
               <option key={staffMember.id} value={staffMember.id}>
                 {staffMember.name}
@@ -264,13 +265,13 @@ export function AppointmentsClient({
           setMessage({
             type: "success",
             text:
-              mode === "edit" ? messages.updateSuccess : messages.createSuccess,
+              mode === "edit" ? labels.updateSuccess : labels.createSuccess,
           });
           router.refresh();
         }}
         services={services}
         staffMembers={staffMembers}
-        messages={messages}
+        messages={labels}
       />
 
       <AppointmentsTable
@@ -282,11 +283,11 @@ export function AppointmentsClient({
         showDate={selectedView === "all"}
         emptyMessage={
           selectedView === "all"
-            ? messages.emptyAll
-            : messages.emptyDay
+            ? labels.emptyAll
+            : labels.emptyDay
         }
         locale={locale}
-        messages={messages}
+        messages={labels}
       />
 
       {selectedView === "all" && hasMore && (
@@ -296,7 +297,7 @@ export function AppointmentsClient({
             onClick={loadMore}
             className="rounded-md border px-4 py-2 text-sm"
           >
-            {messages.loadMore}
+            {labels.loadMore}
           </button>
         </div>
       )}

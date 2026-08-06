@@ -7,7 +7,16 @@ import { FormEvent, useState } from "react";
 
 type PublicSlugSettingsFormProps = {
   initialSlug: string;
-  messages: AdminMessages["settings"];
+  messages: Pick<
+    AdminMessages["settings"],
+    | "slugLabel"
+    | "slugHelp"
+    | "preview"
+    | "save"
+    | "saving"
+    | "updateSuccess"
+    | "updateFailed"
+  >;
 };
 
 export function PublicSlugSettingsForm({

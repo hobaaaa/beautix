@@ -1,4 +1,3 @@
-import { getAdminMessages } from "@/lib/i18n/admin";
 import { defaultLocale, type Locale } from "@/lib/i18n/constants";
 import { measureServerTiming } from "@/lib/perf";
 import { getCurrentOrgContext } from "@/lib/supabase/org";
@@ -25,13 +24,7 @@ export async function StaffPageContent({
     }),
   );
 
-  return (
-    <StaffClient
-      staff={staff}
-      services={services}
-      messages={getAdminMessages(locale).staff}
-    />
-  );
+  return <StaffClient staff={staff} services={services} locale={locale} />;
 }
 
 export default async function StaffPage() {
